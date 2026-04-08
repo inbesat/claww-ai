@@ -1,0 +1,3 @@
+{"created_at_ms":1775510606814,"session_id":"session-1775510606814-0","type":"session_meta","updated_at_ms":1775510613083,"version":1}
+{"message":{"blocks":[{"text":"hello","type":"text"}],"role":"user"},"type":"message"}
+{"message":{"blocks":[{"text":"I'm an interactive Claude Code agent, here to assist you with software engineering tasks. What would you like to do today?","type":"text"}],"role":"assistant","usage":{"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"input_tokens":4832,"output_tokens":26}},"type":"message"}
