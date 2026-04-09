@@ -99,7 +99,7 @@ const ChatInput = ({ isLoading, onSendMessage, darkMode }) => {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('http://localhost:3001/api/upload', {
+      const response = await fetch('https://claww-ai-2.onrender.com/api/upload', {
         method: 'POST',
         body: formData,
       });
