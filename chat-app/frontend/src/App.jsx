@@ -6,7 +6,7 @@ import './index.css';
 
 const STORAGE_KEY = 'claw_chats';
 const HISTORY_KEY = 'claw_history';
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || 'https://claww-ai-2.onrender.com';
 
 const SYSTEM_PROMPTS = [
   { id: 'default', name: 'Default', prompt: 'You are a helpful AI assistant.' },
