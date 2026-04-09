@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 
 const chatgptDark = {
@@ -96,6 +99,9 @@ const MessageBubble = ({ message, darkMode }) => {
   const renderMarkdown = (text) => {
     return (
       <ReactMarkdown
+        remarkPlugins={[remarkMath]}
+        rehypePlugins={[rehypeKatex]}
+        className="prose dark:prose-invert max-w-none"
         components={{
           code({ node, inline, className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '');
@@ -183,10 +189,10 @@ const MessageBubble = ({ message, darkMode }) => {
         </div>
       )}
       <div className="relative">
-        <div className={`max-w-[85%] ${bubbleClasses} px-5 py-3.5 rounded-2xl shadow-sm animate-slide-up`}>
+          <div className={`max-w-[85%] ${bubbleClasses} px-5 py-3.5 rounded-2xl shadow-sm animate-slide-up`}>
           <div className="text-[15px] leading-relaxed">
             {isUser ? (
-              <p className="whitespace-pre-wrap break-words">{message.text}</p>
+              renderMarkdown(message.text)
             ) : (
               <>
                 {renderMarkdown(message.text)}

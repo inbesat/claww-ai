@@ -92,7 +92,11 @@ function App() {
 
   const currentMessages = messages[sessionId] || [];
 
-  const handleSendMessage = async (message, fileContent = null) => {
+  const handleSendMessage = async (message, fileContext = null) => {
+    const outboundMessage = fileContext
+      ? `Message: ${message}\n\nDocument Context:\n${fileContext}`
+      : message;
+
     const userMessage = {
       id: ++messageIdRef.current,
       text: message,
@@ -115,12 +119,11 @@ function App() {
     setError(null);
 
     try {
-      const response = await fetch('https://claww-ai-2.onrender.com/api/chat/stream', {
+      const response = await fetch('http://localhost:3001/api/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message,
-          fileContent,
+          message: outboundMessage,
           sessionId,
           history: currentMessages,
           systemPrompt:

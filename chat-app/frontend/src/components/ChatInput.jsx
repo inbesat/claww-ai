@@ -2,8 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 
 const ChatInput = ({ isLoading, onSendMessage, darkMode }) => {
   const [message, setMessage] = useState('');
-  const [attachedFile, setAttachedFile] = useState(null);
-  const [fileContent, setFileContent] = useState('');
+  const [fileContext, setFileContext] = useState(null);
+  const [attachedFileName, setAttachedFileName] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const submittingRef = useRef(false);
@@ -66,40 +66,14 @@ const ChatInput = ({ isLoading, onSendMessage, darkMode }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const validTextTypes = ['.txt', '.pdf'];
-    const validImageTypes = ['.png', '.jpg', '.jpeg'];
-    const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-    
-    if (!validTextTypes.includes(ext) && !validImageTypes.includes(ext)) {
-      alert('Please select a .txt, .pdf, .png, or .jpg file');
-      return;
-    }
-
-    setAttachedFile(file);
+    setAttachedFileName(file.name);
     setIsUploading(true);
 
     try {
-      // Handle images - convert to base64 for vision model
-      if (validImageTypes.includes(ext)) {
-        const reader = new FileReader();
-        await new Promise((resolve, reject) => {
-          reader.onload = () => {
-            const base64 = reader.result;
-            setFileContent(`[IMAGE:${file.name}]\n${base64}`);
-            resolve();
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-        setIsUploading(false);
-        return;
-      }
-
-      // Send text/PDF to backend for processing
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('https://claww-ai-2.onrender.com/api/upload', {
+      const response = await fetch('http://localhost:3001/api/upload', {
         method: 'POST',
         body: formData,
       });
@@ -109,7 +83,7 @@ const ChatInput = ({ isLoading, onSendMessage, darkMode }) => {
       }
 
       const data = await response.json();
-      setFileContent(data.content);
+      setFileContext(data.content);
     } catch (err) {
       console.error('Upload error:', err);
       alert('Failed to process file');
@@ -120,8 +94,8 @@ const ChatInput = ({ isLoading, onSendMessage, darkMode }) => {
   };
 
   const handleRemoveFile = () => {
-    setAttachedFile(null);
-    setFileContent('');
+    setAttachedFileName('');
+    setFileContext(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -134,7 +108,7 @@ const ChatInput = ({ isLoading, onSendMessage, darkMode }) => {
     
     submittingRef.current = true;
     
-    onSendMessage(message, fileContent);
+    onSendMessage(message, fileContext);
     setMessage('');
     handleRemoveFile();
     
@@ -154,27 +128,27 @@ const ChatInput = ({ isLoading, onSendMessage, darkMode }) => {
   };
 
   const handleAskAboutFile = () => {
-    if (!fileContent) return;
-    const prompt = `Can you analyze this file and answer questions about it? Here's the content:\n\n${fileContent}`;
+    if (!fileContext) return;
+    const prompt = `Can you analyze this file and answer questions about it? Here's the content:\n\n${fileContext}`;
     setMessage(prompt);
   };
 
   return (
     <div className={`sticky bottom-0 border-t px-4 py-4 ${darkMode ? 'border-zinc-800/30 bg-[#0a0a0a]/95' : 'border-zinc-200 bg-white/95'} backdrop-blur-md`}>
       <div className="max-w-[800px] mx-auto">
-        {attachedFile && (
+        {attachedFileName && (
           <div className="mb-3 flex items-center gap-2">
             <div className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-lg ${darkMode ? 'bg-zinc-800/60' : 'bg-zinc-100'}`}>
               <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               <span className={`text-sm flex-1 truncate ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>
-                {isUploading ? 'Processing...' : attachedFile.name}
+                {isUploading ? 'Processing...' : attachedFileName}
               </span>
               <button
                 type="button"
                 onClick={handleAskAboutFile}
-                disabled={isUploading || !fileContent}
+                disabled={isUploading || !fileContext}
                 className={`text-xs px-2 py-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${isUploading ? 'hidden' : ''}`}
               >
                 Ask about this
@@ -197,7 +171,7 @@ const ChatInput = ({ isLoading, onSendMessage, darkMode }) => {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".txt,.pdf,.png,.jpg,.jpeg"
+              accept=".txt, .pdf, image/*, .docx, application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               onChange={handleFileSelect}
               className="hidden"
             />
