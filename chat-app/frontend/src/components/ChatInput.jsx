@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 const ChatInput = ({ isLoading, onSendMessage, darkMode }) => {
   const [message, setMessage] = useState('');
   const [fileContext, setFileContext] = useState(null);
@@ -73,7 +75,7 @@ const ChatInput = ({ isLoading, onSendMessage, darkMode }) => {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('http://localhost:3001/api/upload', {
+      const response = await fetch(`${API_URL}/api/upload`, {
         method: 'POST',
         body: formData,
       });

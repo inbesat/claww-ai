@@ -6,6 +6,7 @@ import './index.css';
 
 const STORAGE_KEY = 'claw_chats';
 const HISTORY_KEY = 'claw_history';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 const SYSTEM_PROMPTS = [
   { id: 'default', name: 'Default', prompt: 'You are a helpful AI assistant.' },
@@ -119,7 +120,7 @@ function App() {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:3001/api/chat/stream', {
+      const response = await fetch(`${API_URL}/api/chat/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
