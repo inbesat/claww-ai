@@ -6,6 +6,7 @@ const ChatInput = ({ isLoading, onSendMessage, darkMode }) => {
   const [message, setMessage] = useState('');
   const [fileContext, setFileContext] = useState(null);
   const [attachedFileName, setAttachedFileName] = useState('');
+  const [isImageMode, setIsImageMode] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const submittingRef = useRef(false);
@@ -110,9 +111,10 @@ const ChatInput = ({ isLoading, onSendMessage, darkMode }) => {
     
     submittingRef.current = true;
     
-    onSendMessage(message, fileContext);
+    onSendMessage(message, fileContext, isImageMode);
     setMessage('');
     handleRemoveFile();
+    setIsImageMode(false);
     
     setTimeout(() => {
       submittingRef.current = false;
@@ -169,7 +171,7 @@ const ChatInput = ({ isLoading, onSendMessage, darkMode }) => {
           </div>
         )}
         <form onSubmit={handleSubmit}>
-          <div className={`relative flex items-end rounded-2xl border transition-all duration-200 shadow-sm ${darkMode ? 'bg-zinc-900/80 border-zinc-700/50 hover:border-zinc-600/50 focus-within:border-emerald-500/50 focus-within:ring-2 focus-within:ring-emerald-500/20' : 'bg-zinc-50 border-zinc-200 hover:border-zinc-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20'}`}>
+          <div className={`relative flex items-end rounded-2xl border transition-all duration-200 shadow-sm ${isImageMode ? 'shadow-[0_0_15px_rgba(139,92,246,0.5)] border-violet-500/70 focus-within:ring-2 focus-within:ring-violet-500/30' : darkMode ? 'bg-zinc-900/80 border-zinc-700/50 hover:border-zinc-600/50 focus-within:border-emerald-500/50 focus-within:ring-2 focus-within:ring-emerald-500/20' : 'bg-zinc-50 border-zinc-200 hover:border-zinc-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20'} ${isImageMode ? (darkMode ? 'bg-zinc-900/90' : 'bg-violet-50') : ''}`}>
             <input
               ref={fileInputRef}
               type="file"
@@ -185,6 +187,17 @@ const ChatInput = ({ isLoading, onSendMessage, darkMode }) => {
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsImageMode(prev => !prev)}
+              disabled={isLoading || isUploading}
+              className={`p-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isImageMode ? 'text-violet-500 bg-violet-500/10' : darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
+              title={isImageMode ? 'Image mode on' : 'Enable image generation'}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18l-.813-2.096L6 15l2.187-.904L9 12l.813 2.096L12 15l-2.187.904zM17.813 7.904L17 10l-.813-2.096L14 7l2.187-.904L17 4l.813 2.096L20 7l-2.187.904zM14 19l.813-2.096L17 16l-2.187-.904L14 13l-.813 2.096L11 16l2.187.904L14 19z" />
               </svg>
             </button>
             <button
@@ -209,7 +222,7 @@ const ChatInput = ({ isLoading, onSendMessage, darkMode }) => {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={isLoading ? "AI is thinking..." : "Message Claw AI..."}
+              placeholder={isLoading ? (isImageMode ? "Claw AI is imagining your request..." : "AI is thinking...") : isImageMode ? "Describe the image you want to create..." : "Message Claw AI..."}
               className={`w-full px-2 py-4 bg-transparent focus:outline-none resize-none transition-all ${darkMode ? 'text-[#fafafa] placeholder-zinc-500' : 'text-zinc-900 placeholder-zinc-400'}`}
               disabled={isLoading || isUploading}
               rows={1}

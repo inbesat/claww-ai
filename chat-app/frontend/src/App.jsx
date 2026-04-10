@@ -23,6 +23,7 @@ function App() {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [error, setError] = useState(null);
 
   const [systemPrompt, setSystemPrompt] = useState(() => {
@@ -93,7 +94,7 @@ function App() {
 
   const currentMessages = messages[sessionId] || [];
 
-  const handleSendMessage = async (message, fileContext = null) => {
+  const handleSendMessage = async (message, fileContext = null, isImageMode = false) => {
     const outboundMessage = fileContext
       ? `Message: ${message}\n\nDocument Context:\n${fileContext}`
       : message;
@@ -113,13 +114,62 @@ function App() {
     const aiMessageId = ++messageIdRef.current;
     setMessages(prev => ({
       ...prev,
-      [sessionId]: [...(prev[sessionId] || []), { id: aiMessageId, text: '', sender: 'ai', isStreaming: true }]
+      [sessionId]: [
+        ...(prev[sessionId] || []),
+        {
+          id: aiMessageId,
+          text: isImageMode ? 'Claw AI is imagining your request...' : '',
+          sender: 'ai',
+          isStreaming: true
+        }
+      ]
     }));
 
-    setIsLoading(true);
+    if (isImageMode) {
+      setIsGeneratingImage(true);
+    } else {
+      setIsLoading(true);
+    }
     setError(null);
 
     try {
+      if (isImageMode) {
+        if (!message.trim()) {
+          throw new Error('Image prompt required');
+        }
+
+        const response = await fetch(`${API_URL}/api/generate-image`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: message.trim() }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        const imageMarkdown = `![Generated Image](${data.image})`;
+
+        setMessages(prev => ({
+          ...prev,
+          [sessionId]: prev[sessionId].map(msg =>
+            msg.id === aiMessageId ? { ...msg, text: imageMarkdown, isStreaming: false } : msg
+          )
+        }));
+
+        setChatHistory(prev => [
+          ...prev.filter(chat => chat.id !== sessionId),
+          {
+            id: sessionId,
+            title: message.slice(0, 30),
+            timestamp: Date.now()
+          }
+        ]);
+
+        return;
+      }
+
       const response = await fetch(`${API_URL}/api/chat/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -202,6 +252,7 @@ function App() {
       }));
     } finally {
       setIsLoading(false);
+      setIsGeneratingImage(false);
     }
   };
 
@@ -245,12 +296,12 @@ function App() {
       <div className="flex-1 flex flex-col">
         <ChatArea
           messages={currentMessages}
-          isLoading={isLoading}
+          isLoading={isLoading || isGeneratingImage}
           darkMode={darkMode}
         />
 
         <ChatInput
-          isLoading={isLoading}
+          isLoading={isLoading || isGeneratingImage}
           onSendMessage={handleSendMessage}
           darkMode={darkMode}
         />

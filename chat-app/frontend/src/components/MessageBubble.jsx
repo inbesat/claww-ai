@@ -172,6 +172,15 @@ const MessageBubble = ({ message, darkMode }) => {
               </blockquote>
             );
           },
+          img({ src, alt }) {
+            return (
+              <img
+                src={src}
+                alt={alt || 'Generated image'}
+                className="my-3 max-w-full rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm"
+              />
+            );
+          },
         }}
       >
         {text}
