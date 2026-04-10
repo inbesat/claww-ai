@@ -212,8 +212,6 @@ export const LargePreviewableCodeBlock = ({ code, language, darkMode }) => {
     </div>
   );
 };
-  );
-};
 
 const MessageBubble = ({ message, darkMode, onOpenCanvas }) => {
   const isUser = message.sender === 'user';
