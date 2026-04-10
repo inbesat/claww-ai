@@ -386,22 +386,23 @@ function App() {
         <div className={`flex-1 flex flex-col ${activeCanvas ? '' : ''}`}>
           <div className={`flex-1 flex ${activeCanvas ? 'gap-0' : ''}`}>
             <div className={`flex-1 flex flex-col ${activeCanvas ? 'w-[35%]' : ''}`}>
-            <ChatArea
-              messages={currentMessages}
-              isLoading={isLoading || isGeneratingImage}
-              darkMode={darkMode}
-              onOpenCanvas={setActiveCanvas}
-              currentAgentStep={currentAgentStep}
-            />
+              <ChatArea
+                messages={currentMessages}
+                isLoading={isLoading || isGeneratingImage}
+                darkMode={darkMode}
+                onOpenCanvas={setActiveCanvas}
+                currentAgentStep={currentAgentStep}
+              />
 
-            <ChatInput
-              isLoading={isLoading || isGeneratingImage}
-              onSendMessage={handleSendMessage}
-              onFileProcessed={handlePdfProcessed}
-              darkMode={darkMode}
-              activeCanvas={activeCanvas}
-              onToggleCanvas={setActiveCanvas}
-            />
+              <ChatInput
+                isLoading={isLoading || isGeneratingImage}
+                onSendMessage={handleSendMessage}
+                onFileProcessed={handlePdfProcessed}
+                darkMode={darkMode}
+                activeCanvas={activeCanvas}
+                onToggleCanvas={setActiveCanvas}
+              />
+            </div>
           </div>
 
           {activeCanvas && (
@@ -440,3 +441,4 @@ function App() {
 }
 
 export default App;
+

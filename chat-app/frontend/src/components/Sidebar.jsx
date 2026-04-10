@@ -27,7 +27,8 @@ const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ persona }),
       });
-    } catch (console.error) {
+    } catch (err) {
+      console.error('Failed to save persona:', err);
     } finally {
       setIsSavingPersona(false);
     }
