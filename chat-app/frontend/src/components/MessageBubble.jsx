@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -153,6 +153,35 @@ export const LargePreviewableCodeBlock = ({ code, language, darkMode }) => {
     setTimeout(() => setCopied(false), 1500);
   };
 
+  useEffect(() => {
+    return () => {
+      if (isSpeaking) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [message.text]);
+
+  const toggleSpeech = () => {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    const text = message.text;
+    if (!text) return;
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    window.speechSynthesis.speak(utterance);
+    setIsSpeaking(true);
+  };
+
   const CopyButton = () => (
     <button
       onClick={handleCopy}
@@ -166,6 +195,25 @@ export const LargePreviewableCodeBlock = ({ code, language, darkMode }) => {
       ) : (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+      )}
+    </button>
+  );
+
+  const SpeakButton = () => (
+    <button
+      onClick={toggleSpeech}
+      className={`absolute top-2 right-14 p-1.5 rounded-lg bg-white/80 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-700 transition-all duration-300 opacity-0 group-hover:opacity-100 border border-zinc-200/50 dark:border-zinc-700/50 ${isSpeaking ? 'text-violet-500 animate-pulse' : 'text-zinc-500 dark:text-zinc-400 hover:text-violet-600 dark:hover:text-violet-400'}`}
+      title={isSpeaking ? 'Stop speaking' : 'Read aloud'}
+    >
+      {isSpeaking ? (
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+        </svg>
+      ) : (
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
         </svg>
       )}
     </button>
@@ -328,9 +376,10 @@ components={{
           </div>
         </div>
         {!isUser && !isStreaming && (
-          <div className="absolute -top-1 -right-1">
+          <div className="absolute -top-1 -right-1 flex gap-1">
+            <SpeakButton />
             {copied ? (
-              <span className="text-xs bg-emerald-600 text-white px-2 py-1 rounded-lg shadow-sm">Copied!</span>
+              <span className="text-xs bg-violet-600 text-white px-2 py-1 rounded-lg shadow-sm">Copied!</span>
             ) : (
               <CopyButton />
             )}

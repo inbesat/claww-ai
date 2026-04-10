@@ -11,7 +11,7 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, active
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [isCodeMode, setIsCodeMode] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const submittingRef = useRef(false);
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -24,7 +24,7 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, active
     }
   }, [message]);
 
-  const handleVoiceInput = () => {
+  const toggleListening = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       alert('Voice input is not supported in your browser. Try Chrome.');
       return;
@@ -37,14 +37,14 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, active
     recognition.interimResults = true;
     recognition.lang = 'en-US';
 
-    if (isRecording) {
+    if (isListening) {
       recognition.stop();
-      setIsRecording(false);
+      setIsListening(false);
       return;
     }
 
     recognition.onstart = () => {
-      setIsRecording(true);
+      setIsListening(true);
     };
 
     recognition.onresult = (event) => {
@@ -57,11 +57,11 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, active
 
     recognition.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
-      setIsRecording(false);
+      setIsListening(false);
     };
 
     recognition.onend = () => {
-      setIsRecording(false);
+      setIsListening(false);
     };
 
     recognition.start();
@@ -294,15 +294,15 @@ return (
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
               </svg>
             </button>
-            <button
+<button
               type="button"
-              onClick={handleVoiceInput}
+              onClick={toggleListening}
               disabled={isLoading || isUploading}
-              className={`p-3 rounded-lg transition-colors ${isRecording ? 'text-red-500 bg-red-500/10' : darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'} disabled:opacity-50 disabled:cursor-not-allowed`}
-              title={isRecording ? 'Stop recording' : 'Voice input'}
+              className={`p-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${isListening ? 'text-red-500 bg-red-500/20 animate-pulse' : darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
+              title={isListening ? 'Stop recording' : 'Voice input'}
             >
-              {isRecording ? (
-                <svg className="w-5 h-5 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+              {isListening ? (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1 1.93c-3.94-.49-7-3.85-7-7.93h2c0 3.31 2.69 6 6 6s6-2.69 6-6h2c0 4.08-3.06 7.44-7 7.93V19h4v2H8v-2h4v-3.07z"/>
                 </svg>
               ) : (
