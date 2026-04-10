@@ -392,7 +392,7 @@ app.post('/api/chat/stream', async (req, res) => {
 
       systemPromptText = "You are an elite Senior Developer. Provide only clean, modern, and production-ready code blocks. " + buildSystemPrompt();
 
-      const hfResponse = await fetch('https://router.huggingface.co/hf-inference/models/Qwen/Qwen2.5-Coder-32B-Instruct', {
+      const hfResponse = await fetch('https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-32B-Instruct', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${hfToken}`,
