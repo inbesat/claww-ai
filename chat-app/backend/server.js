@@ -381,51 +381,8 @@ app.post('/api/chat/stream', async (req, res) => {
     }
 
     if (isCodeMode) {
-      console.log(`[Code Mode] Using Hugging Face Qwen model`);
-      const hfToken = process.env.HUGGINGFACE_ACCESS_TOKEN;
-      if (!hfToken) {
-        res.write(`data: ${JSON.stringify({ error: 'HuggingFace token not configured' })}\n\n`);
-        res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
-        res.end();
-        return;
-      }
-
-      systemPromptText = "You are an elite Senior Developer. Provide only clean, modern, and production-ready code blocks. " + buildSystemPrompt();
-
-      const hfResponse = await fetch('https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-32B-Instruct', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${hfToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          inputs: `<|system|>\n${systemPromptText}<|user|>\n${message}<|assistant|>`,
-          parameters: {
-            max_new_tokens: 2048,
-            temperature: 0.7,
-            top_p: 0.9,
-            return_full_text: false
-          }
-        })
-      });
-
-      if (!hfResponse.ok) {
-        const errorText = await hfResponse.text();
-        console.error('HuggingFace error:', hfResponse.status, errorText);
-        throw new Error(`HuggingFace API error: ${hfResponse.status}`);
-      }
-
-      const hfResult = await hfResponse.json();
-      const generatedText = Array.isArray(hfResult) ? hfResult[0]?.generated_text : hfResult.generated_text;
-      
-      if (generatedText) {
-        const responseContent = generatedText.replace(/<\|.*?\|>/g, '').trim();
-        res.write(`data: ${JSON.stringify({ content: responseContent })}\n\n`);
-      }
-      
-      res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
-      res.end();
-      return;
+      console.log(`[Code Mode] Using Groq with Senior Developer prompt`);
+      systemPromptText = "You are an elite Senior Developer. Provide only clean, modern, and production-ready code blocks. Do not use conversational filler.";
     }
 
     console.log(`[Default Mode] Model: ${model}, Search: ${isSearchMode}, Code: ${isCodeMode}`);

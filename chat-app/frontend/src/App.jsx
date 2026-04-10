@@ -6,7 +6,7 @@ import './index.css';
 
 const STORAGE_KEY = 'claw_chats';
 const HISTORY_KEY = 'claw_history';
-const API_URL = (import.meta.env.VITE_API_URL || 'https://claww-ai-2.onrender.com').trim();
+const API_URL = (import.meta.env.VITE_API_URL || 'https://claww-ai-3.onrender.com').trim();
 
 const SYSTEM_PROMPTS = [
   { id: 'default', name: 'Default', prompt: 'You are a helpful AI assistant.' },
@@ -97,12 +97,11 @@ function App() {
 
   const handleSendMessage = async (message, fileContext = null, isImageMode = false, isSearchMode = false, isCodeMode = false) => {
     let contextParts = [];
-    if (fileContext) contextParts.push(fileContext);
-    if (pdfContext) {
-      const truncatedPdf = pdfContext.length > 10000 
-        ? pdfContext.substring(0, 10000) + '\n\n[Document truncated due to length...]'
-        : pdfContext;
-      contextParts.push(`Document Content:\n${truncatedPdf}`);
+    if (fileContext) {
+      const truncatedContext = fileContext.length > 10000 
+        ? fileContext.substring(0, 10000) + '\n\n[Document truncated due to length...]' 
+        : fileContext;
+      contextParts.push(`Document Content:\n${truncatedContext}`);
     }
     
     const outboundMessage = contextParts.length > 0

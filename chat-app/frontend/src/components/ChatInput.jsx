@@ -148,8 +148,10 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode }) => {
 
   const handleAskAboutFile = () => {
     if (!fileContext) return;
-    const prompt = `Can you analyze this file and answer questions about it? Here's the content:\n\n${fileContext}`;
-    setMessage(prompt);
+    setMessage("What is this document about?");
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
   };
 
   return (
