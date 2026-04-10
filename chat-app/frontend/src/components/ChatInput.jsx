@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
-const ChatInput = ({ isLoading, onSendMessage, darkMode }) => {
+const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode }) => {
   const [message, setMessage] = useState('');
   const [fileContext, setFileContext] = useState(null);
   const [attachedFileName, setAttachedFileName] = useState('');
@@ -76,7 +76,12 @@ const ChatInput = ({ isLoading, onSendMessage, darkMode }) => {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(`${API_URL}/api/upload`, {
+      let endpoint = `${API_URL}/api/upload`;
+      if (file.type === 'application/pdf') {
+        endpoint = `${API_URL}/api/process-pdf`;
+      }
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         body: formData,
       });
@@ -86,7 +91,13 @@ const ChatInput = ({ isLoading, onSendMessage, darkMode }) => {
       }
 
       const data = await response.json();
-      setFileContext(data.content);
+
+      if (file.type === 'application/pdf' && data.preview) {
+        onFileProcessed(data);
+        setAttachedFileName('');
+      } else {
+        setFileContext(data.content);
+      }
     } catch (err) {
       console.error('Upload error:', err);
       alert('Failed to process file');

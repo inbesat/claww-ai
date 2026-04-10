@@ -10,6 +10,19 @@ const fs = require('fs');
 const axios = require('axios');
 const Tesseract = require('tesseract.js');
 
+let gm;
+try {
+  const gmModule = require('gm');
+  const gmInstance = gmModule.subClass({ 
+    imageMagick: false,
+    appPath: 'E:/claw-code-main (3) (1)/claw-code-main/claw-code-main/GraphicsMagick-1.3.46-Q16/'
+  });
+  gmInstance.setGhostscriptBinary('gswin64c');
+  gm = gmInstance;
+} catch (e) {
+  console.warn('GraphicsMagick not available, thumbnail generation may fail');
+}
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -30,7 +43,8 @@ if (!process.env.SERP_API_KEY) {
 }
 
 // 📦 MIDDLEWARE
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 const upload = multer({
   dest: 'uploads/',
@@ -185,6 +199,64 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     console.error('Upload error:', err);
     if (req.file) deleteFile(req.file.path);
     return res.status(500).json({ error: 'Upload failed' });
+  }
+});
+
+// 📄 PDF PROCESSING WITH THUMBNAIL
+app.post('/api/process-pdf', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    
+    const file = req.file;
+    if (!file.originalname.toLowerCase().endsWith('.pdf')) {
+      deleteFile(file.path);
+      return res.status(400).json({ error: 'Only PDF files are supported' });
+    }
+
+    const dataBuffer = fs.readFileSync(file.path);
+    let extractedText = null;
+    let preview = null;
+
+    try {
+      const pdfData = await pdf(dataBuffer);
+      extractedText = pdfData.text;
+    } catch (pdfErr) {
+      console.error('PDF text extraction failed:', pdfErr.message);
+    }
+
+    if (gm) {
+      try {
+        console.log("Rendering PDF thumbnail for:", file.originalname);
+        const thumbnailBuffer = await new Promise((resolve, reject) => {
+          gm(file.path + '[0]')
+            .resize(500, null)
+            .toBuffer('PNG', (err, buffer) => {
+              if (err) reject(err);
+              else resolve(buffer);
+            });
+        });
+        preview = `data:image/png;base64,${thumbnailBuffer.toString('base64')}`;
+      } catch (gmErr) {
+        console.error('Thumbnail generation failed:', gmErr.message);
+      }
+    }
+
+    deleteFile(file.path);
+
+    if (!extractedText && !preview) {
+      return res.status(400).json({ error: 'Could not process PDF. It may be password-protected or corrupted.' });
+    }
+
+    return res.json({ 
+      text: extractedText || '', 
+      preview, 
+      fileName: file.originalname 
+    });
+
+  } catch (err) {
+    console.error('PDF processing error:', err);
+    if (req.file) deleteFile(req.file.path);
+    return res.status(500).json({ error: err.message || 'PDF processing failed' });
   }
 });
 

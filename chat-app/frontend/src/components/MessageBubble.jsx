@@ -204,15 +204,19 @@ const MessageBubble = ({ message, darkMode }) => {
           <div className="text-[15px] leading-relaxed">
             {(() => {
               const rawText = message.text || '';
-              const isBase64Image = rawText.startsWith('data:image');
+              const embeddedImage = message.image;
+              const isBase64Image = rawText.startsWith('data:image') || (embeddedImage && embeddedImage.startsWith('data:image'));
               
               if (isBase64Image) {
                 return (
-                  <img 
-                    src={rawText} 
-                    alt="AI Generated" 
-                    className="rounded-xl max-w-full border border-zinc-700 shadow-lg" 
-                  />
+                  <>
+                    {rawText && <div className="mb-2">{renderMarkdown(rawText)}</div>}
+                    <img 
+                      src={embeddedImage || rawText} 
+                      alt="AI Generated" 
+                      className="rounded-xl max-w-full border border-zinc-700 shadow-lg" 
+                    />
+                  </>
                 );
               }
               

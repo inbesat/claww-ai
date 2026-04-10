@@ -25,6 +25,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [error, setError] = useState(null);
+  const [pdfContext, setPdfContext] = useState(null);
 
   const [systemPrompt, setSystemPrompt] = useState(() => {
     return localStorage.getItem('claw_system_prompt') || 'default';
@@ -95,8 +96,17 @@ function App() {
   const currentMessages = messages[sessionId] || [];
 
   const handleSendMessage = async (message, fileContext = null, isImageMode = false) => {
-    const outboundMessage = fileContext
-      ? `Message: ${message}\n\nDocument Context:\n${fileContext}`
+    let contextParts = [];
+    if (fileContext) contextParts.push(fileContext);
+    if (pdfContext) {
+      const truncatedPdf = pdfContext.length > 10000 
+        ? pdfContext.substring(0, 10000) + '\n\n[Document truncated due to length...]'
+        : pdfContext;
+      contextParts.push(`Document Content:\n${truncatedPdf}`);
+    }
+    
+    const outboundMessage = contextParts.length > 0
+      ? `Message: ${message}\n\n${contextParts.join('\n\n')}`
       : message;
 
     const userMessage = {
@@ -183,13 +193,18 @@ function App() {
         return;
       }
 
+      const sanitizedHistory = currentMessages.map(msg => ({
+        ...msg,
+        text: msg.text?.startsWith('data:image') ? '[AI Generated Image]' : msg.text
+      }));
+
       const response = await fetch(`${API_URL}/api/chat/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: outboundMessage,
           sessionId,
-          history: currentMessages,
+          history: sanitizedHistory,
           systemPrompt:
             SYSTEM_PROMPTS.find(p => p.id === systemPrompt)?.prompt ||
             SYSTEM_PROMPTS[0].prompt
@@ -269,6 +284,23 @@ function App() {
     }
   };
 
+  const handlePdfProcessed = (pdfData) => {
+    if (pdfData.preview) {
+      const previewMessage = {
+        id: ++messageIdRef.current,
+        text: `📄 **${pdfData.fileName}**\n\nDocument loaded. You can now ask questions about it.`,
+        sender: 'ai',
+        isStreaming: false,
+        image: pdfData.preview
+      };
+      setMessages(prev => ({
+        ...prev,
+        [sessionId]: [...(prev[sessionId] || []), previewMessage]
+      }));
+    }
+    setPdfContext(pdfData.text);
+  };
+
   const handleNewChat = () => {
     setSessionId(Math.random().toString(36).substring(2, 15));
     setError(null);
@@ -316,6 +348,7 @@ function App() {
         <ChatInput
           isLoading={isLoading || isGeneratingImage}
           onSendMessage={handleSendMessage}
+          onFileProcessed={handlePdfProcessed}
           darkMode={darkMode}
         />
 
