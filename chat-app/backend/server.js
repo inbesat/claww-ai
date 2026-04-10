@@ -28,6 +28,10 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 
+// 📦 MIDDLEWARE
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
 // ✅ GROQ CLIENT
 const groq = new OpenAI({
   apiKey: process.env.GROQ_API_KEY,
@@ -42,13 +46,10 @@ if (!process.env.SERP_API_KEY) {
   throw new Error("❌ SERP_API_KEY missing");
 }
 
-// 📦 MIDDLEWARE
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
-
+// 📦 MULTER UPLOAD CONFIG
 const upload = multer({
   dest: 'uploads/',
-  limits: { fileSize: 10 * 1024 * 1024 }
+  limits: { fileSize: 50 * 1024 * 1024 }
 });
 
 // 🔍 WEB SEARCH
@@ -208,6 +209,8 @@ app.post('/api/process-pdf', upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     
     const file = req.file;
+    console.log("File received:", file.originalname, "Size:", file.size);
+    
     if (!file.originalname.toLowerCase().endsWith('.pdf')) {
       deleteFile(file.path);
       return res.status(400).json({ error: 'Only PDF files are supported' });
