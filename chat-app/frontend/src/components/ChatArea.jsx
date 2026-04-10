@@ -116,7 +116,7 @@ const SynapseChart = ({ chartData, darkMode }) => {
   return null;
 };
 
-const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas }) => {
+const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentStep }) => {
   const chatAreaRef = useRef(null);
   const prevMessagesLengthRef = useRef(messages.length);
   const prevScrollHeightRef = useRef(0);
@@ -201,6 +201,47 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas }) => {
     </svg>
   );
 
+  const AgentIcon = () => (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+    </svg>
+  );
+
+  const FingerprintIcon = () => (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 8m0 0h8m-8 0c1.656-1.066 3-2.78 3-5.085a6.958 6.958 0 01-1.002-3.02 6.961 6.961 0 01-.023-3.036m-3.038 3.127l.052-.085a9.94 9.94 0 01-.032-1.372m4.244 4.803l-.085-.076a10.44 10.44 0 01-1.26-1.893l.066-.11a10.7 10.7 0 01.932-1.765m.391 2.782c-.128.397-.252.8-.37 1.208" />
+    </svg>
+  );
+
+  const StatusBanner = ({ text, darkMode, agentStep }) => {
+    const activeStep = agentStep || (text ? (text.match(/\[AGENT_STEP:([^\]]+)\]/)?.[1] || 
+      (text.includes('[PLANNING]') ? 'Planning' : 
+       text.includes('[RESEARCHING]') ? 'Researching' : 
+       text.includes('[EXECUTING]') ? 'Executing' : null)) : null);
+    
+    if (!activeStep) return null;
+    
+    return (
+      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50">
+        <div className={`flex items-center gap-3 px-5 py-3 rounded-full backdrop-blur-2xl border shadow-2xl ${
+          darkMode 
+            ? 'bg-gradient-to-r from-violet-900/90 to-fuchsia-900/90 border-violet-600/50' 
+            : 'bg-gradient-to-r from-violet-100/90 to-fuchsia-100/90 border-violet-300'
+        }`}>
+          <div className="relative">
+            <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 animate-pulse block" />
+            <span className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 animate-ping opacity-75" />
+          </div>
+          <span className={`text-sm font-semibold bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent`}>
+            {activeStep}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  const currentStatus = messages.length > 0 ? messages[messages.length - 1].text : '';
+
   return (
     <div 
       ref={chatAreaRef}
@@ -218,7 +259,7 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas }) => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto mt-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto mt-8">
               <FeatureCard 
                 icon={<GlobeIcon />}
                 title="Web Search"
@@ -255,6 +296,18 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas }) => {
                 description="Your personal long-term memory. Upload full libraries and chat with all your data at once."
                 darkMode={darkMode}
               />
+              <FeatureCard 
+                icon={<AgentIcon />}
+                title="Agentic Workflows"
+                description="Autonomous planning and execution for complex tasks."
+                darkMode={darkMode}
+              />
+              <FeatureCard 
+                icon={<FingerprintIcon />}
+                title="Persona Memory"
+                description="A tailored experience that remembers who you are."
+                darkMode={darkMode}
+              />
             </div>
           </div>
         )}
@@ -280,6 +333,8 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas }) => {
             <MessageBubble key={message.id} message={message} darkMode={darkMode} onOpenCanvas={onOpenCanvas} />
           );
         })}
+
+        <StatusBanner text={currentStatus} darkMode={darkMode} agentStep={currentAgentStep} />
       </div>
     </div>
   );

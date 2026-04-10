@@ -45,6 +45,7 @@ function App() {
   const [activeCanvas, setActiveCanvas] = useState(null);
   const [autoOpenCanvas, setAutoOpenCanvas] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [currentAgentStep, setCurrentAgentStep] = useState(null);
 
   // Session ID
   const [sessionId, setSessionId] = useState(() => {
@@ -289,6 +290,16 @@ function App() {
                     msg.id === aiMessageId ? { ...msg, text: fullContent } : msg
                   )
                 }));
+                const stepMatch = fullContent.match(/\[AGENT_STEP:([^\]]+)\]/);
+                if (stepMatch) {
+                  setCurrentAgentStep(stepMatch[1]);
+                } else if (fullContent.includes('[PLANNING]')) {
+                  setCurrentAgentStep('Planning');
+                } else if (fullContent.includes('[RESEARCHING]')) {
+                  setCurrentAgentStep('Researching');
+                } else if (fullContent.includes('[EXECUTING]')) {
+                  setCurrentAgentStep('Executing');
+                }
               }
             } catch (e) {
               // Ignore parse errors
@@ -309,6 +320,7 @@ function App() {
     } finally {
       setIsLoading(false);
       setIsGeneratingImage(false);
+      setCurrentAgentStep(null);
     }
   };
 
@@ -379,6 +391,7 @@ function App() {
               isLoading={isLoading || isGeneratingImage}
               darkMode={darkMode}
               onOpenCanvas={setActiveCanvas}
+              currentAgentStep={currentAgentStep}
             />
 
             <ChatInput

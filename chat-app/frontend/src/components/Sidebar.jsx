@@ -1,10 +1,37 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat, onRenameChat, darkMode, isCollapsed, onToggleCollapse }) => {
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [isUploadingVault, setIsUploadingVault] = useState(false);
+  const [persona, setPersona] = useState('');
+  const [isSavingPersona, setIsSavingPersona] = useState(false);
   const vaultInputRef = useRef(null);
+
+  useEffect(() => {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    fetch(`${API_URL}/api/persona`)
+      .then(res => res.json())
+      .then(data => setPersona(data.persona || ''))
+      .catch(console.error);
+  }, []);
+
+  const handlePersonaChange = (e) => setPersona(e.target.value);
+
+  const handleSavePersona = async () => {
+    setIsSavingPersona(true);
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      await fetch(`${API_URL}/api/persona`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ persona }),
+      });
+    } catch (console.error) {
+    } finally {
+      setIsSavingPersona(false);
+    }
+  };
 
   const handleVaultUpload = async (e) => {
     const files = e.target.files;
@@ -123,6 +150,41 @@ const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat
             >
               {isUploadingVault ? 'Uploading...' : 'Add Documents'}
             </label>
+          </div>
+        </div>
+      )}
+
+      {!isCollapsed && (
+        <div className="px-3 mt-4">
+          <div className={`p-3 rounded-xl border ${darkMode ? 'border-zinc-800 bg-zinc-900/50' : 'border-zinc-200 bg-white'}`}>
+            <div className="flex items-center gap-2 mb-2">
+              <svg className="w-4 h-4 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 8m0 0h8m-8 0c1.656-1.066 3-2.78 3-5.085a6.958 6.958 0 01-1.002-3.02 6.961 6.961 0 01-.023-3.036m-3.038 3.127l.052-.085a9.94 9.94 0 01-.032-1.372m4.244 4.803l-.085-.076a10.44 10.44 0 01-1.26-1.893l.066-.11a10.7 10.7 0 01.932-1.765m.391 2.782c-.128.397-.252.8-.37 1.208" />
+              </svg>
+              <span className="text-xs font-medium">Personal Identity</span>
+            </div>
+            <textarea
+              value={persona}
+              onChange={handlePersonaChange}
+              placeholder="I am a developer, use friendly tone..."
+              className={`w-full text-xs p-2 rounded-lg resize-none border ${
+                darkMode 
+                  ? 'bg-zinc-800 border-zinc-700 text-zinc-300 placeholder-zinc-500' 
+                  : 'bg-zinc-50 border-zinc-200 text-zinc-700 placeholder-zinc-400'
+              }`}
+              rows={2}
+            />
+            <button
+              onClick={handleSavePersona}
+              disabled={isSavingPersona}
+              className={`mt-2 w-full text-xs py-1.5 rounded-lg transition-all ${
+                isSavingPersona
+                  ? 'bg-zinc-700 text-zinc-400'
+                  : 'bg-violet-600 text-white hover:bg-violet-500'
+              }`}
+            >
+              {isSavingPersona ? 'Saved!' : 'Save Identity'}
+            </button>
           </div>
         </div>
       )}

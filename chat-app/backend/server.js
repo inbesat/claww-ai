@@ -520,6 +520,16 @@ app.post('/api/chat/stream', async (req, res) => {
     let systemPromptText = buildSystemPrompt();
     let userContent = message;
 
+    // Inject persona context
+    if (personaStore.persona && personaStore.persona.trim()) {
+      systemPromptText += `\n\nUSER BACKGROUND CONTEXT:\n${personaStore.persona}\nRemember this context when responding.`;
+    }
+
+    // Inject agentic workflow instructions if message contains "Plan:" or "Agent Mode"
+    if (message.toLowerCase().includes('plan:') || message.toLowerCase().includes('agent mode')) {
+      systemPromptText += `\n\nAGENTIC WORKFLOW: When executing complex tasks, use these thinking tags:\n- [PLANNING] Describe your step-by-step approach\n- [RESEARCHING] Gather necessary information\n- [EXECUTING] Implement the solution\nEnd each section clearly so the UI can display status.`;
+    }
+
     if (imageContext) {
       console.log(`[Vision Mode] Using llama-3.2-11b-vision-preview`);
       model = 'llama-3.2-11b-vision-preview';
@@ -606,6 +616,20 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK' });
 });
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+
+// 🧠 PERSONA MEMORY (In-Memory Store)
+const personaStore = {};
+
+app.get('/api/persona', (req, res) => {
+  const persona = personaStore.persona || '';
+  res.json({ persona });
+});
+
+app.post('/api/persona', (req, res) => {
+  const { persona } = req.body;
+  personaStore.persona = persona || '';
+  res.json({ success: true });
+});
 
 
 // 🚀 START
