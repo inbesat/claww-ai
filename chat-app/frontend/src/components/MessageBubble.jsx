@@ -139,9 +139,87 @@ const PreviewableCodeBlock = ({ code, language, darkMode }) => {
 };
 
 export const LargePreviewableCodeBlock = ({ code, language, darkMode }) => {
+  const [activeTab, setActiveTab] = useState('code');
+  const previewableLanguages = ['html', 'css', 'javascript', 'xml', 'js', 'css', 'html'];
+  const canPreview = previewableLanguages.includes(language?.toLowerCase());
+
+  const containerClass = darkMode 
+    ? 'bg-[#1e1e1e] border border-zinc-700' 
+    : 'bg-white border border-gray-200';
+
+  return (
+    <div className={`relative my-3 rounded-lg overflow-hidden ${containerClass}`}>
+      <div className={`flex items-center justify-between px-3 py-2 ${darkMode ? 'bg-zinc-800/80' : 'bg-gray-100'}`}>
+        <span className={`text-xs font-medium uppercase ${darkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
+          {language || 'text'}
+        </span>
+        {canPreview && (
+          <div className="flex gap-1">
+            <button
+              onClick={() => setActiveTab('code')}
+              className={`px-2.5 py-1 text-xs rounded-md transition-all ${
+                activeTab === 'code'
+                  ? 'bg-violet-600 text-white'
+                  : darkMode 
+                    ? 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700' 
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Code
+            </button>
+            <button
+              onClick={() => setActiveTab('preview')}
+              className={`px-2.5 py-1 text-xs rounded-md transition-all ${
+                activeTab === 'preview'
+                  ? 'bg-violet-600 text-white'
+                  : darkMode 
+                    ? 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700' 
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Preview
+            </button>
+          </div>
+        )}
+      </div>
+      
+      {activeTab === 'code' ? (
+        <SyntaxHighlighter
+          style={chatgptDark}
+          language={language || 'text'}
+          PreTag="div"
+          customStyle={{
+            margin: 0,
+            borderRadius: '0 0 0.5rem 0.5rem',
+            fontSize: '14px',
+            background: darkMode ? '#1e1e1e' : '#f8f8f8',
+            maxHeight: '600px',
+            overflow: 'auto',
+          }}
+          wrapLines={true}
+          wrapLongLines={true}
+        >
+          {code}
+        </SyntaxHighlighter>
+      ) : (
+        <iframe
+          title="preview"
+          srcDoc={code}
+          sandbox="allow-scripts"
+          className="w-full h-[600px] bg-white rounded-b-md border-none"
+        />
+      )}
+    </div>
+  );
+};
+  );
+};
+
+const MessageBubble = ({ message, darkMode, onOpenCanvas }) => {
   const isUser = message.sender === 'user';
   const isStreaming = message.isStreaming;
   const [copied, setCopied] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   
   const bubbleClasses = isUser
     ? 'bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white shadow-lg shadow-violet-500/20 rounded-2xl rounded-br-sm'
