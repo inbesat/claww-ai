@@ -25,9 +25,9 @@ try {
   
   const gmInstance = gmModule.subClass(gmConfig);
   
-  if (!isProduction) {
-    gmInstance.setGhostscriptBinary('gswin64c');
-  }
+  const gsBinary = isProduction ? 'gs' : 'gswin64c';
+  gmInstance.setGhostscriptBinary(gsBinary);
+  console.log(`[GraphicsMagick] Ghostscript binary set to: ${gsBinary}`);
   
   gm = gmInstance;
 } catch (e) {
@@ -253,7 +253,7 @@ app.post('/api/process-pdf', upload.single('file'), async (req, res) => {
         });
         preview = `data:image/png;base64,${thumbnailBuffer.toString('base64')}`;
       } catch (gmErr) {
-        console.error('Thumbnail generation failed:', gmErr.message);
+        console.error('Thumbnail generation failed:', gmErr.message, gmErr.stack);
       }
     }
 
