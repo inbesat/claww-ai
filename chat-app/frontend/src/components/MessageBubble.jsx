@@ -390,5 +390,4 @@ components={{
   );
 };
 
-export { PreviewableCodeBlock, LargePreviewableCodeBlock };
 export default MessageBubble;
