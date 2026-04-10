@@ -26,9 +26,9 @@ const chatgptDark = {
     fontFamily: "Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace",
     fontSize: '14px',
     padding: '12px 16px',
-    margin: '1em 0',
+    margin: '0',
     overflow: 'auto',
-    borderRadius: '0.5rem',
+    borderRadius: '0 0 0.5rem 0.5rem',
     lineHeight: '1.5',
     tabSize: 2,
   },
@@ -61,6 +61,81 @@ const chatgptDark = {
   'class-name': { color: '#dcdcaa' },
   regex: { color: '#d16969' },
   variable: { color: '#9cdcfe' },
+};
+
+const PreviewableCodeBlock = ({ code, language, darkMode }) => {
+  const [activeTab, setActiveTab] = useState('code');
+  const previewableLanguages = ['html', 'css', 'javascript', 'xml', 'js', 'css', 'html'];
+  const canPreview = previewableLanguages.includes(language?.toLowerCase());
+
+  const containerClass = darkMode 
+    ? 'bg-[#1e1e1e] border border-zinc-700' 
+    : 'bg-white border border-gray-200';
+
+  return (
+    <div className={`relative my-3 rounded-lg overflow-hidden ${containerClass}`}>
+      <div className={`flex items-center justify-between px-3 py-2 ${darkMode ? 'bg-zinc-800/80' : 'bg-gray-100'}`}>
+        <span className={`text-xs font-medium uppercase ${darkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
+          {language || 'text'}
+        </span>
+        {canPreview && (
+          <div className="flex gap-1">
+            <button
+              onClick={() => setActiveTab('code')}
+              className={`px-2.5 py-1 text-xs rounded-md transition-all ${
+                activeTab === 'code'
+                  ? 'bg-violet-600 text-white'
+                  : darkMode 
+                    ? 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700' 
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Code
+            </button>
+            <button
+              onClick={() => setActiveTab('preview')}
+              className={`px-2.5 py-1 text-xs rounded-md transition-all ${
+                activeTab === 'preview'
+                  ? 'bg-violet-600 text-white'
+                  : darkMode 
+                    ? 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700' 
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Preview
+            </button>
+          </div>
+        )}
+      </div>
+      
+      {activeTab === 'code' ? (
+        <SyntaxHighlighter
+          style={chatgptDark}
+          language={language || 'text'}
+          PreTag="div"
+          customStyle={{
+            margin: 0,
+            borderRadius: '0 0 0.5rem 0.5rem',
+            fontSize: '14px',
+            background: darkMode ? '#1e1e1e' : '#f8f8f8',
+            maxHeight: '400px',
+            overflow: 'auto',
+          }}
+          wrapLines={true}
+          wrapLongLines={true}
+        >
+          {code}
+        </SyntaxHighlighter>
+      ) : (
+        <iframe
+          title="preview"
+          srcDoc={code}
+          sandbox="allow-scripts"
+          className="w-full h-[400px] bg-white rounded-b-md border-none"
+        />
+      )}
+    </div>
+  );
 };
 
 const MessageBubble = ({ message, darkMode }) => {
@@ -102,33 +177,19 @@ const MessageBubble = ({ message, darkMode }) => {
         remarkPlugins={[remarkMath]}
         rehypePlugins={[rehypeKatex]}
         className="prose dark:prose-invert max-w-none"
-        components={{
+components={{
           code({ node, inline, className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '');
             const language = match ? match[1] : '';
+            const codeString = String(children).replace(/\n$/, '');
             
             if (!inline && (match || children)) {
               return (
-                <div className="relative group">
-                  <SyntaxHighlighter
-                    style={chatgptDark}
-                    language={language || 'text'}
-                    PreTag="div"
-                    customStyle={{
-                      margin: '1em 0',
-                      borderRadius: '0.5rem',
-                      fontSize: '14px',
-                      background: '#1e1e1e',
-                      maxHeight: '400px',
-                      overflow: 'auto',
-                    }}
-                    wrapLines={true}
-                    wrapLongLines={true}
-                    {...props}
-                  >
-                    {String(children).replace(/\n$/, '')}
-                  </SyntaxHighlighter>
-                </div>
+                <PreviewableCodeBlock
+                  code={codeString}
+                  language={language}
+                  darkMode={darkMode}
+                />
               );
             }
             

@@ -9,6 +9,7 @@ const { fromPath } = require('pdf2pic');
 const fs = require('fs');
 const axios = require('axios');
 const Tesseract = require('tesseract.js');
+const cheerio = require('cheerio');
 
 let gm;
 try {
@@ -63,7 +64,41 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 }
 });
 
-// 🔍 WEB SEARCH
+// 🕷️ PAGE SCRAPER
+async function scrapePage(url) {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      console.log(`[Scraper] Blocked or error for ${url}: ${response.status}`);
+      return '';
+    }
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    const text = $('p, h1, h2, h3, article, main, section').text();
+    const cleaned = text.replace(/\s+/g, ' ').trim();
+    
+    return cleaned.length > 5000 ? cleaned.substring(0, 5000) : cleaned;
+
+  } catch (err) {
+    console.error(`[Scraper] Failed to scrape ${url}:`, err.message);
+    return '';
+  }
+}
+
+// 🔍 WEB SEARCH WITH DEEP SCRAPING
 const WEB_SEARCH_PATTERN = /news|headlines|happened|president|minister|who is|latest|current|event|yesterday|today|tomorrow|forecast|score|price|weather|ipl|match|who won|result|election|trump|musk|biden|government|stock|growth|gdp/i;
 
 async function searchWeb(query) {
@@ -72,18 +107,41 @@ async function searchWeb(query) {
       params: {
         q: query,
         api_key: process.env.SERP_API_KEY,
-        engine: 'google'
+        engine: 'google',
+        num: 5
       }
     });
 
     const results = response.data.organic_results || [];
-
-    return results
+    const snippets = results
       .slice(0, 5)
       .map(r => r.snippet)
       .filter(s => s && s.length > 20)
       .map(s => `• ${s.trim().replace(/\s+/g, ' ')}`)
       .join('\n');
+
+    const topUrls = results.slice(0, 2).map(r => r.link).filter(Boolean);
+    
+    let deepContent = '';
+    if (topUrls.length > 0) {
+      console.log(`[Deep Scrap] Fetching top ${topUrls.length} URLs...`);
+      const scrapedResults = await Promise.all(topUrls.map(url => scrapePage(url)));
+      const validScrapes = scrapedResults.filter(s => s.length > 100);
+      if (validScrapes.length > 0) {
+        deepContent = '\n\n--- DEEP CONTENT FROM SOURCES ---\n' + validScrapes.join('\n\n--- NEXT SOURCE ---\n\n');
+      }
+    }
+
+    const maxTotalLength = 12000;
+    let combined = snippets;
+    if (deepContent) {
+      combined = `${snippets}\n\n${deepContent}`;
+      if (combined.length > maxTotalLength) {
+        combined = combined.substring(0, maxTotalLength) + '\n\n[Content truncated due to length...]';
+      }
+    }
+
+    return combined;
 
   } catch (err) {
     console.error('Search error:', err.message);
@@ -357,7 +415,7 @@ app.post('/api/chat', async (req, res) => {
 // ⚡ STREAM CHAT
 app.post('/api/chat/stream', async (req, res) => {
   try {
-    const { message, isSearchMode, isCodeMode } = req.body;
+    const { message, isSearchMode, isCodeMode, imageContext } = req.body;
 
     if (!message) {
       return res.end();
@@ -369,13 +427,21 @@ app.post('/api/chat/stream', async (req, res) => {
 
     let model = 'llama-3.3-70b-versatile';
     let systemPromptText = buildSystemPrompt();
-    let userPromptText = message;
+    let userContent = message;
 
-    if (isSearchMode) {
+    if (imageContext) {
+      console.log(`[Vision Mode] Using llama-3.2-11b-vision-preview`);
+      model = 'llama-3.2-11b-vision-preview';
+      userContent = [
+        { type: "text", text: message },
+        { type: "image_url", image_url: { url: imageContext } }
+      ];
+      systemPromptText = "You are Synapse AI with vision capabilities. Analyze the provided image and answer questions about it accurately.";
+    } else if (isSearchMode) {
       console.log(`[Search Mode] Forcing web search for: "${message}"`);
       const webData = await searchWeb(message);
       if (webData) {
-        userPromptText = `Context from real-time web search:\n<search_results>\n${webData}\n</search_results>\n\nBased ONLY on the search results above, answer the following query: "${message}"`;
+        userContent = `Context from real-time web search:\n<search_results>\n${webData}\n</search_results>\n\nBased ONLY on the search results above, answer the following query: "${message}"`;
       }
       systemPromptText = "You are a real-time researcher. Today is Friday, April 10, 2026. Use the provided search results to give an up-to-the-minute answer.";
     }
@@ -391,7 +457,7 @@ app.post('/api/chat/stream', async (req, res) => {
       model: model,
       messages: [
         { role: "system", content: systemPromptText },
-        { role: "user", content: userPromptText }
+        { role: "user", content: userContent }
       ],
       stream: true
     });

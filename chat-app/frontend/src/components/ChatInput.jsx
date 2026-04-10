@@ -6,6 +6,7 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode }) => {
   const [message, setMessage] = useState('');
   const [fileContext, setFileContext] = useState(null);
   const [attachedFileName, setAttachedFileName] = useState('');
+  const [imageContext, setImageContext] = useState(null);
   const [isImageMode, setIsImageMode] = useState(false);
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [isCodeMode, setIsCodeMode] = useState(false);
@@ -71,6 +72,26 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.type.startsWith('image/') && file.type !== 'application/pdf') {
+      setIsUploading(true);
+      try {
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        setImageContext(base64);
+        setAttachedFileName(file.name);
+      } catch (err) {
+        console.error('Image read error:', err);
+        alert('Failed to read image');
+      } finally {
+        setIsUploading(false);
+      }
+      return;
+    }
+
     setAttachedFileName(file.name);
     setIsUploading(true);
 
@@ -109,9 +130,10 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode }) => {
     }
   };
 
-  const handleRemoveFile = () => {
+const handleRemoveFile = () => {
     setAttachedFileName('');
     setFileContext(null);
+    setImageContext(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -124,7 +146,7 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode }) => {
     
     submittingRef.current = true;
     
-    onSendMessage(message, fileContext, isImageMode, isSearchMode, isCodeMode);
+    onSendMessage(message, fileContext, isImageMode, isSearchMode, isCodeMode, imageContext);
     setMessage('');
     handleRemoveFile();
     setIsImageMode(false);
@@ -157,7 +179,29 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode }) => {
   return (
     <div className={`sticky bottom-0 border-t px-4 py-4 ${darkMode ? 'border-zinc-800/30 bg-[#0a0a0a]/95' : 'border-zinc-200 bg-white/95'} backdrop-blur-md`}>
       <div className="max-w-[800px] mx-auto">
-        {attachedFileName && (
+{attachedFileName && imageContext && (
+          <div className="mb-3 flex items-center gap-2">
+            <div className={`relative flex items-center gap-2 px-3 py-2 rounded-lg ${darkMode ? 'bg-zinc-800/60' : 'bg-zinc-100'}`}>
+              <img src={imageContext} alt="Preview" className="w-10 h-10 rounded-lg object-cover border border-zinc-700" />
+              <span className={`text-sm flex-1 truncate ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>
+                {attachedFileName}
+              </span>
+              <span className="text-xs px-2 py-1 rounded-md bg-violet-600 text-white">
+                Vision
+              </span>
+              <button
+                type="button"
+                onClick={handleRemoveFile}
+                className={`p-1 rounded-md hover:bg-zinc-700 ${darkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-zinc-500 hover:text-zinc-700'}`}
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+        {attachedFileName && !imageContext && (
           <div className="mb-3 flex items-center gap-2">
             <div className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-lg ${darkMode ? 'bg-zinc-800/60' : 'bg-zinc-100'}`}>
               <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -189,10 +233,10 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode }) => {
         )}
         <form onSubmit={handleSubmit}>
           <div className={`relative flex items-end rounded-2xl border transition-all duration-200 shadow-sm ${isImageMode ? 'shadow-[0_0_15px_rgba(139,92,246,0.5)] border-violet-500/70 focus-within:ring-2 focus-within:ring-violet-500/30' : darkMode ? 'bg-zinc-900/80 border-zinc-700/50 hover:border-zinc-600/50 focus-within:border-emerald-500/50 focus-within:ring-2 focus-within:ring-emerald-500/20' : 'bg-zinc-50 border-zinc-200 hover:border-zinc-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20'} ${isImageMode ? (darkMode ? 'bg-zinc-900/90' : 'bg-violet-50') : ''}`}>
-            <input
+<input
               ref={fileInputRef}
               type="file"
-              accept=".txt, .pdf, image/*, .docx, application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              accept=".pdf,image/jpeg,image/png,image/webp"
               onChange={handleFileSelect}
               className="hidden"
             />
@@ -261,7 +305,7 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode }) => {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={isLoading ? (isImageMode ? "Claw AI is imagining your request..." : "AI is thinking...") : isImageMode ? "Describe the image you want to create..." : "Message Claw AI..."}
+              placeholder={isLoading ? (isImageMode ? "Synapse AI is imagining your request..." : "AI is thinking...") : isImageMode ? "Describe the image you want to create..." : "Message Synapse AI..."}
               className={`w-full px-2 py-4 bg-transparent focus:outline-none resize-none transition-all ${darkMode ? 'text-[#fafafa] placeholder-zinc-500' : 'text-zinc-900 placeholder-zinc-400'}`}
               disabled={isLoading || isUploading}
               rows={1}
