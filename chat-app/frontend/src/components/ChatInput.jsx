@@ -12,6 +12,7 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, active
   const [isCodeMode, setIsCodeMode] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isCanvasMode, setIsCanvasMode] = useState(false);
   const submittingRef = useRef(false);
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -146,12 +147,13 @@ const handleRemoveFile = () => {
     
     submittingRef.current = true;
     
-    onSendMessage(message, fileContext, isImageMode, isSearchMode, isCodeMode, imageContext);
+    onSendMessage(message, fileContext, isImageMode, isSearchMode, isCodeMode, imageContext, isCanvasMode);
     setMessage('');
     handleRemoveFile();
     setIsImageMode(false);
     setIsSearchMode(false);
     setIsCodeMode(false);
+    setIsCanvasMode(false);
     
     setTimeout(() => {
       submittingRef.current = false;
@@ -285,16 +287,16 @@ return (
             </button>
 <button
               type="button"
-              onClick={() => onToggleCanvas(activeCanvas ? null : { code: '', language: 'html' })}
+              onClick={() => activeCanvas ? onToggleCanvas(null) : setIsCanvasMode(prev => !prev)}
               disabled={isLoading || isUploading}
-              className={`p-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${activeCanvas ? 'text-violet-400 bg-violet-500/20' : darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
-              title={activeCanvas ? 'Close Canvas' : 'Open Canvas'}
+              className={`p-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${activeCanvas || isCanvasMode ? 'text-violet-400 bg-violet-500/20' : darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
+              title={activeCanvas ? 'Close Canvas' : isCanvasMode ? 'Canvas Mode Active' : 'Enable Canvas Mode'}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
               </svg>
             </button>
-<button
+            <button
               type="button"
               onClick={toggleListening}
               disabled={isLoading || isUploading}

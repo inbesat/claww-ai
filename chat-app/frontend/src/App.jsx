@@ -43,6 +43,7 @@ function App() {
   });
 
   const [activeCanvas, setActiveCanvas] = useState(null);
+  const [autoOpenCanvas, setAutoOpenCanvas] = useState(false);
 
   // Session ID
   const [sessionId, setSessionId] = useState(() => {
@@ -85,6 +86,21 @@ function App() {
     }
   }, [darkMode]);
 
+  // Auto-open canvas when AI completes a code response
+  useEffect(() => {
+    const currentMessages = messages[sessionId] || [];
+    if (currentMessages.length === 0) return;
+    const lastMsg = currentMessages[currentMessages.length - 1];
+
+    if (autoOpenCanvas && lastMsg.sender === 'ai' && !lastMsg.isStreaming) {
+      const codeMatch = lastMsg.text.match(/```(\w+)?\n([\s\S]*?)```/);
+      if (codeMatch) {
+        setActiveCanvas({ language: codeMatch[1] || 'html', code: codeMatch[2].trim() });
+        setAutoOpenCanvas(false);
+      }
+    }
+  }, [messages, sessionId, autoOpenCanvas]);
+
   // Restore message IDs
   useEffect(() => {
     const savedMessages = messages[sessionId] || [];
@@ -98,7 +114,7 @@ function App() {
 
   const currentMessages = messages[sessionId] || [];
 
-  const handleSendMessage = async (message, fileContext = null, isImageMode = false, isSearchMode = false, isCodeMode = false, imageContext = null) => {
+  const handleSendMessage = async (message, fileContext = null, isImageMode = false, isSearchMode = false, isCodeMode = false, imageContext = null, isCanvasMode = false) => {
     let contextParts = [];
     if (fileContext) {
       const truncatedContext = fileContext.length > 10000 
@@ -107,9 +123,14 @@ function App() {
       contextParts.push(`Document Content:\n${truncatedContext}`);
     }
     
-    const outboundMessage = contextParts.length > 0
+    let outboundMessage = contextParts.length > 0
       ? `Message: ${message}\n\n${contextParts.join('\n\n')}`
       : message;
+
+    if (isCanvasMode) {
+      setAutoOpenCanvas(true);
+      outboundMessage = message + "\n\n(Provide the response as a single, complete HTML/CSS/JS code block)";
+    }
 
     const userMessage = {
       id: ++messageIdRef.current,

@@ -34,7 +34,7 @@ const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat
     <div className={`flex flex-col h-full transition-all ${darkMode ? 'bg-[#0a0a0a]' : 'bg-white'}`}>
       <button 
         onClick={onNewChat}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-xl transition-all duration-200 text-sm font-light hover:shadow-lg hover:shadow-emerald-600/20 active:scale-[0.98]"
+        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white rounded-xl transition-all duration-300 text-sm font-light hover:shadow-lg hover:shadow-violet-500/20 active:scale-[0.98] border-none"
       >
         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
           <path d="M12 5v14M5 12h14" />

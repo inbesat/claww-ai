@@ -125,8 +125,12 @@ async function searchWeb(query) {
     let deepContent = '';
     if (topUrls.length > 0) {
       console.log(`[Deep Scrap] Fetching top ${topUrls.length} URLs...`);
-      const scrapedResults = await Promise.all(topUrls.map(url => scrapePage(url)));
-      const validScrapes = scrapedResults.filter(s => s.length > 100);
+      const scrapedResults = await Promise.all(
+        topUrls.map(async url => ({ url, text: await scrapePage(url) }))
+      );
+      const validScrapes = scrapedResults
+        .filter(s => s.text.length > 100)
+        .map(s => `--- SOURCE: ${s.url} ---\n${s.text}`);
       if (validScrapes.length > 0) {
         deepContent = '\n\n--- DEEP CONTENT FROM SOURCES ---\n' + validScrapes.join('\n\n--- NEXT SOURCE ---\n\n');
       }
@@ -443,7 +447,7 @@ app.post('/api/chat/stream', async (req, res) => {
       if (webData) {
         userContent = `Context from real-time web search:\n<search_results>\n${webData}\n</search_results>\n\nBased ONLY on the search results above, answer the following query: "${message}"`;
       }
-      systemPromptText = "You are a real-time researcher. Today is Friday, April 10, 2026. Use the provided search results to give an up-to-the-minute answer.";
+      systemPromptText = "You are a real-time researcher. Today is Friday, April 10, 2026. Use the provided search results to give an up-to-the-minute answer. You MUST include the source URLs at the very bottom of your response under a 'Sources:' heading.";
     }
 
     if (isCodeMode) {
