@@ -13,6 +13,7 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, active
   const [isUploading, setIsUploading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isCanvasMode, setIsCanvasMode] = useState(false);
+  const [showToolsMenu, setShowToolsMenu] = useState(false);
   const submittingRef = useRef(false);
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -250,52 +251,74 @@ return (
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-              </svg>
+</svg>
             </button>
             <button
               type="button"
-              onClick={() => setIsImageMode(prev => !prev)}
-              disabled={isLoading || isUploading}
-              className={`p-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${isImageMode ? 'text-violet-400 bg-violet-500/20' : darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
-              title={isImageMode ? 'Image mode on' : 'Enable image generation'}
+              onClick={() => setShowToolsMenu(prev => !prev)}
+              className={`p-3 rounded-lg transition-all duration-300 ${showToolsMenu || isImageMode || isSearchMode || isCodeMode || activeCanvas || isCanvasMode || isListening ? 'text-violet-400 bg-violet-500/20' : darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
+              title="Tools"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18l-.813-2.096L6 15l2.187-.904L9 12l.813 2.096L12 15l-2.187.904zM17.813 7.904L17 10l-.813-2.096L14 7l2.187-.904L17 4l.813 2.096L20 7l-2.187.904zM14 19l.813-2.096L17 16l-2.187-.904L14 13l-.813 2.096L11 16l2.187.904L14 19z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </button>
-            <button
-              type="button"
-              onClick={() => setIsSearchMode(prev => !prev)}
-              disabled={isLoading || isUploading}
-              className={`p-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${isSearchMode ? 'text-violet-400 bg-violet-500/20' : darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
-              title={isSearchMode ? 'Web search on' : 'Enable web search'}
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsCodeMode(prev => !prev)}
-              disabled={isLoading || isUploading}
-              className={`p-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${isCodeMode ? 'text-violet-400 bg-violet-500/20' : darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
-              title={isCodeMode ? 'Code mode on' : 'Enable code mode'}
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-              </svg>
-            </button>
-<button
-              type="button"
-              onClick={() => activeCanvas ? onToggleCanvas(null) : setIsCanvasMode(prev => !prev)}
-              disabled={isLoading || isUploading}
-              className={`p-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${activeCanvas || isCanvasMode ? 'text-violet-400 bg-violet-500/20' : darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
-              title={activeCanvas ? 'Close Canvas' : isCanvasMode ? 'Canvas Mode Active' : 'Enable Canvas Mode'}
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-              </svg>
-            </button>
+            {showToolsMenu && (
+              <div className="absolute bottom-full mb-2 left-4 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-2xl border border-gray-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-2 w-56 z-50">
+                <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400 px-3 py-2 uppercase tracking-wider">Tools</div>
+                <button
+                  onClick={() => setIsSearchMode(prev => !prev)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 ${isSearchMode ? 'bg-violet-500/10 text-violet-400' : darkMode ? 'text-zinc-300 hover:bg-zinc-800' : 'text-zinc-700 hover:bg-zinc-100'}`}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                  </svg>
+                  Web Search
+                  {isSearchMode && <span className="ml-auto w-2 h-2 rounded-full bg-violet-500" />}
+                </button>
+                <button
+                  onClick={() => setIsCodeMode(prev => !prev)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 ${isCodeMode ? 'bg-violet-500/10 text-violet-400' : darkMode ? 'text-zinc-300 hover:bg-zinc-800' : 'text-zinc-700 hover:bg-zinc-100'}`}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                  </svg>
+                  Code Mode
+                  {isCodeMode && <span className="ml-auto w-2 h-2 rounded-full bg-violet-500" />}
+                </button>
+                <button
+                  onClick={() => setIsImageMode(prev => !prev)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 ${isImageMode ? 'bg-violet-500/10 text-violet-400' : darkMode ? 'text-zinc-300 hover:bg-zinc-800' : 'text-zinc-700 hover:bg-zinc-100'}`}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18l-.813-2.096L6 15l2.187-.904L9 12l.813 2.096L12 15l-2.187.904zM17.813 7.904L17 10l-.813-2.096L14 7l2.187-.904L17 4l.813 2.096L20 7l-2.187.904zM14 19l.813-2.096L17 16l-2.187-.904L14 13l-.813 2.096L11 16l2.187.904L14 19z" />
+                  </svg>
+                  Image Gen
+                  {isImageMode && <span className="ml-auto w-2 h-2 rounded-full bg-violet-500" />}
+                </button>
+                <button
+                  onClick={toggleListening}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 ${isListening ? 'bg-red-500/10 text-red-400' : darkMode ? 'text-zinc-300 hover:bg-zinc-800' : 'text-zinc-700 hover:bg-zinc-100'}`}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                  </svg>
+                  Voice Mode
+                  {isListening && <span className="ml-auto w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
+                </button>
+                <button
+                  onClick={() => activeCanvas ? onToggleCanvas(null) : setIsCanvasMode(prev => !prev)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 ${activeCanvas || isCanvasMode ? 'bg-violet-500/10 text-violet-400' : darkMode ? 'text-zinc-300 hover:bg-zinc-800' : 'text-zinc-700 hover:bg-zinc-100'}`}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                  </svg>
+                  Canvas Mode
+                  {(activeCanvas || isCanvasMode) && <span className="ml-auto w-2 h-2 rounded-full bg-violet-500" />}
+                </button>
+              </div>
+            )}
             <button
               type="button"
               onClick={toggleListening}

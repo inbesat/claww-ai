@@ -44,6 +44,7 @@ function App() {
 
   const [activeCanvas, setActiveCanvas] = useState(null);
   const [autoOpenCanvas, setAutoOpenCanvas] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Session ID
   const [sessionId, setSessionId] = useState(() => {
@@ -352,7 +353,7 @@ function App() {
 
   return (
     <div className={`min-h-screen flex ${darkMode ? 'dark' : ''}`}>
-      <div className="w-64 hidden md:flex">
+      <div className={`hidden md:flex ${isSidebarCollapsed ? 'w-20' : 'w-64'} transition-all duration-300`}>
         <Sidebar
           sessionId={sessionId}
           chatHistory={chatHistory}
@@ -361,6 +362,8 @@ function App() {
           onDeleteChat={handleDeleteChat}
           onRenameChat={handleRenameChat}
           darkMode={darkMode}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
         />
       </div>
 
