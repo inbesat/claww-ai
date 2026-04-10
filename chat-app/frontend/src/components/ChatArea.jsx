@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
 
-const ChatArea = ({ messages, isLoading, darkMode }) => {
+const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas }) => {
   const chatAreaRef = useRef(null);
   const prevMessagesLengthRef = useRef(messages.length);
   const prevScrollHeightRef = useRef(0);
@@ -77,7 +77,7 @@ const ChatArea = ({ messages, isLoading, darkMode }) => {
   return (
     <div 
       ref={chatAreaRef}
-      className="flex-1 overflow-y-auto py-6 px-4 bg-white dark:bg-transparent"
+      className={`flex-1 overflow-y-auto py-6 px-4 ${darkMode ? 'bg-[#0a0a0a]' : 'bg-zinc-50'} scrollbar-thin scrollbar-thumb-zinc-700/50 scrollbar-track-transparent`}
     >
       <div className="max-w-[800px] mx-auto space-y-4">
         {messages.length === 0 && (
@@ -121,7 +121,7 @@ const ChatArea = ({ messages, isLoading, darkMode }) => {
         )}
         
         {messages.map((message) => (
-          <MessageBubble key={message.id} message={message} darkMode={darkMode} />
+          <MessageBubble key={message.id} message={message} darkMode={darkMode} onOpenCanvas={onOpenCanvas} />
         ))}
       </div>
     </div>

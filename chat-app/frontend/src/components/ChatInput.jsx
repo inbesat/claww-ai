@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
-const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode }) => {
+const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, activeCanvas, onToggleCanvas }) => {
   const [message, setMessage] = useState('');
   const [fileContext, setFileContext] = useState(null);
   const [attachedFileName, setAttachedFileName] = useState('');
@@ -176,13 +176,13 @@ const handleRemoveFile = () => {
     }
   };
 
-  return (
-    <div className={`sticky bottom-0 border-t px-4 py-4 ${darkMode ? 'border-zinc-800/30 bg-[#0a0a0a]/95' : 'border-zinc-200 bg-white/95'} backdrop-blur-md`}>
+return (
+    <div className={`sticky bottom-0 border-t border-gray-200/50 dark:border-zinc-800/50 px-4 py-4 ${darkMode ? 'bg-[#0a0a0a]/70' : 'bg-white/70'} backdrop-blur-2xl`}>
       <div className="max-w-[800px] mx-auto">
-{attachedFileName && imageContext && (
+        {attachedFileName && imageContext && (
           <div className="mb-3 flex items-center gap-2">
-            <div className={`relative flex items-center gap-2 px-3 py-2 rounded-lg ${darkMode ? 'bg-zinc-800/60' : 'bg-zinc-100'}`}>
-              <img src={imageContext} alt="Preview" className="w-10 h-10 rounded-lg object-cover border border-zinc-700" />
+            <div className={`relative flex items-center gap-2 px-3 py-2 rounded-lg border ${darkMode ? 'bg-zinc-800/60 border-zinc-700' : 'bg-zinc-100 border-zinc-200'}`}>
+              <img src={imageContext} alt="Preview" className="w-10 h-10 rounded-lg object-cover border border-zinc-600" />
               <span className={`text-sm flex-1 truncate ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>
                 {attachedFileName}
               </span>
@@ -192,7 +192,7 @@ const handleRemoveFile = () => {
               <button
                 type="button"
                 onClick={handleRemoveFile}
-                className={`p-1 rounded-md hover:bg-zinc-700 ${darkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-zinc-500 hover:text-zinc-700'}`}
+                className={`p-1 rounded-md hover:bg-zinc-700 transition-all duration-300 ${darkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-zinc-500 hover:text-zinc-700'}`}
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -203,8 +203,8 @@ const handleRemoveFile = () => {
         )}
         {attachedFileName && !imageContext && (
           <div className="mb-3 flex items-center gap-2">
-            <div className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-lg ${darkMode ? 'bg-zinc-800/60' : 'bg-zinc-100'}`}>
-              <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-lg border ${darkMode ? 'bg-zinc-800/60 border-zinc-700' : 'bg-zinc-100 border-zinc-200'}`}>
+              <svg className="w-4 h-4 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               <span className={`text-sm flex-1 truncate ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>
@@ -214,7 +214,7 @@ const handleRemoveFile = () => {
                 type="button"
                 onClick={handleAskAboutFile}
                 disabled={isUploading || !fileContext}
-                className={`text-xs px-2 py-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${isUploading ? 'hidden' : ''}`}
+                className={`text-xs px-2 py-1 rounded-md bg-violet-600 text-white hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 ${isUploading ? 'hidden' : ''}`}
               >
                 Ask about this
               </button>
@@ -222,7 +222,7 @@ const handleRemoveFile = () => {
                 type="button"
                 onClick={handleRemoveFile}
                 disabled={isUploading}
-                className={`p-1 rounded-md hover:bg-zinc-700 ${darkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-zinc-500 hover:text-zinc-700'} disabled:opacity-50`}
+                className={`p-1 rounded-md hover:bg-zinc-700 transition-all duration-300 ${darkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-zinc-500 hover:text-zinc-700'} disabled:opacity-50`}
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -232,7 +232,7 @@ const handleRemoveFile = () => {
           </div>
         )}
         <form onSubmit={handleSubmit}>
-          <div className={`relative flex items-end rounded-2xl border transition-all duration-200 shadow-sm ${isImageMode ? 'shadow-[0_0_15px_rgba(139,92,246,0.5)] border-violet-500/70 focus-within:ring-2 focus-within:ring-violet-500/30' : darkMode ? 'bg-zinc-900/80 border-zinc-700/50 hover:border-zinc-600/50 focus-within:border-emerald-500/50 focus-within:ring-2 focus-within:ring-emerald-500/20' : 'bg-zinc-50 border-zinc-200 hover:border-zinc-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20'} ${isImageMode ? (darkMode ? 'bg-zinc-900/90' : 'bg-violet-50') : ''}`}>
+          <div className={`relative flex items-end rounded-2xl border transition-all duration-300 shadow-sm ${isImageMode ? 'shadow-[0_0_15px_rgba(139,92,246,0.5)] border-violet-500/70 ring-1 ring-violet-500/30' : darkMode ? 'bg-zinc-900/80 border-zinc-700/50 hover:border-zinc-600/50 focus-within:ring-1 focus-within:ring-violet-500/50 focus-within:border-violet-500/50' : 'bg-white border-zinc-200 hover:border-zinc-300 focus-within:ring-1 focus-within:ring-violet-500/50 focus-within:border-violet-500/50'} ${isImageMode ? (darkMode ? 'bg-zinc-900/90' : 'bg-violet-50') : ''}`}>
 <input
               ref={fileInputRef}
               type="file"
@@ -254,7 +254,7 @@ const handleRemoveFile = () => {
               type="button"
               onClick={() => setIsImageMode(prev => !prev)}
               disabled={isLoading || isUploading}
-              className={`p-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isImageMode ? 'text-violet-500 bg-violet-500/10' : darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
+              className={`p-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${isImageMode ? 'text-violet-400 bg-violet-500/20' : darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
               title={isImageMode ? 'Image mode on' : 'Enable image generation'}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -265,7 +265,7 @@ const handleRemoveFile = () => {
               type="button"
               onClick={() => setIsSearchMode(prev => !prev)}
               disabled={isLoading || isUploading}
-              className={`p-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isSearchMode ? 'text-blue-400 bg-blue-500/10' : darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
+              className={`p-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${isSearchMode ? 'text-violet-400 bg-violet-500/20' : darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
               title={isSearchMode ? 'Web search on' : 'Enable web search'}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -276,11 +276,22 @@ const handleRemoveFile = () => {
               type="button"
               onClick={() => setIsCodeMode(prev => !prev)}
               disabled={isLoading || isUploading}
-              className={`p-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isCodeMode ? 'text-amber-400 bg-amber-500/10' : darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
+              className={`p-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${isCodeMode ? 'text-violet-400 bg-violet-500/20' : darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
               title={isCodeMode ? 'Code mode on' : 'Enable code mode'}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+            </button>
+<button
+              type="button"
+              onClick={() => onToggleCanvas(activeCanvas ? null : { code: '', language: 'html' })}
+              disabled={isLoading || isUploading}
+              className={`p-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${activeCanvas ? 'text-violet-400 bg-violet-500/20' : darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
+              title={activeCanvas ? 'Close Canvas' : 'Open Canvas'}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
               </svg>
             </button>
             <button
@@ -316,7 +327,7 @@ const handleRemoveFile = () => {
             <button
               type="submit"
               disabled={isLoading || isUploading || !message.trim()}
-              className="m-2 p-2.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-lg hover:shadow-emerald-600/30 disabled:hover:shadow-none"
+              className="m-2 p-2.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 active:from-violet-700 active:to-fuchsia-700 text-white rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 hover:shadow-lg hover:shadow-violet-500/30 disabled:hover:shadow-none"
             >
               {isLoading ? (
                 <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">

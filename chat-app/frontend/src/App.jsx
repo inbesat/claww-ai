@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
 import ChatInput from './components/ChatInput';
+import { LargePreviewableCodeBlock } from './components/MessageBubble';
 import './index.css';
 
 const STORAGE_KEY = 'claw_chats';
@@ -40,6 +41,8 @@ function App() {
     const saved = localStorage.getItem('darkMode');
     return saved !== null ? JSON.parse(saved) : true;
   });
+
+  const [activeCanvas, setActiveCanvas] = useState(null);
 
   // Session ID
   const [sessionId, setSessionId] = useState(() => {
@@ -341,18 +344,49 @@ function App() {
       </div>
 
       <div className="flex-1 flex flex-col">
-        <ChatArea
-          messages={currentMessages}
-          isLoading={isLoading || isGeneratingImage}
-          darkMode={darkMode}
-        />
+        <div className={`flex-1 flex ${activeCanvas ? 'gap-0' : ''}`}>
+          <div className={`flex-1 flex flex-col ${activeCanvas ? 'w-[40%]' : ''}`}>
+            <ChatArea
+              messages={currentMessages}
+              isLoading={isLoading || isGeneratingImage}
+              darkMode={darkMode}
+              onOpenCanvas={setActiveCanvas}
+            />
 
-        <ChatInput
-          isLoading={isLoading || isGeneratingImage}
-          onSendMessage={handleSendMessage}
-          onFileProcessed={handlePdfProcessed}
-          darkMode={darkMode}
-        />
+            <ChatInput
+              isLoading={isLoading || isGeneratingImage}
+              onSendMessage={handleSendMessage}
+              onFileProcessed={handlePdfProcessed}
+              darkMode={darkMode}
+              activeCanvas={activeCanvas}
+              onToggleCanvas={setActiveCanvas}
+            />
+          </div>
+
+          {activeCanvas && (
+            <div className={`w-[60%] border-l ${darkMode ? 'border-zinc-800/50 bg-[#0a0a0a]' : 'border-gray-200 bg-white'} flex flex-col animate-fade-in`}>
+              <div className={`flex items-center justify-between px-4 py-3 border-b ${darkMode ? 'border-zinc-800/50 bg-zinc-900/50' : 'border-gray-200 bg-gray-50'}`}>
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm font-medium ${darkMode ? 'text-zinc-300' : 'text-gray-700'}`}>Canvas</span>
+                  <span className="text-xs px-2 py-0.5 rounded bg-violet-500/20 text-violet-600 border border-violet-500/30">
+                    {activeCanvas.language || 'code'}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setActiveCanvas(null)}
+                  className={`p-1.5 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-800 ${darkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-gray-500 hover:text-gray-700'} transition-all duration-300`}
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex-1 p-4 overflow-auto">
+                <LargePreviewableCodeBlock code={activeCanvas.code} language={activeCanvas.language} darkMode={darkMode} />
+              </div>
+            </div>
+          )}
+        </div>
 
         {error && (
           <div className="text-red-500 p-2 text-center">

@@ -138,14 +138,14 @@ const PreviewableCodeBlock = ({ code, language, darkMode }) => {
   );
 };
 
-const MessageBubble = ({ message, darkMode }) => {
+export const LargePreviewableCodeBlock = ({ code, language, darkMode }) => {
   const isUser = message.sender === 'user';
   const isStreaming = message.isStreaming;
   const [copied, setCopied] = useState(false);
   
   const bubbleClasses = isUser
-    ? 'bg-[#10a37f] text-white'
-    : 'bg-zinc-100 dark:bg-[#2a2a2a] text-zinc-900 dark:text-[#e5e5e5]';
+    ? 'bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white shadow-lg shadow-violet-500/20 rounded-2xl rounded-br-sm'
+    : 'bg-white dark:bg-[#121212] border border-gray-200 dark:border-zinc-800 shadow-sm rounded-2xl rounded-bl-sm';
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(message.text);
@@ -156,7 +156,7 @@ const MessageBubble = ({ message, darkMode }) => {
   const CopyButton = () => (
     <button
       onClick={handleCopy}
-      className={`absolute top-2 right-2 p-1.5 rounded-lg bg-zinc-200/80 dark:bg-zinc-700/60 hover:bg-zinc-300 dark:hover:bg-zinc-600 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-all duration-200 opacity-0 group-hover:opacity-100`}
+      className={`absolute top-2 right-2 p-1.5 rounded-lg bg-white/80 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-700 text-zinc-500 dark:text-zinc-400 hover:text-violet-600 dark:hover:text-violet-400 transition-all duration-300 opacity-0 group-hover:opacity-100 border border-zinc-200/50 dark:border-zinc-700/50`}
       title="Copy"
     >
       {copied ? (
@@ -182,14 +182,48 @@ components={{
             const match = /language-(\w+)/.exec(className || '');
             const language = match ? match[1] : '';
             const codeString = String(children).replace(/\n$/, '');
+            const previewableLanguages = ['html', 'css', 'javascript', 'xml', 'js', 'css', 'html'];
+            const canPreview = previewableLanguages.includes(language?.toLowerCase());
             
             if (!inline && (match || children)) {
               return (
-                <PreviewableCodeBlock
-                  code={codeString}
-                  language={language}
-                  darkMode={darkMode}
-                />
+                <div className="relative my-3 rounded-lg overflow-hidden border border-zinc-700/50 dark:bg-[#1e1e1e] bg-gray-100">
+                  <div className={`flex items-center justify-between px-3 py-2 ${darkMode ? 'bg-zinc-800/80' : 'bg-gray-200'}`}>
+                    <span className={`text-xs font-medium uppercase ${darkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
+                      {language || 'text'}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {canPreview && onOpenCanvas && (
+                        <button
+                          onClick={() => onOpenCanvas({ code: codeString, language })}
+                          className="px-2.5 py-1 text-xs rounded-md bg-violet-600 hover:bg-violet-500 text-white transition-all duration-300 flex items-center gap-1"
+                        >
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                          </svg>
+                          Canvas
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <SyntaxHighlighter
+                    style={chatgptDark}
+                    language={language || 'text'}
+                    PreTag="div"
+                    customStyle={{
+                      margin: 0,
+                      borderRadius: '0 0 0.5rem 0.5rem',
+                      fontSize: '13px',
+                      background: darkMode ? '#1e1e1e' : '#f8f8f8',
+                      maxHeight: '250px',
+                      overflow: 'auto',
+                    }}
+                    wrapLines={true}
+                    wrapLongLines={true}
+                  >
+                    {codeString}
+                  </SyntaxHighlighter>
+                </div>
               );
             }
             
@@ -254,7 +288,7 @@ components={{
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} gap-3 group animate-fade-in`}>
       {!isUser && (
-        <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-emerald-600/30">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-violet-500/30 border border-violet-400/30">
           <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
           </svg>
@@ -307,4 +341,5 @@ components={{
   );
 };
 
+export { PreviewableCodeBlock, LargePreviewableCodeBlock };
 export default MessageBubble;
