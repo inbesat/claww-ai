@@ -6,7 +6,7 @@ import './index.css';
 
 const STORAGE_KEY = 'claw_chats';
 const HISTORY_KEY = 'claw_history';
-const API_URL = (import.meta.env.VITE_API_URL || 'https://claww-ai-2.onrender.com').trim();
+const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001').trim();
 
 const SYSTEM_PROMPTS = [
   { id: 'default', name: 'Default', prompt: 'You are a helpful AI assistant.' },
@@ -139,6 +139,7 @@ function App() {
         }
 
         console.log('Sending Prompt:', message.trim());
+        console.log('Attempting to fetch from:', API_URL + '/api/generate-image');
 
         const response = await fetch(`${API_URL}/api/generate-image`, {
           method: 'POST',
@@ -147,7 +148,9 @@ function App() {
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+          const errorText = await response.text();
+          console.error('HTTP error response:', response.status, errorText);
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
 
         const data = await response.json();
@@ -159,12 +162,12 @@ function App() {
 
         console.log('Image URL received from backend:', imageUrl);
 
-        const imageMarkdown = `![Generated Image](${imageUrl})`;
+        console.log('Setting message text (raw):', JSON.stringify(imageUrl));
 
         setMessages(prev => ({
           ...prev,
           [sessionId]: prev[sessionId].map(msg =>
-            msg.id === aiMessageId ? { ...msg, text: imageMarkdown, isStreaming: false } : msg
+            msg.id === aiMessageId ? { ...msg, text: imageUrl, isStreaming: false } : msg
           )
         }));
 

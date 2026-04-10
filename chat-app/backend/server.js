@@ -196,18 +196,39 @@ app.post('/api/generate-image', async (req, res) => {
       return res.status(400).json({ error: 'Prompt required' });
     }
 
-    const cleanPrompt = prompt.replace(/!\[.*?\]\(.*?\)/g, '').replace(/["']/g, '').trim();
+    const cleanPrompt = prompt.replace(/!\[.*?\]\(.*?\)/g, '').replace(/[#?&]/g, '').trim();
 
     if (!cleanPrompt) {
       return res.status(400).json({ error: 'Prompt required' });
     }
 
-    const encodedPrompt = encodeURIComponent(cleanPrompt);
-    const seed = Math.floor(Math.random() * 100000);
-    const imageUrl = `https://gen.pollinations.ai/image/${encodedPrompt}?width=1024&height=1024&model=flux&seed=${seed}&nologo=true`;
-    console.log('Generated Pollinations URL:', imageUrl);
+    const token = process.env.HUGGINGFACE_ACCESS_TOKEN;
+    if (!token) {
+      return res.status(500).json({ error: 'HuggingFace token not configured' });
+    }
 
-    return res.json({ image: imageUrl });
+    const hfResponse = await fetch('https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ inputs: cleanPrompt })
+    });
+
+    if (!hfResponse.ok) {
+      const errorText = await hfResponse.text();
+      console.error('HuggingFace error:', hfResponse.status, errorText);
+      throw new Error(`HuggingFace API error: ${hfResponse.status}`);
+    }
+
+    const buffer = await hfResponse.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString('base64');
+    const base64Image = `data:image/jpeg;base64,${base64}`;
+
+    console.log('Generated FLUX image (base64 length):', base64.length);
+
+    return res.json({ image: base64Image });
   } catch (err) {
     console.error('Image generation error:', err);
     return res.status(500).json({ error: err.message || 'Image generation failed' });
@@ -291,9 +312,11 @@ app.post('/api/chat/stream', async (req, res) => {
 
 
 // ❤️ HEALTH
+app.get('/', (req, res) => res.send('Claw AI Backend is Live!'));
 app.get('/health', (req, res) => {
   res.json({ status: 'OK' });
 });
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 
 // 🚀 START

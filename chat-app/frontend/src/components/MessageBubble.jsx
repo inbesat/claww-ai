@@ -202,14 +202,30 @@ const MessageBubble = ({ message, darkMode }) => {
       <div className="relative">
           <div className={`max-w-[85%] ${bubbleClasses} px-5 py-3.5 rounded-2xl shadow-sm animate-slide-up`}>
           <div className="text-[15px] leading-relaxed">
-            {isUser ? (
-              renderMarkdown(message.text)
-            ) : (
-              <>
-                {renderMarkdown(message.text)}
-                {isStreaming && <span className="inline-block w-0.5 h-4 ml-0.5 bg-zinc-400 animate-pulse" />}
-              </>
-            )}
+            {(() => {
+              const rawText = message.text || '';
+              const isBase64Image = rawText.startsWith('data:image');
+              
+              if (isBase64Image) {
+                return (
+                  <img 
+                    src={rawText} 
+                    alt="AI Generated" 
+                    className="rounded-xl max-w-full border border-zinc-700 shadow-lg" 
+                  />
+                );
+              }
+              
+              const cleanText = typeof rawText === 'string' ? rawText.replace(/^\s*\(|\)\s*$/g, '').trim() : rawText;
+              return isUser ? (
+                renderMarkdown(cleanText)
+              ) : (
+                <>
+                  {renderMarkdown(cleanText)}
+                  {isStreaming && <span className="inline-block w-0.5 h-4 ml-0.5 bg-zinc-400 animate-pulse" />}
+                </>
+              );
+            })()}
           </div>
         </div>
         {!isUser && !isStreaming && (
