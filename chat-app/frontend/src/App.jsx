@@ -115,7 +115,7 @@ function App() {
 
   const currentMessages = messages[sessionId] || [];
 
-  const handleSendMessage = async (message, fileContext = null, isImageMode = false, isSearchMode = false, isCodeMode = false, imageContext = null, isCanvasMode = false) => {
+  const handleSendMessage = async (message, fileContext = null, isImageMode = false, isSearchMode = false, isCodeMode = false, imageContext = null, isCanvasMode = false, isVaultMode = false) => {
     let contextParts = [];
     if (fileContext) {
       const truncatedContext = fileContext.length > 10000 
@@ -234,7 +234,8 @@ function App() {
             SYSTEM_PROMPTS[0].prompt,
           isSearchMode,
           isCodeMode,
-          imageContext
+          imageContext,
+          isVaultMode
         }),
       });
 

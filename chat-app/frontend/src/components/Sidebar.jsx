@@ -1,8 +1,41 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat, onRenameChat, darkMode, isCollapsed, onToggleCollapse }) => {
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
+  const [isUploadingVault, setIsUploadingVault] = useState(false);
+  const vaultInputRef = useRef(null);
+
+  const handleVaultUpload = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploadingVault(true);
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append('file', files[i]);
+    }
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_URL}/api/vault/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+      if (data.success) {
+        console.log(`Uploaded ${data.chunks} chunks from ${data.filename}`);
+      } else {
+        alert(data.error || 'Upload failed');
+      }
+    } catch (err) {
+      console.error('Vault upload error:', err);
+      alert('Failed to upload to vault');
+    } finally {
+      setIsUploadingVault(false);
+      if (vaultInputRef.current) vaultInputRef.current.value = '';
+    }
+  };
 
   const handleStartEdit = (e, chat) => {
     e.stopPropagation();
@@ -59,6 +92,40 @@ const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat
           {!isCollapsed && "New Chat"}
         </button>
       </div>
+
+      {!isCollapsed && (
+        <div className="px-3 mt-4">
+          <div className={`p-3 rounded-xl border border-dashed ${darkMode ? 'border-zinc-700 text-zinc-400' : 'border-zinc-300 text-zinc-500'}`}>
+            <div className="flex items-center gap-2 mb-2">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+              </svg>
+              <span className="text-xs font-medium">Knowledge Vault</span>
+            </div>
+            <input
+              ref={vaultInputRef}
+              type="file"
+              multiple
+              accept=".pdf,.txt,.docx"
+              onChange={handleVaultUpload}
+              className="hidden"
+              id="vault-upload"
+            />
+            <label
+              htmlFor="vault-upload"
+              className={`block w-full text-center text-xs py-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                isUploadingVault 
+                  ? 'bg-zinc-700/50 text-zinc-400 cursor-wait'
+                  : darkMode 
+                    ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' 
+                    : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'
+              }`}
+            >
+              {isUploadingVault ? 'Uploading...' : 'Add Documents'}
+            </label>
+          </div>
+        </div>
+      )}
       
       <div className={`flex-1 overflow-y-auto mt-6 ${isCollapsed ? '-mx-2 px-2' : '-mx-3 px-3'}`}>
         {!isCollapsed && (

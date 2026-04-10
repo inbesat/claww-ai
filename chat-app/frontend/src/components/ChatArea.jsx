@@ -74,6 +74,18 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas }) => {
     </svg>
   );
 
+  const LayoutIcon = () => (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+    </svg>
+  );
+
+  const DatabaseIcon = () => (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+    </svg>
+  );
+
   return (
     <div 
       ref={chatAreaRef}
@@ -91,7 +103,7 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas }) => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto mt-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto mt-8">
               <FeatureCard 
                 icon={<GlobeIcon />}
                 title="Web Search"
@@ -114,6 +126,18 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas }) => {
                 icon={<FileIcon />}
                 title="Document Analysis"
                 description="Upload PDFs and ask questions about their content."
+                darkMode={darkMode}
+              />
+              <FeatureCard 
+                icon={<LayoutIcon />}
+                title="Canvas"
+                description="Interactive workspace for live coding, document editing, and side-by-side previews."
+                darkMode={darkMode}
+              />
+              <FeatureCard 
+                icon={<DatabaseIcon />}
+                title="Knowledge Vault"
+                description="Your personal long-term memory. Upload full libraries and chat with all your data at once."
                 darkMode={darkMode}
               />
             </div>

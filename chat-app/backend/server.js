@@ -10,6 +10,8 @@ const fs = require('fs');
 const axios = require('axios');
 const Tesseract = require('tesseract.js');
 const cheerio = require('cheerio');
+const { Pinecone } = require('@pinecone-database/pinecone');
+const { HfInference } = require('@huggingface/inference');
 
 let gm;
 try {
@@ -49,6 +51,20 @@ const groq = new OpenAI({
   apiKey: process.env.GROQ_API_KEY,
   baseURL: 'https://api.groq.com/openai/v1'
 });
+
+// ✅ PINECONE & HF CLIENTS
+let pinecone, pineconeIndex;
+if (process.env.PINECONE_API_KEY) {
+  pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
+  pineconeIndex = pinecone.Index('synapse-vault');
+  console.log('[Pinecone] Connected to synapse-vault index');
+}
+
+let hf;
+if (process.env.HF_TOKEN) {
+  hf = new HfInference(process.env.HF_TOKEN);
+  console.log('[HuggingFace] Inference client initialized');
+}
 
 // ✅ ENV CHECK
 if (!process.env.GROQ_API_KEY) {
@@ -385,6 +401,75 @@ app.post('/api/generate-image', async (req, res) => {
   }
 });
 
+// 🗄️ KNOWLEDGE VAULT UPLOAD
+app.post('/api/vault/upload', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    if (!pineconeIndex || !hf) {
+      return res.status(500).json({ error: 'Pinecone or HuggingFace not configured' });
+    }
+
+    const file = req.file;
+    const ext = file.originalname.toLowerCase().split('.').pop();
+    let text = '';
+
+    if (ext === 'pdf') {
+      const dataBuffer = fs.readFileSync(file.path);
+      const data = await pdf(dataBuffer);
+      text = data.text;
+    } else if (ext === 'txt') {
+      text = fs.readFileSync(file.path, 'utf-8');
+    } else if (ext === 'docx') {
+      const result = await mammoth.extractRawText({ path: file.path });
+      text = result.value;
+    }
+
+    deleteFile(file.path);
+
+    if (!text || text.trim().length < 50) {
+      return res.status(400).json({ error: 'Could not extract enough text from file' });
+    }
+
+    const chunks = [];
+    const chunkSize = 1000;
+    for (let i = 0; i < text.length; i += chunkSize) {
+      chunks.push(text.slice(i, i + chunkSize));
+    }
+
+    console.log(`[Vault] Generating embeddings for ${chunks.length} chunks...`);
+    const embeddings = await hf.featureExtraction({
+      model: 'sentence-transformers/all-MiniLM-L6-v2',
+      inputs: chunks
+    });
+
+    const vectors = chunks.map((chunk, i) => {
+      const embedding = Array.isArray(embeddings[i]) ? embeddings[i] : embeddings;
+      return {
+        id: `${file.originalname}-${i}`,
+        values: embedding,
+        metadata: { text: chunk, source: file.originalname }
+      };
+    });
+
+    const batchSize = 100;
+    for (let i = 0; i < vectors.length; i += batchSize) {
+      const batch = vectors.slice(i, i + batchSize);
+      await pineconeIndex.upsert(batch);
+    }
+
+    console.log(`[Vault] Upserted ${vectors.length} vectors for ${file.originalname}`);
+    return res.json({ success: true, chunks: vectors.length, filename: file.originalname });
+
+  } catch (err) {
+    console.error('Vault upload error:', err);
+    if (req.file) deleteFile(req.file.path);
+    return res.status(500).json({ error: err.message || 'Vault upload failed' });
+  }
+});
+
 
 // 🧠 NORMAL CHAT
 app.post('/api/chat', async (req, res) => {
@@ -419,7 +504,7 @@ app.post('/api/chat', async (req, res) => {
 // ⚡ STREAM CHAT
 app.post('/api/chat/stream', async (req, res) => {
   try {
-    const { message, isSearchMode, isCodeMode, imageContext } = req.body;
+    const { message, isSearchMode, isCodeMode, imageContext, isVaultMode } = req.body;
 
     if (!message) {
       return res.end();
@@ -441,6 +526,32 @@ app.post('/api/chat/stream', async (req, res) => {
         { type: "image_url", image_url: { url: imageContext } }
       ];
       systemPromptText = "You are Synapse AI with vision capabilities. Analyze the provided image and answer questions about it accurately.";
+    } else if (isVaultMode && pineconeIndex && hf) {
+      console.log(`[Vault Mode] Querying knowledge base for: "${message}"`);
+      try {
+        const queryEmbedding = await hf.featureExtraction({
+          model: 'sentence-transformers/all-MiniLM-L6-v2',
+          inputs: message
+        });
+        
+        const queryResponse = await pineconeIndex.query({
+          vector: queryEmbedding,
+          topK: 3,
+          includeMetadata: true
+        });
+
+        if (queryResponse.matches && queryResponse.matches.length > 0) {
+          const vaultContext = queryResponse.matches
+            .map(m => `--- From ${m.metadata?.source || 'document'} ---\n${m.metadata?.text || ''}`)
+            .join('\n\n');
+          
+          userContent = `Context from Knowledge Vault:\n<vault_documents>\n${vaultContext}\n</vault_documents>\n\nBased on the documents above, answer: "${message}"`;
+          console.log(`[Vault Mode] Found ${queryResponse.matches.length} relevant documents`);
+        }
+      } catch (vaultErr) {
+        console.error('[Vault Mode] Error querying Pinecone:', vaultErr.message);
+      }
+      systemPromptText = "You are Synapse AI with access to a private Knowledge Vault. Answer questions using the provided document context. If the context doesn't contain enough information, state that clearly.";
     } else if (isSearchMode) {
       console.log(`[Search Mode] Forcing web search for: "${message}"`);
       const webData = await searchWeb(message);

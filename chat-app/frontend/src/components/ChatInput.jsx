@@ -13,6 +13,7 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, active
   const [isUploading, setIsUploading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isCanvasMode, setIsCanvasMode] = useState(false);
+  const [isVaultMode, setIsVaultMode] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
   const submittingRef = useRef(false);
   const textareaRef = useRef(null);
@@ -148,7 +149,7 @@ const handleRemoveFile = () => {
     
     submittingRef.current = true;
     
-    onSendMessage(message, fileContext, isImageMode, isSearchMode, isCodeMode, imageContext, isCanvasMode);
+    onSendMessage(message, fileContext, isImageMode, isSearchMode, isCodeMode, imageContext, isCanvasMode, isVaultMode);
     setMessage('');
     handleRemoveFile();
     setIsImageMode(false);
@@ -316,6 +317,16 @@ return (
                   </svg>
                   Canvas Mode
                   {(activeCanvas || isCanvasMode) && <span className="ml-auto w-2 h-2 rounded-full bg-violet-500" />}
+                </button>
+                <button
+                  onClick={() => setIsVaultMode(prev => !prev)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 ${isVaultMode ? 'bg-violet-500/10 text-violet-400' : darkMode ? 'text-zinc-300 hover:bg-zinc-800' : 'text-zinc-700 hover:bg-zinc-100'}`}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                  </svg>
+                  Vault Mode
+                  {isVaultMode && <span className="ml-auto w-2 h-2 rounded-full bg-violet-500" />}
                 </button>
               </div>
             )}
