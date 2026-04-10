@@ -6,7 +6,6 @@ const multer = require('multer');
 const pdf = require('pdf-parse');
 const mammoth = require('mammoth');
 const { fromPath } = require('pdf2pic');
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 const fs = require('fs');
 const axios = require('axios');
 const Tesseract = require('tesseract.js');
@@ -19,9 +18,6 @@ const groq = new OpenAI({
   apiKey: process.env.GROQ_API_KEY,
   baseURL: 'https://api.groq.com/openai/v1'
 });
-const gemini = process.env.GEMINI_API_KEY
-  ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-  : null;
 
 // ✅ ENV CHECK
 if (!process.env.GROQ_API_KEY) {
@@ -199,23 +195,8 @@ app.post('/api/generate-image', async (req, res) => {
       return res.status(400).json({ error: 'Prompt required' });
     }
 
-    if (!gemini) {
-      return res.status(500).json({ error: 'GEMINI_API_KEY missing' });
-    }
-
-    const model = gemini.getGenerativeModel({ model: 'gemini-2.5-flash-image' });
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const imagePart = response.candidates?.[0]?.content?.parts?.find(part => part.inlineData);
-
-    if (!imagePart?.inlineData?.data) {
-      return res.status(500).json({ error: 'No image returned from Gemini' });
-    }
-
-    const mimeType = imagePart.inlineData.mimeType || 'image/png';
-    return res.json({
-      image: `data:${mimeType};base64,${imagePart.inlineData.data}`
-    });
+    const imageUrl = `https://gen.pollinations.ai/image/${encodeURIComponent(prompt)}?width=1024&height=1024&model=flux&seed=${Math.floor(Math.random() * 100000)}&nologo=true`;
+    return res.json({ image: imageUrl });
   } catch (err) {
     console.error('Image generation error:', err);
     return res.status(500).json({ error: err.message || 'Image generation failed' });
