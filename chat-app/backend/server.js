@@ -13,11 +13,22 @@ const Tesseract = require('tesseract.js');
 let gm;
 try {
   const gmModule = require('gm');
-  const gmInstance = gmModule.subClass({ 
-    imageMagick: false,
-    appPath: 'E:/claw-code-main (3) (1)/claw-code-main/claw-code-main/GraphicsMagick-1.3.46-Q16/'
-  });
-  gmInstance.setGhostscriptBinary('gswin64c');
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  const gmConfig = { 
+    imageMagick: false
+  };
+  
+  if (!isProduction) {
+    gmConfig.appPath = 'E:/claw-code-main (3) (1)/claw-code-main/claw-code-main/GraphicsMagick-1.3.46-Q16/';
+  }
+  
+  const gmInstance = gmModule.subClass(gmConfig);
+  
+  if (!isProduction) {
+    gmInstance.setGhostscriptBinary('gswin64c');
+  }
+  
   gm = gmInstance;
 } catch (e) {
   console.warn('GraphicsMagick not available, thumbnail generation may fail');
@@ -53,7 +64,7 @@ const upload = multer({
 });
 
 // 🔍 WEB SEARCH
-const WEB_SEARCH_PATTERN = /today|latest|current|now|news|score|price|weather|ipl|match|who won|result/i;
+const WEB_SEARCH_PATTERN = /news|headlines|happened|president|minister|who is|latest|current|event|yesterday|today|tomorrow|forecast|score|price|weather|ipl|match|who won|result|election|trump|musk|biden|government|stock|growth|gdp/i;
 
 async function searchWeb(query) {
   try {
@@ -81,20 +92,22 @@ async function searchWeb(query) {
 }
 
 function buildSystemPrompt() {
-  return `You are Claw AI, an advanced and highly capable assistant. 
+  return `Current Date: Friday, April 10, 2026. If the user asks about anything after 2023, you MUST use the web search tool.
+
+You are Claw AI, an advanced and highly capable assistant. 
 
 STRICT OPERATING RULES:
 1. MATH FORMATTING: You MUST use proper LaTeX for all mathematical equations. Wrap inline math in $ and block math in $$. 
 BAD EXAMPLE: x = (-b ± √(b² - 4ac)) / 2a
 GOOD EXAMPLE: $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
 
-2. REAL-TIME DATA: If the user provides 'Context from real-time web search', you must treat it as absolute truth. NEVER say you don't have internet access or cannot provide real-time info. 
+2. REAL-TIME DATA: If the user provides 'Context from real-time web search', you must treat it as absolute truth. NEVER say you don't have internet access or cannot provide real-time info. Here is the latest information from the web. Use this to answer the user, as your internal knowledge is outdated.
 
 3. DOCUMENT CONTEXT: If the user provides 'Document Context', read it carefully and base your answer entirely on that extracted text. Do not ignore it.`;
 }
 
-async function buildPrompt(message) {
-  const needsWebSearch = WEB_SEARCH_PATTERN.test(message);
+async function buildPrompt(message, forceSearch = false) {
+  const needsWebSearch = forceSearch || WEB_SEARCH_PATTERN.test(message);
   let webData = '';
   
   if (needsWebSearch) {
@@ -344,7 +357,7 @@ app.post('/api/chat', async (req, res) => {
 // ⚡ STREAM CHAT
 app.post('/api/chat/stream', async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, isSearchMode, isCodeMode } = req.body;
 
     if (!message) {
       return res.end();
@@ -354,13 +367,74 @@ app.post('/api/chat/stream', async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
-    const { systemPrompt, userPrompt } = await buildPrompt(message);
+    let model = 'llama-3.3-70b-versatile';
+    let systemPromptText = buildSystemPrompt();
+    let userPromptText = message;
+
+    if (isSearchMode) {
+      console.log(`[Search Mode] Forcing web search for: "${message}"`);
+      const webData = await searchWeb(message);
+      if (webData) {
+        userPromptText = `Context from real-time web search:\n<search_results>\n${webData}\n</search_results>\n\nBased ONLY on the search results above, answer the following query: "${message}"`;
+      }
+      systemPromptText = "You are a real-time researcher. Today is Friday, April 10, 2026. Use the provided search results to give an up-to-the-minute answer.";
+    }
+
+    if (isCodeMode) {
+      console.log(`[Code Mode] Using Hugging Face Qwen model`);
+      const hfToken = process.env.HUGGINGFACE_ACCESS_TOKEN;
+      if (!hfToken) {
+        res.write(`data: ${JSON.stringify({ error: 'HuggingFace token not configured' })}\n\n`);
+        res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+        res.end();
+        return;
+      }
+
+      systemPromptText = "You are an elite Senior Developer. Provide only clean, modern, and production-ready code blocks. " + buildSystemPrompt();
+
+      const hfResponse = await fetch('https://router.huggingface.co/hf-inference/models/Qwen/Qwen2.5-Coder-32B-Instruct', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${hfToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          inputs: `<|system|>\n${systemPromptText}<|user|>\n${message}<|assistant|>`,
+          parameters: {
+            max_new_tokens: 2048,
+            temperature: 0.7,
+            top_p: 0.9,
+            return_full_text: false
+          }
+        })
+      });
+
+      if (!hfResponse.ok) {
+        const errorText = await hfResponse.text();
+        console.error('HuggingFace error:', hfResponse.status, errorText);
+        throw new Error(`HuggingFace API error: ${hfResponse.status}`);
+      }
+
+      const hfResult = await hfResponse.json();
+      const generatedText = Array.isArray(hfResult) ? hfResult[0]?.generated_text : hfResult.generated_text;
+      
+      if (generatedText) {
+        const responseContent = generatedText.replace(/<\|.*?\|>/g, '').trim();
+        res.write(`data: ${JSON.stringify({ content: responseContent })}\n\n`);
+      }
+      
+      res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+      res.end();
+      return;
+    }
+
+    console.log(`[Default Mode] Model: ${model}, Search: ${isSearchMode}, Code: ${isCodeMode}`);
 
     const completion = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
+      model: model,
       messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt }
+        { role: "system", content: systemPromptText },
+        { role: "user", content: userPromptText }
       ],
       stream: true
     });

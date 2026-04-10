@@ -95,7 +95,7 @@ function App() {
 
   const currentMessages = messages[sessionId] || [];
 
-  const handleSendMessage = async (message, fileContext = null, isImageMode = false) => {
+  const handleSendMessage = async (message, fileContext = null, isImageMode = false, isSearchMode = false, isCodeMode = false) => {
     let contextParts = [];
     if (fileContext) contextParts.push(fileContext);
     if (pdfContext) {
@@ -207,7 +207,9 @@ function App() {
           history: sanitizedHistory,
           systemPrompt:
             SYSTEM_PROMPTS.find(p => p.id === systemPrompt)?.prompt ||
-            SYSTEM_PROMPTS[0].prompt
+            SYSTEM_PROMPTS[0].prompt,
+          isSearchMode,
+          isCodeMode
         }),
       });
 

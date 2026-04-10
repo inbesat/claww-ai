@@ -7,6 +7,8 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode }) => {
   const [fileContext, setFileContext] = useState(null);
   const [attachedFileName, setAttachedFileName] = useState('');
   const [isImageMode, setIsImageMode] = useState(false);
+  const [isSearchMode, setIsSearchMode] = useState(false);
+  const [isCodeMode, setIsCodeMode] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const submittingRef = useRef(false);
@@ -122,10 +124,12 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode }) => {
     
     submittingRef.current = true;
     
-    onSendMessage(message, fileContext, isImageMode);
+    onSendMessage(message, fileContext, isImageMode, isSearchMode, isCodeMode);
     setMessage('');
     handleRemoveFile();
     setIsImageMode(false);
+    setIsSearchMode(false);
+    setIsCodeMode(false);
     
     setTimeout(() => {
       submittingRef.current = false;
@@ -209,6 +213,28 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode }) => {
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18l-.813-2.096L6 15l2.187-.904L9 12l.813 2.096L12 15l-2.187.904zM17.813 7.904L17 10l-.813-2.096L14 7l2.187-.904L17 4l.813 2.096L20 7l-2.187.904zM14 19l.813-2.096L17 16l-2.187-.904L14 13l-.813 2.096L11 16l2.187.904L14 19z" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsSearchMode(prev => !prev)}
+              disabled={isLoading || isUploading}
+              className={`p-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isSearchMode ? 'text-blue-400 bg-blue-500/10' : darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
+              title={isSearchMode ? 'Web search on' : 'Enable web search'}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsCodeMode(prev => !prev)}
+              disabled={isLoading || isUploading}
+              className={`p-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isCodeMode ? 'text-amber-400 bg-amber-500/10' : darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
+              title={isCodeMode ? 'Code mode on' : 'Enable code mode'}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
               </svg>
             </button>
             <button
