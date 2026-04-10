@@ -6,7 +6,7 @@ import './index.css';
 
 const STORAGE_KEY = 'claw_chats';
 const HISTORY_KEY = 'claw_history';
-const API_URL = import.meta.env.VITE_API_URL || 'https://claww-ai-2.onrender.com';
+const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001').trim();
 
 const SYSTEM_PROMPTS = [
   { id: 'default', name: 'Default', prompt: 'You are a helpful AI assistant.' },
@@ -138,6 +138,8 @@ function App() {
           throw new Error('Image prompt required');
         }
 
+        console.log('Sending Prompt:', message.trim());
+
         const response = await fetch(`${API_URL}/api/generate-image`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -149,7 +151,15 @@ function App() {
         }
 
         const data = await response.json();
-        const imageMarkdown = `![Generated Image](${data.image})`;
+        const imageUrl = typeof data.image === 'string' ? data.image.trim() : '';
+
+        if (!imageUrl) {
+          throw new Error('Image URL missing from API response');
+        }
+
+        console.log('Image URL received from backend:', imageUrl);
+
+        const imageMarkdown = `![Generated Image](${imageUrl})`;
 
         setMessages(prev => ({
           ...prev,

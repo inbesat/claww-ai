@@ -173,6 +173,8 @@ const MessageBubble = ({ message, darkMode }) => {
             );
           },
           img({ src, alt }) {
+            if (!src) return null;
+
             return (
               <img
                 src={src}

@@ -13,6 +13,8 @@ const Tesseract = require('tesseract.js');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+app.use(cors());
+
 // ✅ GROQ CLIENT
 const groq = new OpenAI({
   apiKey: process.env.GROQ_API_KEY,
@@ -28,7 +30,6 @@ if (!process.env.SERP_API_KEY) {
 }
 
 // 📦 MIDDLEWARE
-app.use(cors());
 app.use(express.json());
 
 const upload = multer({
@@ -195,7 +196,17 @@ app.post('/api/generate-image', async (req, res) => {
       return res.status(400).json({ error: 'Prompt required' });
     }
 
-    const imageUrl = `https://gen.pollinations.ai/image/${encodeURIComponent(prompt)}?width=1024&height=1024&model=flux&seed=${Math.floor(Math.random() * 100000)}&nologo=true`;
+    const cleanPrompt = prompt.replace(/!\[.*?\]\(.*?\)/g, '').replace(/["']/g, '').trim();
+
+    if (!cleanPrompt) {
+      return res.status(400).json({ error: 'Prompt required' });
+    }
+
+    const encodedPrompt = encodeURIComponent(cleanPrompt);
+    const seed = Math.floor(Math.random() * 100000);
+    const imageUrl = `https://gen.pollinations.ai/image/${encodedPrompt}?width=1024&height=1024&model=flux&seed=${seed}&nologo=true`;
+    console.log('Generated Pollinations URL:', imageUrl);
+
     return res.json({ image: imageUrl });
   } catch (err) {
     console.error('Image generation error:', err);
