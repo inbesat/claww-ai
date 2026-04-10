@@ -332,6 +332,8 @@ function App() {
   const handleNewChat = () => {
     setSessionId(Math.random().toString(36).substring(2, 15));
     setError(null);
+    setActiveCanvas(null);
+    setAutoOpenCanvas(false);
   };
 
   const handleDeleteChat = (chatId) => {
@@ -368,9 +370,10 @@ function App() {
         />
       </div>
 
-      <div className="flex-1 flex flex-col">
-        <div className={`flex-1 flex ${activeCanvas ? 'gap-0' : ''}`}>
-          <div className={`flex-1 flex flex-col ${activeCanvas ? 'w-[40%]' : ''}`}>
+      <div className="flex w-full">
+        <div className={`flex-1 flex flex-col ${activeCanvas ? '' : ''}`}>
+          <div className={`flex-1 flex ${activeCanvas ? 'gap-0' : ''}`}>
+            <div className={`flex-1 flex flex-col ${activeCanvas ? 'w-[35%]' : ''}`}>
             <ChatArea
               messages={currentMessages}
               isLoading={isLoading || isGeneratingImage}
@@ -389,7 +392,7 @@ function App() {
           </div>
 
           {activeCanvas && (
-            <div className={`w-[60%] border-l ${darkMode ? 'border-zinc-800/50 bg-[#0a0a0a]' : 'border-gray-200 bg-white'} flex flex-col animate-fade-in`}>
+            <div className={`w-[65%] border-l ${darkMode ? 'border-zinc-800/50 bg-[#0a0a0a]' : 'border-gray-200 bg-white'} flex flex-col animate-fade-in`}>
               <div className={`flex items-center justify-between px-4 py-3 border-b ${darkMode ? 'border-zinc-800/50 bg-zinc-900/50' : 'border-gray-200 bg-gray-50'}`}>
                 <div className="flex items-center gap-2">
                   <span className={`text-sm font-medium ${darkMode ? 'text-zinc-300' : 'text-gray-700'}`}>Canvas</span>

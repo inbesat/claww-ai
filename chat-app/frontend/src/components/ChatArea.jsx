@@ -1,5 +1,120 @@
 import { useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
+import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+
+const SynapseChart = ({ chartData, darkMode }) => {
+  const { type, data, colors = ['#8b5cf6', '#d946ef'] } = chartData;
+  
+  const chartColors = {
+    bar: colors[0],
+    line: colors[0] || '#8b5cf6',
+    area: colors[0] || '#8b5cf6',
+    pie: colors
+  };
+
+  const containerClass = darkMode 
+    ? 'bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4' 
+    : 'bg-white border border-gray-200 rounded-2xl p-4 shadow-sm';
+
+  if (type === 'bar') {
+    return (
+      <div className={`${containerClass} my-4`}>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#3f3f46' : '#e5e5e5'} />
+            <XAxis dataKey={Object.keys(data[0] || {})[0]} stroke={darkMode ? '#71717a' : '#6b7280'} />
+            <YAxis stroke={darkMode ? '#71717a' : '#6b7280'} />
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: darkMode ? '#18181b' : '#fff', 
+                border: `1px solid ${darkMode ? '#3f3f46' : '#e5e5e5'}`,
+                borderRadius: '8px'
+              }}
+            />
+            <Bar dataKey={Object.keys(data[0] || {})[1]} fill={chartColors.bar} radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  }
+
+  if (type === 'line') {
+    return (
+      <div className={`${containerClass} my-4`}>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#3f3f46' : '#e5e5e5'} />
+            <XAxis dataKey={Object.keys(data[0] || {})[0]} stroke={darkMode ? '#71717a' : '#6b7280'} />
+            <YAxis stroke={darkMode ? '#71717a' : '#6b7280'} />
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: darkMode ? '#18181b' : '#fff', 
+                border: `1px solid ${darkMode ? '#3f3f46' : '#e5e5e5'}`,
+                borderRadius: '8px'
+              }}
+            />
+            <Line type="monotone" dataKey={Object.keys(data[0] || {})[1]} stroke={chartColors.line} strokeWidth={2} dot={{ fill: chartColors.line }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  }
+
+  if (type === 'area') {
+    return (
+      <div className={`${containerClass} my-4`}>
+        <ResponsiveContainer width="100%" height={300}>
+          <AreaChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#3f3f46' : '#e5e5e5'} />
+            <XAxis dataKey={Object.keys(data[0] || {})[0]} stroke={darkMode ? '#71717a' : '#6b7280'} />
+            <YAxis stroke={darkMode ? '#71717a' : '#6b7280'} />
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: darkMode ? '#18181b' : '#fff', 
+                border: `1px solid ${darkMode ? '#3f3f46' : '#e5e5e5'}`,
+                borderRadius: '8px'
+              }}
+            />
+            <Area type="monotone" dataKey={Object.keys(data[0] || {})[1]} stroke={chartColors.area} fill={chartColors.area} fillOpacity={0.3} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  }
+
+  if (type === 'pie') {
+    return (
+      <div className={`${containerClass} my-4`}>
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie
+              data={data}
+              dataKey={Object.values(data[0] || {})[1]}
+              nameKey={Object.keys(data[0] || {})[0]}
+              cx="50%"
+              cy="50%"
+              outerRadius={100}
+              label
+            >
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={chartColors.pie[index % chartColors.pie.length]} />
+              ))}
+            </Pie>
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: darkMode ? '#18181b' : '#fff', 
+                border: `1px solid ${darkMode ? '#3f3f46' : '#e5e5e5'}`,
+                borderRadius: '8px'
+              }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  }
+
+  return null;
+};
 
 const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas }) => {
   const chatAreaRef = useRef(null);
@@ -144,9 +259,27 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas }) => {
           </div>
         )}
         
-        {messages.map((message) => (
-          <MessageBubble key={message.id} message={message} darkMode={darkMode} onOpenCanvas={onOpenCanvas} />
-        ))}
+        {messages.map((message) => {
+          const hasChartData = message.text && message.text.includes('```chart-data');
+          let chartData = null;
+          
+          if (hasChartData) {
+            try {
+              const chartMatch = message.text.match(/```chart-data\n([\s\S]*?)```/);
+              if (chartMatch) {
+                chartData = JSON.parse(chartMatch[1]);
+              }
+            } catch (e) {
+              console.error('Chart parse error:', e);
+            }
+          }
+          
+          return chartData ? (
+            <SynapseChart key={message.id} chartData={chartData} darkMode={darkMode} />
+          ) : (
+            <MessageBubble key={message.id} message={message} darkMode={darkMode} onOpenCanvas={onOpenCanvas} />
+          );
+        })}
       </div>
     </div>
   );
