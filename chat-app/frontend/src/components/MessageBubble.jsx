@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { saveAs } from 'file-saver';
+import { io } from 'socket.io-client';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 const chatgptDark = {
   'code[class*="language-"]': {
@@ -139,13 +142,61 @@ const PreviewableCodeBlock = ({ code, language, darkMode }) => {
   );
 };
 
-export const LargePreviewableCodeBlock = ({ code, language, darkMode }) => {
+export const LargePreviewableCodeBlock = ({ code, language, darkMode, sessionId }) => {
   const [activeTab, setActiveTab] = useState('code');
+  const [localCode, setLocalCode] = useState(code);
+  const [isLiveCollab, setIsLiveCollab] = useState(false);
+  const socketRef = useRef(null);
+  const isLocalUpdate = useRef(false);
+  
   const previewableLanguages = ['html', 'css', 'javascript', 'xml', 'js', 'css', 'html'];
   const canPreview = previewableLanguages.includes(language?.toLowerCase());
 
+  useEffect(() => {
+    if (!sessionId) return;
+    
+    socketRef.current = io(API_URL, {
+      transports: ['websocket'],
+      reconnection: true
+    });
+    
+    socketRef.current.on('connect', () => {
+      socketRef.current.emit('join-room', sessionId);
+      setIsLiveCollab(true);
+    });
+    
+    socketRef.current.on('canvas-update', (newCode) => {
+      isLocalUpdate.current = true;
+      setLocalCode(newCode);
+      isLocalUpdate.current = false;
+    });
+    
+    return () => {
+      socketRef.current?.disconnect();
+    };
+  }, [sessionId]);
+
+  useEffect(() => {
+    setLocalCode(code);
+  }, [code]);
+
+  const handleCodeChange = (e) => {
+    const newCode = e.target.value;
+    setLocalCode(newCode);
+    
+    if (sessionId && socketRef.current) {
+      socketRef.current.emit('canvas-update', { sessionId, code: newCode });
+    }
+  };
+
+  const handleCopyInviteLink = () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('session', sessionId);
+    navigator.clipboard.writeText(url.toString());
+  };
+
   const handleDownload = () => {
-    const blob = new Blob([code], { type: 'text/html;charset=utf-8' });
+    const blob = new Blob([localCode], { type: 'text/html;charset=utf-8' });
     saveAs(blob, 'index.html');
   };
 
@@ -222,28 +273,38 @@ export const LargePreviewableCodeBlock = ({ code, language, darkMode }) => {
         </div>
       </div>
       
+      {sessionId && (
+        <div className={`flex items-center gap-2 px-3 py-1.5 text-xs ${darkMode ? 'bg-zinc-800/50 text-zinc-400' : 'bg-gray-50 text-gray-500'}`}>
+          <span className={`flex items-center gap-1.5 ${isLiveCollab ? 'text-green-500' : ''}`}>
+            <span className={`w-2 h-2 rounded-full ${isLiveCollab ? 'bg-green-500 animate-pulse' : 'bg-zinc-500'}`} />
+            {isLiveCollab ? 'Live Collab' : 'Offline'}
+          </span>
+          {isLiveCollab && (
+            <button
+              onClick={handleCopyInviteLink}
+              className="ml-auto text-xs px-2 py-1 rounded bg-violet-600 text-white hover:bg-violet-500 transition-all"
+            >
+              Copy Invite Link
+            </button>
+          )}
+        </div>
+      )}
+      
       {activeTab === 'code' ? (
-        <SyntaxHighlighter
-          style={chatgptDark}
-          language={language || 'text'}
-          PreTag="div"
-          customStyle={{
-            margin: 0,
-            borderRadius: '0 0 0.5rem 0.5rem',
-            fontSize: '14px',
-            background: darkMode ? '#1e1e1e' : '#f8f8f8',
-            maxHeight: '600px',
-            overflow: 'auto',
-          }}
-          wrapLines={true}
-          wrapLongLines={true}
-        >
-          {code}
-        </SyntaxHighlighter>
+        <div className="relative">
+          <textarea
+            value={localCode}
+            onChange={handleCodeChange}
+            className={`w-full min-h-[200px] p-3 font-mono text-sm resize-y bg-transparent outline-none ${
+              darkMode ? 'text-zinc-200' : 'text-zinc-800'
+            }`}
+            spellCheck={false}
+          />
+        </div>
       ) : (
         <iframe
           title="preview"
-          srcDoc={code}
+          srcDoc={localCode}
           sandbox="allow-scripts"
           className="w-full h-[calc(100vh-180px)] bg-white rounded-b-md border-none"
         />
@@ -252,7 +313,7 @@ export const LargePreviewableCodeBlock = ({ code, language, darkMode }) => {
   );
 };
 
-const MessageBubble = ({ message, darkMode, onOpenCanvas }) => {
+const MessageBubble = ({ message, darkMode, onOpenCanvas, sessionId }) => {
   const isUser = message.sender === 'user';
   const isStreaming = message.isStreaming;
   const [copied, setCopied] = useState(false);

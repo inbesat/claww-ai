@@ -181,7 +181,7 @@ const handleRemoveFile = () => {
   };
 
 return (
-    <div className={`sticky bottom-0 border-t border-gray-200/50 dark:border-zinc-800/50 px-4 py-4 ${darkMode ? 'bg-[#0a0a0a]/70' : 'bg-white/70'} backdrop-blur-2xl`}>
+    <div className={`sticky bottom-0 border-t border-gray-200/50 dark:border-zinc-800/50 px-2 md:px-4 py-3 md:py-4 ${darkMode ? 'bg-[#0a0a0a]/70' : 'bg-white/70'} backdrop-blur-2xl`}>
       <div className="max-w-[800px] mx-auto">
         {attachedFileName && imageContext && (
           <div className="mb-3 flex items-center gap-2">

@@ -1,6 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
 const OpenAI = require('openai');
 const multer = require('multer');
 const pdf = require('pdf-parse');
@@ -12,6 +14,7 @@ const Tesseract = require('tesseract.js');
 const cheerio = require('cheerio');
 const { Pinecone } = require('@pinecone-database/pinecone');
 const { HfInference } = require('@huggingface/inference');
+const nodemailer = require('nodemailer');
 
 let gm;
 try {
@@ -531,8 +534,8 @@ app.post('/api/chat/stream', async (req, res) => {
     }
 
     if (imageContext) {
-      console.log(`[Vision Mode] Using llama-3.2-11b-vision-preview`);
-      model = 'llama-3.2-11b-vision-preview';
+      console.log(`[Vision Mode] Using meta-llama/llama-4-scout-17b-16e-instruct`);
+      model = 'meta-llama/llama-4-scout-17b-16e-instruct';
       userContent = [
         { type: "text", text: message },
         { type: "image_url", image_url: { url: imageContext } }
@@ -631,8 +634,63 @@ app.post('/api/persona', (req, res) => {
   res.json({ success: true });
 });
 
+const emailTransporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+app.post('/api/action/email', async (req, res) => {
+  const { to, subject, body } = req.body;
+  
+  if (!to || !subject || !body) {
+    return res.status(400).json({ error: 'Missing required fields: to, subject, body' });
+  }
+  
+  try {
+    await emailTransporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to,
+      subject,
+      text: body
+    });
+    console.log(`[Email Action] Sent to ${to}: ${subject}`);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[Email Action] Failed:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 // 🚀 START
-app.listen(PORT, () => {
+const httpServer = http.createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+});
+
+io.on('connection', (socket) => {
+  console.log('[Socket] Client connected:', socket.id);
+  
+  socket.on('join-room', (sessionId) => {
+    socket.join(sessionId);
+    console.log(`[Socket] ${socket.id} joined room: ${sessionId}`);
+  });
+  
+  socket.on('canvas-update', ({ sessionId, code }) => {
+    socket.to(sessionId).emit('canvas-update', code);
+  });
+  
+  socket.on('disconnect', () => {
+    console.log('[Socket] Client disconnected:', socket.id);
+  });
+});
+
+httpServer.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });

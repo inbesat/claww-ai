@@ -45,10 +45,15 @@ function App() {
   const [activeCanvas, setActiveCanvas] = useState(null);
   const [autoOpenCanvas, setAutoOpenCanvas] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentAgentStep, setCurrentAgentStep] = useState(null);
 
   // Session ID
   const [sessionId, setSessionId] = useState(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlSession = urlParams.get('session');
+    if (urlSession) return urlSession;
+
     const saved = localStorage.getItem('claw_current_session');
     if (saved) return saved;
 
@@ -59,6 +64,13 @@ function App() {
       ? recent
       : Math.random().toString(36).substring(2, 15);
   });
+
+  // Update URL when session changes
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('session', sessionId);
+    window.history.replaceState({}, '', url.toString());
+  }, [sessionId]);
 
   const messageIdRef = useRef(0);
 
@@ -231,8 +243,8 @@ function App() {
           sessionId,
           history: sanitizedHistory,
           systemPrompt:
-            SYSTEM_PROMPTS.find(p => p.id === systemPrompt)?.prompt ||
-            SYSTEM_PROMPTS[0].prompt,
+            (SYSTEM_PROMPTS.find(p => p.id === systemPrompt)?.prompt ||
+            SYSTEM_PROMPTS[0].prompt) + "\n\nIf the user explicitly asks you to send an email, you must output a hidden JSON block exactly formatted like this at the end of your response: `[EMAIL_ACTION: {\"to\": \"target@domain.com\", \"subject\": \"...\", \"body\": \"...\"}]`. Do not output markdown inside the JSON.",
           isSearchMode,
           isCodeMode,
           imageContext,
@@ -382,7 +394,47 @@ function App() {
         />
       </div>
 
+      {isSidebarOpen && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setIsSidebarOpen(false)} />
+          <div className="absolute left-0 top-0 h-full w-64 bg-zinc-900 shadow-2xl">
+            <Sidebar
+              sessionId={sessionId}
+              chatHistory={chatHistory}
+              onNewChat={() => { handleNewChat(); setIsSidebarOpen(false); }}
+              onSelectChat={(id) => { setSessionId(id); setIsSidebarOpen(false); }}
+              onDeleteChat={handleDeleteChat}
+              onRenameChat={handleRenameChat}
+              darkMode={darkMode}
+              isCollapsed={false}
+              onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
+              isMobileOpen={true}
+              onCloseMobile={() => setIsSidebarOpen(false)}
+            />
+          </div>
+        </div>
+      )}
+
       <div className="flex w-full">
+        <div className="md:hidden flex items-center justify-between w-full px-4 py-3 backdrop-blur-md bg-black/50 sticky top-0 z-40 border-b border-zinc-800/50">
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-300"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <span className="text-lg font-bold bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">Synapse</span>
+          <button
+            onClick={handleNewChat}
+            className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-300"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+        </div>
         <div className={`flex-1 flex flex-col ${activeCanvas ? '' : ''}`}>
           <div className={`flex-1 flex ${activeCanvas ? 'gap-0' : ''}`}>
             <div className={`flex-1 flex flex-col ${activeCanvas ? 'w-[35%]' : ''}`}>
@@ -392,6 +444,7 @@ function App() {
                 darkMode={darkMode}
                 onOpenCanvas={setActiveCanvas}
                 currentAgentStep={currentAgentStep}
+                sessionId={sessionId}
               />
 
               <ChatInput

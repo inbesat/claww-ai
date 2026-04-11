@@ -116,25 +116,70 @@ const SynapseChart = ({ chartData, darkMode }) => {
   return null;
 };
 
-const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentStep }) => {
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+const EmailActionCard = ({ actionJson, darkMode }) => {
+  const [status, setStatus] = useState('preparing');
+  
+  useEffect(() => {
+    const sendEmail = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/action/email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: actionJson
+        });
+        const data = await res.json();
+        setStatus(data.success ? 'sent' : 'error');
+      } catch (err) {
+        setStatus('error');
+      }
+    };
+    sendEmail();
+  }, []);
+  
+  const { to } = JSON.parse(actionJson);
+  
+  return (
+    <div className={`mt-3 p-4 rounded-xl border flex items-center gap-3 ${
+      darkMode 
+        ? status === 'sent' ? 'bg-green-900/20 border-green-700/50' : status === 'error' ? 'bg-red-900/20 border-red-700/50' : 'bg-violet-900/20 border-violet-700/50'
+        : status === 'sent' ? 'bg-green-50 border-green-200' : status === 'error' ? 'bg-red-50 border-red-200' : 'bg-violet-50 border-violet-200'
+    }`}>
+      {status === 'preparing' ? (
+        <>
+          <span className="text-lg">📧</span>
+          <span className={darkMode ? 'text-zinc-300' : 'text-zinc-700'}>
+            Email preparing to send to <span className="font-medium">{to}</span>...
+          </span>
+          <span className="ml-auto w-3 h-3 rounded-full bg-violet-500 animate-pulse" />
+        </>
+      ) : status === 'sent' ? (
+        <>
+          <span className="text-lg">✅</span>
+          <span className={darkMode ? 'text-green-400' : 'text-green-700'}>
+            Email successfully sent to <span className="font-medium">{to}</span>
+          </span>
+        </>
+      ) : (
+        <>
+          <span className="text-lg">❌</span>
+          <span className={darkMode ? 'text-red-400' : 'text-red-700'}>
+            Failed to send email to <span className="font-medium">{to}</span>
+          </span>
+        </>
+      )}
+    </div>
+  );
+};
+
+const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentStep, sessionId }) => {
   const chatAreaRef = useRef(null);
-  const prevMessagesLengthRef = useRef(messages.length);
-  const prevScrollHeightRef = useRef(0);
+  const scrollAnchorRef = useRef(null);
 
   useEffect(() => {
-    if (chatAreaRef.current) {
-      // Auto-scroll to bottom, but only scroll if content grew or it's a new message
-      const scrollHeight = chatAreaRef.current.scrollHeight;
-      const wasAtBottom = chatAreaRef.current.scrollHeight - chatAreaRef.current.scrollTop - chatAreaRef.current.clientHeight < 50;
-      
-      if (messages.length > prevMessagesLengthRef.current || wasAtBottom || prevScrollHeightRef.current < scrollHeight) {
-        chatAreaRef.current.scrollTo({
-          top: scrollHeight,
-          behavior: messages.length > prevMessagesLengthRef.current ? 'smooth' : 'auto'
-        });
-      }
-      prevMessagesLengthRef.current = messages.length;
-      prevScrollHeightRef.current = scrollHeight;
+    if (scrollAnchorRef.current) {
+      scrollAnchorRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isLoading]);
 
@@ -245,9 +290,9 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
   return (
     <div 
       ref={chatAreaRef}
-      className={`flex-1 overflow-y-auto py-6 px-4 ${darkMode ? 'bg-[#0a0a0a]' : 'bg-zinc-50'} scrollbar-thin scrollbar-thumb-zinc-700/50 scrollbar-track-transparent`}
+      className={`flex-1 overflow-y-auto h-[calc(100vh-180px)] py-6 px-4 md:pt-6 pt-20 ${darkMode ? 'bg-[#0a0a0a]' : 'bg-zinc-50'} scrollbar-thin scrollbar-thumb-zinc-700/50 scrollbar-track-transparent`}
     >
-      <div className="max-w-[800px] mx-auto space-y-4">
+      <div className="max-w-[800px] mx-auto space-y-4 pb-4">
         {messages.length === 0 && (
           <div className="text-center py-16">
             <div className="mb-8">
@@ -315,6 +360,8 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
         {messages.map((message) => {
           const hasChartData = message.text && message.text.includes('```chart-data');
           let chartData = null;
+          let emailActionJson = null;
+          let displayText = message.text;
           
           if (hasChartData) {
             try {
@@ -327,14 +374,36 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
             }
           }
           
-          return chartData ? (
-            <SynapseChart key={message.id} chartData={chartData} darkMode={darkMode} />
-          ) : (
-            <MessageBubble key={message.id} message={message} darkMode={darkMode} onOpenCanvas={onOpenCanvas} />
+          // Parse and clean email action from text
+          const emailMatch = message.text?.match(/\[EMAIL_ACTION:\s*(\{.*?\})\]/s);
+          if (emailMatch) {
+            try {
+              emailActionJson = emailMatch[1];
+              displayText = message.text.replace(emailMatch[0], '');
+            } catch (e) {
+              console.error('Email action parse error:', e);
+            }
+          }
+          
+          return (
+            <div key={message.id}>
+              {chartData ? (
+                <SynapseChart chartData={chartData} darkMode={darkMode} />
+              ) : (
+                <MessageBubble 
+                  message={{ ...message, text: displayText }} 
+                  darkMode={darkMode} 
+                  onOpenCanvas={onOpenCanvas} 
+                  sessionId={sessionId}
+                />
+              )}
+              {emailActionJson && <EmailActionCard actionJson={emailActionJson} darkMode={darkMode} />}
+            </div>
           );
         })}
 
         <StatusBanner text={currentStatus} darkMode={darkMode} agentStep={currentAgentStep} />
+        <div ref={scrollAnchorRef} />
       </div>
     </div>
   );
