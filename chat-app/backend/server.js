@@ -5,7 +5,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const OpenAI = require('openai');
 const multer = require('multer');
-const pdf = require('pdf-parse');
+const pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
 const mammoth = require('mammoth');
 const { fromPath } = require('pdf2pic');
 const fs = require('fs');
@@ -53,8 +53,9 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 
 // 📦 MIDDLEWARE
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
+app.use(express.raw({ type: 'application/pdf', limit: '100mb' }));
 
 // ✅ GROQ CLIENT
 const groq = new OpenAI({
@@ -217,14 +218,30 @@ async function buildPrompt(message, forceSearch = false) {
   };
 }
 
-// 📄 PDF PARSER
+// 📄 PDF PARSER (Page-by-page streaming for memory efficiency)
 async function parsePDF(filePath) {
   try {
     const dataBuffer = fs.readFileSync(filePath);
-    const data = await pdf(dataBuffer);
+    const pdf = await pdfjsLib.getDocument({ data: dataBuffer }).promise;
+    let fullText = '';
     
-    if (data.text && data.text.trim().length > 20) {
-      return data.text; // Success: Text-based PDF
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items.map(item => item.str).join(' ');
+      fullText += pageText + '\n';
+      
+      if (i % 10 === 0) {
+        console.log(`[ParsePDF] Processed page ${i} of ${pdf.numPages}`);
+      }
+      
+      page.cleanup();
+    }
+    
+    pdf.destroy();
+    
+    if (fullText.trim().length > 20) {
+      return fullText;
     }
 
     console.log("PDF lacks text, attempting OCR...");
@@ -325,9 +342,24 @@ app.post('/api/process-pdf', upload.single('file'), async (req, res) => {
     let numPages = 0;
 
     try {
-      const pdfData = await pdf(dataBuffer);
-      extractedText = pdfData.text;
-      numPages = pdfData.numpages;
+      const pdf = await pdfjsLib.getDocument({ data: dataBuffer }).promise;
+      numPages = pdf.numPages;
+      
+      let fullText = '';
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map(item => item.str).join(' ');
+        fullText += pageText + '\n';
+        page.cleanup();
+        
+        if (i % 10 === 0) {
+          console.log(`[Process PDF] Processed page ${i} of ${pdf.numPages}`);
+        }
+      }
+      
+      extractedText = fullText;
+      pdf.destroy();
       console.log(`[Process PDF] Extracted ${numPages} pages, ${extractedText.length} characters`);
     } catch (pdfErr) {
       console.error('[Process PDF] Text extraction failed:', pdfErr.message);
@@ -431,70 +463,142 @@ app.post('/api/vault/upload', upload.single('file'), async (req, res) => {
     const file = req.file;
     console.log(`[Vault] Processing: ${file.originalname} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
     const ext = file.originalname.toLowerCase().split('.').pop();
-    let text = '';
+    
+    const chunks = [];
+    const chunkSize = 1000;
+    const overlap = 200;
 
     if (ext === 'pdf') {
       try {
         const dataBuffer = fs.readFileSync(file.path);
-        const data = await pdf(dataBuffer);
-        text = data.text;
-        console.log(`[Vault] PDF parsed: ${data.numpages} pages`);
+        const pdf = await pdfjsLib.getDocument({ data: dataBuffer }).promise;
+        console.log(`[Vault] PDF loaded: ${pdf.numPages} pages`);
+        
+        let pageTextBuffer = '';
+        
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map(item => item.str).join(' ');
+          
+          pageTextBuffer += pageText + '\n';
+          
+          // Process chunks as we accumulate text
+          while (pageTextBuffer.length >= chunkSize) {
+            const chunk = pageTextBuffer.slice(0, chunkSize).trim();
+            if (chunk.length > 50) {
+              chunks.push(chunk);
+            }
+            pageTextBuffer = pageTextBuffer.slice(chunkSize - overlap);
+          }
+          
+          // Heartbeat log every 10 pages
+          console.log(`[Streaming] Processed page ${i} of ${pdf.numPages}`);
+          
+          // Memory management: pause every 20 pages to allow GC
+          if (i % 20 === 0) {
+            page.cleanup();
+            await new Promise(r => setTimeout(r, 100));
+            if (global.gc) global.gc();
+          } else {
+            page.cleanup();
+          }
+        }
+        
+        // Process remaining text in buffer
+        if (pageTextBuffer.trim().length > 50) {
+          chunks.push(pageTextBuffer.trim());
+        }
+        
+        pdf.destroy();
+        console.log(`[Vault] PDF parsed: ${chunks.length} chunks created`);
+        
       } catch (pdfErr) {
         console.error('[Vault] PDF parse error:', pdfErr.message);
         deleteFile(file.path);
         return res.status(400).json({ error: 'Could not parse PDF. It may be encrypted or corrupted.' });
       }
     } else if (ext === 'txt') {
-      text = fs.readFileSync(file.path, 'utf-8');
+      const text = fs.readFileSync(file.path, 'utf-8');
+      for (let i = 0; i < text.length; i += (chunkSize - overlap)) {
+        const chunk = text.slice(i, i + chunkSize).trim();
+        if (chunk.length > 50) {
+          chunks.push(chunk);
+        }
+      }
     } else if (ext === 'docx') {
       const result = await mammoth.extractRawText({ path: file.path });
-      text = result.value;
+      const text = result.value;
+      for (let i = 0; i < text.length; i += (chunkSize - overlap)) {
+        const chunk = text.slice(i, i + chunkSize).trim();
+        if (chunk.length > 50) {
+          chunks.push(chunk);
+        }
+      }
     }
 
     deleteFile(file.path);
 
-    if (!text || text.trim().length < 50) {
+    if (chunks.length === 0) {
       return res.status(400).json({ error: 'Could not extract enough text from file' });
     }
 
-    // Smart RAG chunking with overlap (~1000 chars, 200 overlap)
-    const chunks = [];
-    const chunkSize = 1000;
-    const overlap = 200;
-    for (let i = 0; i < text.length; i += (chunkSize - overlap)) {
-      const chunk = text.slice(i, i + chunkSize).trim();
-      if (chunk.length > 50) {
-        chunks.push(chunk);
+    console.log(`[Vault] Created ${chunks.length} chunks`);
+    
+    // Force GC before embedding
+    if (global.gc) global.gc();
+
+    try {
+      // Process embeddings in batches to manage memory
+      const vectors = [];
+      const batchSize = 50;
+      
+      for (let i = 0; i < chunks.length; i += batchSize) {
+        const chunkBatch = chunks.slice(i, i + batchSize);
+        
+        const embeddings = await hf.featureExtraction({
+          model: 'sentence-transformers/all-MiniLM-L6-v2',
+          inputs: chunkBatch
+        });
+
+        chunkBatch.forEach((chunk, j) => {
+          const embedding = Array.isArray(embeddings[j]) ? embeddings[j] : embeddings;
+          vectors.push({
+            id: `${file.originalname}-${i + j}`,
+            values: embedding,
+            metadata: { text: chunk, source: file.originalname }
+          });
+        });
+
+        // Memory management: pause between batches
+        if (global.gc) global.gc();
+        await new Promise(r => setTimeout(r, 50));
       }
+
+      // Upsert to Pinecone in batches
+      const upsertBatchSize = 100;
+      for (let i = 0; i < vectors.length; i += upsertBatchSize) {
+        const batch = vectors.slice(i, i + upsertBatchSize);
+        await pineconeIndex.upsert(batch);
+      }
+
+      console.log(`[Vault] Upserted ${vectors.length} vectors for ${file.originalname}`);
+      
+      if (global.gc) global.gc();
+      
+      return res.json({ success: true, chunks: vectors.length, filename: file.originalname });
+    } catch (embeddingErr) {
+      console.error('[Vault] Embedding error:', embeddingErr.message);
+      return res.status(503).json({ error: 'Server Busy - Please try again later' });
     }
-
-    console.log(`[Vault] Created ${chunks.length} chunks from ${text.length} chars`);
-    const embeddings = await hf.featureExtraction({
-      model: 'sentence-transformers/all-MiniLM-L6-v2',
-      inputs: chunks
-    });
-
-    const vectors = chunks.map((chunk, i) => {
-      const embedding = Array.isArray(embeddings[i]) ? embeddings[i] : embeddings;
-      return {
-        id: `${file.originalname}-${i}`,
-        values: embedding,
-        metadata: { text: chunk, source: file.originalname }
-      };
-    });
-
-    const batchSize = 100;
-    for (let i = 0; i < vectors.length; i += batchSize) {
-      const batch = vectors.slice(i, i + batchSize);
-      await pineconeIndex.upsert(batch);
-    }
-
-    console.log(`[Vault] Upserted ${vectors.length} vectors for ${file.originalname}`);
-    return res.json({ success: true, chunks: vectors.length, filename: file.originalname });
 
   } catch (err) {
     console.error('Vault upload error:', err);
     if (req.file) deleteFile(req.file.path);
+    
+    if (err.message?.includes('heap') || err.message?.includes('memory')) {
+      return res.status(503).json({ error: 'Server Busy - Please try with a smaller file' });
+    }
     return res.status(500).json({ error: err.message || 'Vault upload failed' });
   }
 });
@@ -694,6 +798,8 @@ app.post('/api/action/email', async (req, res) => {
 
 // 🚀 START
 const httpServer = http.createServer(app);
+httpServer.timeout = 120000; // 2 minute timeout for large file processing
+
 const io = new Server(httpServer, {
   cors: {
     origin: '*',

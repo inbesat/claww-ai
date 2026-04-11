@@ -38,28 +38,48 @@ const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    const file = files[0];
+    const fileSize = file.size / 1024 / 1024;
+    const isLargeFile = fileSize > 10;
+    
     setIsUploadingVault(true);
     const formData = new FormData();
     for (let i = 0; i < files.length; i++) {
       formData.append('file', files[i]);
     }
 
+    // Create AbortController with 60 second timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
       const response = await fetch(`${API_URL}/api/vault/upload`, {
         method: 'POST',
         body: formData,
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
+      
       const data = await response.json();
       if (data.success) {
         console.log(`Uploaded ${data.chunks} chunks from ${data.filename}`);
       } else {
-        alert(data.error || 'Upload failed');
+        if (response.status === 503) {
+          alert('Server Busy - Please try with a smaller file or wait a moment');
+        } else {
+          alert(data.error || 'Upload failed');
+        }
       }
     } catch (err) {
       console.error('Vault upload error:', err);
-      alert('Failed to upload to vault');
+      if (err.name === 'AbortError') {
+        alert('Upload timed out - the document is very large. Please try a smaller file.');
+      } else {
+        alert('Failed to upload to vault');
+      }
     } finally {
+      clearTimeout(timeoutId);
       setIsUploadingVault(false);
       if (vaultInputRef.current) vaultInputRef.current.value = '';
     }
@@ -172,7 +192,7 @@ return (
                     : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'
               }`}
             >
-              {isUploadingVault ? 'Uploading...' : 'Add Documents'}
+              {isUploadingVault ? 'Indexing 100+ pages... this may take a minute 📚' : 'Add Documents'}
             </label>
           </div>
         </div>
