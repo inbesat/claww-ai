@@ -197,18 +197,6 @@ async function parsePDF(filePath) {
     return null;
   }
 }
-    const storeAsImage = fromPath(filePath, options);
-    const convertedImage = await storeAsImage(1);
-    
-    const result = await Tesseract.recognize(convertedImage.path, 'eng');
-    deleteFile(convertedImage.path);
-    
-    return result.data.text.trim() || null;
-  } catch (err) {
-    console.error('PDF parse/OCR error:', err.message);
-    return null;
-  }
-}
 
 // 🖼️ OCR
 async function extractTextFromImage(filePath) {
