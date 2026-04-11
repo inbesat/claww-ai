@@ -5,7 +5,15 @@ const http = require('http');
 const { Server } = require('socket.io');
 const OpenAI = require('openai');
 const multer = require('multer');
-const pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
+
+let pdfjsLib;
+try {
+  pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = false;
+} catch (e) {
+  console.error('[PDF.js] Failed to load:', e.message);
+}
+
 const mammoth = require('mammoth');
 const { fromPath } = require('pdf2pic');
 const fs = require('fs');
@@ -18,6 +26,12 @@ const nodemailer = require('nodemailer');
 
 process.on('uncaughtException', (err) => console.error('CRITICAL CRASH:', err));
 process.on('unhandledRejection', (reason, promise) => { console.error('Unhandled Rejection:', reason); });
+
+const app = express();
+const PORT = process.env.PORT || 3001;
+
+app.get('/health', (req, res) => res.status(200).send('OK'));
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 let playwright;
 try {
@@ -870,7 +884,6 @@ app.post('/api/browser', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
