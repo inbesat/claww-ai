@@ -11,6 +11,7 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, active
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [isCodeMode, setIsCodeMode] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isCanvasMode, setIsCanvasMode] = useState(false);
   const [isVaultMode, setIsVaultMode] = useState(false);
@@ -95,53 +96,61 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, active
       return;
     }
 
-    setAttachedFileName(file.name);
-    setIsUploading(true);
+     setAttachedFileName(file.name);
+     setIsUploading(true);
+     setIsProcessing(true);
 
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
+     try {
+       const formData = new FormData();
+       formData.append('file', file);
 
-       const controller = new AbortController();
-       const timeoutId = setTimeout(() => controller.abort(), 60000);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-        const response = await fetch(`${file.type === 'application/pdf' ? `${API_URL}/api/process-pdf` : `${API_URL}/api/upload`}`, {
-          method: 'POST',
-          body: formData,
-          signal: controller.signal,
-        });
-
-       clearTimeout(timeoutId);
-
-       if (!response.ok) {
-         if (response.status === 413) {
-           throw new Error('File too large. Maximum size is 50MB.');
-         }
-         throw new Error(`Upload failed: ${response.status}`);
-       }
-
-       const data = await response.json();
-
-       if (file.type === 'application/pdf') {
-         // Handle PDF response from /api/process-pdf: { text, fileName, numPages }
-         onFileProcessed({
-           text: data.text,
-           fileName: data.fileName,
-           numPages: data.numPages
+         const response = await fetch(`${file.type === 'application/pdf' ? `${API_URL}/api/process-pdf` : `${API_URL}/api/upload`}`, {
+           method: 'POST',
+           body: formData,
+           signal: controller.signal,
          });
-         setAttachedFileName('');
-       } else {
-         // Handle other file response from /api/upload: { message, textLength }
-         // For now, we'll store a simple indication that file was processed
-         setFileContext(`${data.message} (${data.textLength} characters extracted)`);
-       }
-    } catch (err) {
-      console.error('Upload error:', err);
-      alert(err.message || 'Failed to process file');
-      handleRemoveFile();
-    } finally {
-      setIsUploading(false);
-    }
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          if (response.status === 413) {
+            throw new Error('File too large. Maximum size is 50MB.');
+          }
+          throw new Error(`Upload failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (file.type === 'application/pdf') {
+          // Handle PDF response from /api/process-pdf: { text, fileName, numPages }
+          onFileProcessed({
+            text: data.text,
+            fileName: data.fileName,
+            numPages: data.numPages
+          });
+          setAttachedFileName('');
+          
+          // Auto-summary trigger
+          setMessage("I've read your PDF. Here is a quick overview...");
+        } else {
+          // Handle other file response from /api/upload: { message, textLength }
+          // For now, we'll store a simple indication that file was processed
+          setFileContext(`${data.message} (${data.textLength} characters extracted)`);
+          
+          // Auto-summary trigger for non-PDF files too
+          setMessage("I've processed your file. What would you like to know about it?");
+        }
+     } catch (err) {
+       console.error('Upload error:', err);
+       alert(err.message || 'Failed to process file');
+       handleRemoveFile();
+     } finally {
+       setIsUploading(false);
+       setIsProcessing(false);
+     }
   };
 
 const handleRemoveFile = () => {
@@ -193,8 +202,13 @@ const handleRemoveFile = () => {
 
 return (
     <div className="fixed bottom-0 left-0 md:left-64 right-0 bg-black/40 backdrop-blur-xl border-t border-white/10 px-2 md:px-4 py-3 md:py-4 z-50 shadow-[0_-4px_20px_rgba(217,70,239,0.1)]">
-      <div className="max-w-[800px] mx-auto">
-        {attachedFileName && imageContext && (
+       <div className="max-w-[800px] mx-auto">
+         {isProcessing && (
+           <div className="text-fuchsia-400 text-sm animate-pulse mb-2">
+             Processing Document...
+           </div>
+         )}
+         {attachedFileName && imageContext && (
           <div className="mb-3 flex items-center gap-2">
             <div className={`relative flex items-center gap-2 px-3 py-2 rounded-lg border ${darkMode ? 'bg-zinc-800/60 border-zinc-700' : 'bg-zinc-100 border-zinc-200'}`}>
               <img src={imageContext} alt="Preview" className="w-10 h-10 rounded-lg object-cover border border-zinc-600" />
