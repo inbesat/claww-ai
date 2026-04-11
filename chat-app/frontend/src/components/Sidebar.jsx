@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat, onRenameChat, darkMode, isCollapsed, onToggleCollapse, isMobileOpen, onCloseMobile }) => {
   const [editingId, setEditingId] = useState(null);

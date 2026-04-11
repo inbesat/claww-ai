@@ -304,8 +304,12 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
 
   const FeatureCard = ({ icon, title, description, darkMode, index }) => (
     <div 
-      className="aspect-square w-full flex flex-col items-center justify-center text-center p-4 rounded-3xl backdrop-blur-xl border transition-all duration-500 cursor-pointer hover:scale-[1.02] fade-in-up bg-white/[0.03] border-white/[0.08] hover:bg-violet-600/10 hover:border-violet-500/40"
-      style={{ animationDelay: `${index * 0.05}s` }}
+      className="aspect-square w-full flex flex-col items-center justify-center text-center p-4 rounded-3xl backdrop-blur-xl border transition-all duration-500 cursor-pointer hover:scale-[1.02] bg-white/[0.03] border-white/[0.08] hover:shadow-[0_0_30px_-5px_rgba(168,85,247,0.4)] hover:border-fuchsia-500/50 hover:bg-white/[0.07]"
+      style={{ 
+        animation: 'fadeIn 0.4s ease forwards', 
+        animationDelay: `${index * 0.05}s`, 
+        opacity: 0 
+      }}
     >
       <div className="p-3 rounded-xl mb-3 bg-violet-500/20">
         <div className="text-violet-500 w-6 h-6">{icon}</div>
@@ -313,7 +317,7 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
       <h3 className="font-bold text-sm mb-1 text-[#fafafa]">
         {title}
       </h3>
-      <p className="text-[10px] leading-tight opacity-60 text-zinc-400">
+      <p className="text-[11px] leading-relaxed opacity-60 text-zinc-400">
         {description}
       </p>
     </div>
@@ -433,7 +437,7 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
               </p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 max-w-5xl mx-auto mt-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-w-5xl mx-auto mt-8">
               <FeatureCard index={0}
                 icon={<SynapseLogo />}
                 title="Web Search"
