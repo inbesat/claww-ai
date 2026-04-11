@@ -15,31 +15,31 @@ const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat
   const [isSavingPersona, setIsSavingPersona] = useState(false);
   const vaultInputRef = useRef(null);
 
-  useEffect(() => {
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-    fetch(`${API_URL}/api/persona`)
-      .then(res => res.json())
-      .then(data => setPersona(data.persona || ''))
-      .catch(console.error);
-  }, []);
+   useEffect(() => {
+     const API_URL = (import.meta.env.VITE_API_URL || 'https://claww-ai-3.onrender.com').trim();
+     fetch(`${API_URL}/api/persona`)
+       .then(res => res.json())
+       .then(data => setPersona(data.persona || ''))
+       .catch(console.error);
+   }, []);
 
   const handlePersonaChange = (e) => setPersona(e.target.value);
 
-  const handleSavePersona = async () => {
-    setIsSavingPersona(true);
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      await fetch(`${API_URL}/api/persona`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ persona }),
-      });
-    } catch (err) {
-      console.error('Failed to save persona:', err);
-    } finally {
-      setIsSavingPersona(false);
-    }
-  };
+       const handleSavePersona = async () => {
+     setIsSavingPersona(true);
+     try {
+       const API_URL = (import.meta.env.VITE_API_URL || 'https://claww-ai-3.onrender.com').trim();
+       await fetch(`${API_URL}/api/persona`, {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ persona }),
+       });
+     } catch (err) {
+       console.error('Failed to save persona:', err);
+     } finally {
+       setIsSavingPersona(false);
+     }
+   };
 
   const handleVaultUpload = async (e) => {
     const files = e.target.files;
@@ -55,17 +55,17 @@ const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat
       formData.append('file', files[i]);
     }
 
-    // Create AbortController with 60 second timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+     // Create AbortController with 60 second timeout
+     const controller = new AbortController();
+     const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${API_URL}/api/vault/upload`, {
-        method: 'POST',
-        body: formData,
-        signal: controller.signal,
-      });
+     try {
+       const API_URL = (import.meta.env.VITE_API_URL || 'https://claww-ai-3.onrender.com').trim();
+       const response = await fetch(`${API_URL}/api/vault/upload`, {
+         method: 'POST',
+         body: formData,
+         signal: controller.signal,
+       });
       clearTimeout(timeoutId);
       
       const data = await response.json();

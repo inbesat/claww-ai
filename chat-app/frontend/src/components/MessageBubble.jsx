@@ -41,7 +41,7 @@ const MermaidDiagram = ({ code, darkMode }) => {
   );
 };
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = (import.meta.env.VITE_API_URL || 'https://claww-ai-3.onrender.com').trim();
 
 const chatgptDark = {
   'code[class*="language-"]': {
