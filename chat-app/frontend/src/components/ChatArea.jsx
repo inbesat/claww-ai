@@ -317,7 +317,7 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
 
   const FeatureCard = ({ icon, title, description, darkMode }) => (
     <div 
-      className="aspect-square w-full flex flex-col items-center justify-center text-center p-4 rounded-3xl backdrop-blur-xl border transition-all duration-500 cursor-pointer hover:scale-[1.02] bg-white/[0.03] border-white/[0.08] hover:shadow-[0_0_30px_-5px_rgba(168,85,247,0.4)] hover:border-fuchsia-500/50 hover:bg-white/[0.07]"
+      className="h-auto md:aspect-square w-full flex flex-col items-center justify-center text-center p-4 rounded-3xl backdrop-blur-xl border transition-all duration-500 cursor-pointer hover:scale-[1.02] bg-white/[0.03] border-white/[0.08] hover:shadow-[0_0_30px_-5px_rgba(168,85,247,0.4)] hover:border-fuchsia-500/50 hover:bg-white/[0.07]"
     >
       <div className="p-3 rounded-xl mb-3 bg-violet-500/20">
         <div className="text-violet-500 w-6 h-6">{icon}</div>
@@ -428,7 +428,7 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
   return (
     <div 
       ref={chatAreaRef}
-      className={`flex-1 overflow-y-auto h-[calc(100vh-180px)] py-6 px-4 md:pt-6 pt-20 ${darkMode ? 'bg-[#0a0a0a]' : 'bg-zinc-50'} scrollbar-thin scrollbar-thumb-zinc-700/50 scrollbar-track-transparent`}
+      className={`flex-1 overflow-y-auto h-[calc(100vh-140px)] py-6 px-4 md:pt-6 pt-20 ${darkMode ? 'bg-[#0a0a0a]' : 'bg-zinc-50'} scrollbar-thin scrollbar-thumb-zinc-700/50 scrollbar-track-transparent`}
     >
       <div className="max-w-[800px] mx-auto space-y-4 pb-4">
         <ToolActiveIndicator toolActive={toolActive} toolName={toolName} />
@@ -438,7 +438,7 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
               <div className="flex justify-center mb-6">
                 <SynapseLogo className="w-20 h-20 text-violet-500" glow={true} />
               </div>
-              <h1 className="text-5xl font-black tracking-tighter bg-gradient-to-b from-white via-white to-zinc-500 bg-clip-text text-transparent mb-2">
+              <h1 className="text-3xl sm:text-5xl font-black tracking-tighter bg-gradient-to-b from-white via-white to-zinc-500 bg-clip-text text-transparent mb-2">
                 Welcome to Synapse AI
               </h1>
               <p className="text-lg text-zinc-500">
@@ -446,7 +446,7 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
               </p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-w-5xl mx-auto mt-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto mt-8 pb-32">
               <FeatureCard 
                 icon={<SynapseLogo />}
                 title="Web Search"
