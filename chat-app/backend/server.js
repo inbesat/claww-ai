@@ -16,6 +16,8 @@ const { Pinecone } = require('@pinecone-database/pinecone');
 const { HfInference } = require('@huggingface/inference');
 const nodemailer = require('nodemailer');
 
+process.on('uncaughtException', (err) => console.error('CRITICAL CRASH:', err));
+
 let playwright;
 try {
   playwright = require('playwright');

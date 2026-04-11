@@ -302,14 +302,9 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
   // Check if any message is currently streaming
   const hasStreamingMessage = messages.some(msg => msg.isStreaming);
 
-  const FeatureCard = ({ icon, title, description, darkMode, index }) => (
+  const FeatureCard = ({ icon, title, description, darkMode }) => (
     <div 
       className="aspect-square w-full flex flex-col items-center justify-center text-center p-4 rounded-3xl backdrop-blur-xl border transition-all duration-500 cursor-pointer hover:scale-[1.02] bg-white/[0.03] border-white/[0.08] hover:shadow-[0_0_30px_-5px_rgba(168,85,247,0.4)] hover:border-fuchsia-500/50 hover:bg-white/[0.07]"
-      style={{ 
-        animation: 'fadeIn 0.4s ease forwards', 
-        animationDelay: `${index * 0.05}s`, 
-        opacity: 0 
-      }}
     >
       <div className="p-3 rounded-xl mb-3 bg-violet-500/20">
         <div className="text-violet-500 w-6 h-6">{icon}</div>
@@ -438,61 +433,61 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-w-5xl mx-auto mt-8">
-              <FeatureCard index={0}
+              <FeatureCard 
                 icon={<SynapseLogo />}
                 title="Web Search"
                 description="Get real-time answers and live data from the internet."
                 darkMode={darkMode}
               />
-              <FeatureCard index={1}
+              <FeatureCard 
                 icon={<CodeIcon />}
                 title="Code Mode"
                 description="Generate production-ready code with an elite AI developer."
                 darkMode={darkMode}
               />
-              <FeatureCard index={2}
+              <FeatureCard 
                 icon={<SparklesIcon />}
                 title="Image Gen"
                 description="Create stunning visuals from text descriptions."
                 darkMode={darkMode}
               />
-              <FeatureCard index={3}
+              <FeatureCard 
                 icon={<FileIcon />}
                 title="Document Analysis"
                 description="Upload PDFs and ask questions about their content."
                 darkMode={darkMode}
               />
-              <FeatureCard index={4}
+              <FeatureCard 
                 icon={<LayoutIcon />}
                 title="Multiplayer Canvas"
                 description="Real-time collaborative coding with inviteable friends."
                 darkMode={darkMode}
               />
-              <FeatureCard index={5}
+              <FeatureCard 
                 icon={<DatabaseIcon />}
                 title="100-Page PDF Vault"
                 description="Advanced RAG for deep analysis of massive documents."
                 darkMode={darkMode}
               />
-              <FeatureCard index={6}
+              <FeatureCard 
                 icon={<AgentIcon />}
                 title="Browser Agent"
                 description="AI that browses live websites and extracts data."
                 darkMode={darkMode}
               />
-              <FeatureCard index={7}
+              <FeatureCard 
                 icon={<ChartIcon />}
                 title="Visual Flowcharts"
                 description="Generate Mermaid.js diagrams and charts instantly."
                 darkMode={darkMode}
               />
-              <FeatureCard index={8}
+              <FeatureCard 
                 icon={<MicrophoneIcon />}
                 title="Voice Mode"
                 description="Hands-free interaction with native speech-to-text."
                 darkMode={darkMode}
               />
-              <FeatureCard index={9}
+              <FeatureCard 
                 icon={<FingerprintIcon />}
                 title="Persona Memory"
                 description="A tailored experience that remembers who you are."
