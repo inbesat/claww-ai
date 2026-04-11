@@ -17,6 +17,7 @@ const { HfInference } = require('@huggingface/inference');
 const nodemailer = require('nodemailer');
 
 process.on('uncaughtException', (err) => console.error('CRITICAL CRASH:', err));
+process.on('unhandledRejection', (reason, promise) => { console.error('Unhandled Rejection:', reason); });
 
 let playwright;
 try {
@@ -869,6 +870,7 @@ app.post('/api/browser', async (req, res) => {
   }
 });
 
-httpServer.listen(PORT, () => {
+const PORT = process.env.PORT || 3001;
+httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });

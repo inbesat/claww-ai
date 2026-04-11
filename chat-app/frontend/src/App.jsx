@@ -390,7 +390,7 @@ function App() {
       className={`min-h-screen flex ${darkMode ? 'dark' : ''}`}
       onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
     >
-      <div className="fixed pointer-events-none blur-[120px] opacity-[0.08] w-[500px] h-[500px] bg-gradient-to-r from-fuchsia-500 to-violet-600 rounded-full z-0 transition-all duration-500"
+      <div className="fixed pointer-events-none blur-[120px] opacity-[0.05] w-[500px] h-[500px] bg-gradient-to-r from-fuchsia-500 to-violet-600 rounded-full z-0 transition-all duration-500"
         style={{
           left: mousePos.x - 250,
           top: mousePos.y - 250
