@@ -137,6 +137,29 @@ const CodexModal = ({ isOpen, onClose }) => {
           </Section>
 
           <Section 
+            icon="🧠" 
+            title="8. The Brain (AI Persona)"
+          >
+            <p className="mb-2"><strong>What it is:</strong> Take complete control over Synapse's personality and communication style.</p>
+            <p><strong>How to use:</strong> Use the <strong>AI Persona & Tone</strong> box in the sidebar to give Synapse a custom system prompt.</p>
+            <p className="mt-2">Example prompts:</p>
+            <ul className="list-disc list-inside mt-1 space-y-1 text-zinc-300">
+              <li><em>"Act as a strict senior Python developer"</em></li>
+              <li><em>"Be a witty comedy writer"</em></li>
+              <li><em>"Respond in haiku only"</em></li>
+            </ul>
+            <p className="mt-3"><strong>Quick Presets:</strong> Feeling lazy? Click one of the one-tap presets to instantly change the vibe:</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <span className="text-xs px-2.5 py-1 rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-300">Default ⚡️</span>
+              <span className="text-xs px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-zinc-300">Hacker</span>
+              <span className="text-xs px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-zinc-300">Funny Friend</span>
+              <span className="text-xs px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-zinc-300">Cute GF 💖</span>
+            </div>
+            <p className="mt-2 text-zinc-400 text-xs">The AI adapts its behavior immediately on your next message.</p>
+            <p className="mt-3 text-zinc-400"><strong>Factory Reset:</strong> Need to get back to business? Just click the <strong>Default ⚡️</strong> preset to clear all custom instructions and return Synapse to its standard, highly capable default state.</p>
+          </Section>
+
+          <Section 
             icon="🎭" 
             title="7. The Atmosphere (Theme Engine)"
           >

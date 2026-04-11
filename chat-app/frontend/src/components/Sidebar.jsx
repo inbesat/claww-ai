@@ -1,6 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat, onRenameChat, darkMode, isCollapsed, onToggleCollapse, isMobileOpen, onCloseMobile, onOpenCodex }) => {
+const tonePresets = [
+  { label: "Default ⚡️", prompt: "" },
+  { label: "Hacker", prompt: "Act as an elite, sarcastic cybersecurity hacker. Keep answers technical and edgy." },
+  { label: "Funny Friend", prompt: "Act as my hilarious best friend. Use slang, make jokes, and keep the vibe super casual and fun." },
+  { label: "Cute GF 💖", prompt: "Act as my sweet, supportive, and cute girlfriend. Use emojis, be affectionate, and ask how my day is going." }
+];
+
+const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat, onRenameChat, darkMode, isCollapsed, onToggleCollapse, isMobileOpen, onCloseMobile, onOpenCodex, aiTone, setAiTone }) => {
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [isUploadingVault, setIsUploadingVault] = useState(false);
@@ -243,32 +250,63 @@ return (
       {!isCollapsed && (
         <div className="px-3 mt-4">
           <div className="p-3 rounded-xl border border-white/10 bg-zinc-900/50 backdrop-blur-md">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-3">
               <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
               </svg>
               <span className="text-xs font-medium text-zinc-300">Theme / Vibe</span>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2">
               <button
                 onClick={() => document.documentElement.setAttribute('data-theme', 'cyberpunk')}
-                className="flex-1 py-1.5 text-xs rounded-lg bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white hover:from-fuchsia-500 hover:to-violet-500 transition-all"
+                className="w-full py-2 text-xs rounded-lg text-center bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white hover:from-fuchsia-500 hover:to-violet-500 transition-all shadow-lg shadow-fuchsia-500/20"
               >
                 Cyberpunk
               </button>
               <button
                 onClick={() => document.documentElement.setAttribute('data-theme', 'forest')}
-                className="flex-1 py-1.5 text-xs rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500 transition-all"
+                className="w-full py-2 text-xs rounded-lg text-center bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500 transition-all"
               >
                 Forest
               </button>
               <button
                 onClick={() => document.documentElement.setAttribute('data-theme', 'minimalist')}
-                className="flex-1 py-1.5 text-xs rounded-lg bg-zinc-600 text-white hover:bg-zinc-500 transition-all"
+                className="w-full py-2 text-xs rounded-lg text-center bg-zinc-600 text-white hover:bg-zinc-500 transition-all"
               >
                 Minimal
               </button>
+</div>
+          </div>
+        </div>
+      )}
+
+      {!isCollapsed && (
+        <div className="px-3 mt-4">
+          <div className="p-3 rounded-xl border border-white/10 bg-zinc-900/50 backdrop-blur-md">
+            <div className="flex items-center gap-2 mb-3">
+              <svg className="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387.477a2 2 0 00-1.186 1.186l-.477 2.387a2 2 0 01-.547 1.022l.001.002a2 2 0 001.545.546l2.387-.477a2 2 0 001.186-1.186l.477-2.387a2 2 0 01.547-1.022l.002-.002zM15.5 7.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
+              </svg>
+              <span className="text-xs font-medium text-zinc-300">AI Persona & Tone</span>
             </div>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {tonePresets.map((preset) => (
+                <button
+                  key={preset.label}
+                  onClick={() => setAiTone(preset.prompt)}
+                  className="text-xs px-2.5 py-1 rounded-full bg-white/5 border border-white/10 hover:bg-fuchsia-500/30 hover:border-fuchsia-500/50 transition-colors text-zinc-300 hover:text-white"
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+            <textarea
+              value={aiTone}
+              onChange={(e) => setAiTone(e.target.value)}
+              placeholder="e.g., Act as a senior Python developer and be concise."
+              className="w-full text-xs p-2 rounded-lg resize-none border bg-zinc-800/50 border-white/10 text-zinc-300 placeholder-zinc-500"
+              rows={2}
+            />
           </div>
         </div>
       )}
@@ -351,7 +389,7 @@ return (
       <div className="pt-4 border-t mt-4 flex flex-col gap-2">
         <button
           onClick={onOpenCodex}
-          className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs text-zinc-500 hover:text-fuchsia-400 hover:bg-zinc-800/50 transition-all"
+          className="flex items-center justify-center gap-2 py-3 px-3 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-fuchsia-600/20 to-transparent border-l-4 border-fuchsia-500 hover:bg-fuchsia-600/40 shadow-[0_0_15px_rgba(217,70,239,0.3)] transition-all"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />

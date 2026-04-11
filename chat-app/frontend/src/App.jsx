@@ -65,6 +65,7 @@ function App() {
   const [toolActive, setToolActive] = useState(false);
   const [toolName, setToolName] = useState(null);
   const [showCodex, setShowCodex] = useState(false);
+  const [aiTone, setAiTone] = useState(() => localStorage.getItem('ai_tone') || '');
 
   // Session ID
   const [sessionId, setSessionId] = useState(() => {
@@ -115,7 +116,8 @@ function App() {
     localStorage.setItem(HISTORY_KEY, JSON.stringify(chatHistory));
     localStorage.setItem('claw_current_session', sessionId);
     localStorage.setItem('claw_system_prompt', systemPrompt);
-  }, [messages, chatHistory, sessionId, systemPrompt]);
+    localStorage.setItem('ai_tone', aiTone);
+  }, [messages, chatHistory, sessionId, systemPrompt, aiTone]);
 
   useEffect(() => {
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
@@ -439,6 +441,8 @@ function App() {
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
           onOpenCodex={() => setShowCodex(true)}
+          aiTone={aiTone}
+          setAiTone={setAiTone}
         />
       </div>
 
@@ -459,6 +463,8 @@ function App() {
               isMobileOpen={true}
               onCloseMobile={() => setIsSidebarOpen(false)}
               onOpenCodex={() => setShowCodex(true)}
+              aiTone={aiTone}
+              setAiTone={setAiTone}
             />
           </div>
         </div>
@@ -499,6 +505,7 @@ function App() {
                 selectedVoiceIndex={selectedVoiceIndex}
                 toolActive={toolActive}
                 toolName={toolName}
+                aiTone={aiTone}
               />
 
               <ChatInput
