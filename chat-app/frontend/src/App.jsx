@@ -8,6 +8,13 @@ import './index.css';
 
 try { mermaid.initialize?.({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' }) } catch(e) {}
 
+// Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
 const STORAGE_KEY = 'claw_chats';
 const HISTORY_KEY = 'claw_history';
 const API_URL = (import.meta.env.VITE_API_URL || 'https://claww-ai-3.onrender.com').trim();
@@ -54,6 +61,8 @@ function App() {
   const [isHandsFree, setIsHandsFree] = useState(false);
   const [selectedVoiceIndex, setSelectedVoiceIndex] = useState(0);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [toolActive, setToolActive] = useState(false);
+  const [toolName, setToolName] = useState(null);
 
   // Session ID
   const [sessionId, setSessionId] = useState(() => {
@@ -282,7 +291,15 @@ function App() {
               if (parsed.error) {
                 throw new Error(parsed.error);
               }
+              // Handle tool active status
+              if (parsed.toolActive) {
+                setToolActive(true);
+                setToolName(parsed.toolName);
+              }
+
               if (parsed.done) {
+                setToolActive(false);
+                setToolName(null);
                 // Update chat history with first message
                 setChatHistory(prev => [
                   ...prev.filter(chat => chat.id !== sessionId),
@@ -390,10 +407,11 @@ function App() {
       className={`min-h-screen flex ${darkMode ? 'dark' : ''}`}
       onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
     >
-      <div className="fixed pointer-events-none blur-[120px] opacity-[0.05] w-[500px] h-[500px] bg-gradient-to-r from-fuchsia-500 to-violet-600 rounded-full z-0 transition-all duration-500"
+      <div className="fixed pointer-events-none blur-[120px] opacity-[0.08] w-[600px] h-[600px] rounded-full z-0 transition-all duration-700"
         style={{
-          left: mousePos.x - 250,
-          top: mousePos.y - 250
+          left: mousePos.x - 300,
+          top: mousePos.y - 300,
+          background: 'radial-gradient(circle, var(--aura-color, #8b5cf6) 0%, transparent 70%)'
         }}
       />
       <div className={`hidden md:flex ${isSidebarCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 z-10`}>
@@ -464,6 +482,8 @@ function App() {
                 isVoiceMode={isVoiceMode}
                 isHandsFree={isHandsFree}
                 selectedVoiceIndex={selectedVoiceIndex}
+                toolActive={toolActive}
+                toolName={toolName}
               />
 
               <ChatInput

@@ -190,46 +190,22 @@ return (
                   : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-white/5'
               }`}
             >
-              {isUploadingVault ? 'Indexing 100+ pages... this may take a minute 📚' : 'Add Documents'}
+{isUploadingVault ? 'Indexing 100+ pages... this may take a minute 📚' : 'Add Documents'}
             </label>
           </div>
         </div>
       )}
 
       {!isCollapsed && (
-        <div className="px-3 mt-4">
-          <div className="p-3 rounded-xl border border-white/10 bg-zinc-900/50 backdrop-blur-md">
-            <div className="flex items-center gap-2 mb-2">
-              <svg className="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 8m0 0h8m-8 0c1.656-1.066 3-2.78 3-5.085a6.958 6.958 0 01-1.002-3.02 6.961 6.961 0 01-.023-3.036m-3.038 3.127l.052-.085a9.94 9.94 0 01-.032-1.372m4.244 4.803l-.085-.076a10.44 10.44 0 01-1.26-1.893l.066-.11a10.7 10.7 0 01.932-1.765m.391 2.782c-.128.397-.252.8-.37 1.208" />
-              </svg>
-              <span className="text-xs font-medium text-zinc-300">Personal Identity</span>
-            </div>
-            <textarea
-              value={persona}
-              onChange={handlePersonaChange}
-              placeholder="I am a developer, use friendly tone..."
-              className="w-full text-xs p-2 rounded-lg resize-none border bg-zinc-800/50 border-white/10 text-zinc-300 placeholder-zinc-500"
-              rows={2}
-            />
-            <button
-              onClick={handleSavePersona}
-              disabled={isSavingPersona}
-              className={`mt-2 w-full text-xs py-1.5 rounded-lg transition-all ${
-                isSavingPersona
-                  ? 'bg-zinc-700 text-zinc-400'
-                  : 'bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white hover:from-fuchsia-500 hover:to-violet-500 shadow-lg shadow-fuchsia-500/20'
-              }`}
-            >
-              {isSavingPersona ? 'Saved!' : 'Save Identity'}
-            </button>
+        <div className="px-3 mt-2">
+          <div className="flex items-center justify-center gap-2 py-1.5 rounded-lg bg-zinc-900/30 border border-zinc-800/50">
+            <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-500 animate-pulse" />
+            <span className="text-[10px] text-zinc-500">System Online</span>
           </div>
         </div>
       )}
 
       {!isCollapsed && (
-        <div className="px-3 mt-4">
-          <div className={`p-3 rounded-xl border ${darkMode ? 'border-zinc-800 bg-zinc-900/50' : 'border-zinc-200 bg-white'}`}>
             <div className="flex items-center gap-2 mb-2">
               <svg className="w-4 h-4 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 8m0 0h8m-8 0c1.656-1.066 3-2.78 3-5.085a6.958 6.958 0 01-1.002-3.02 6.961 6.961 0 01-.023-3.036m-3.038 3.127l.052-.085a9.94 9.94 0 01-.032-1.372m4.244 4.803l-.085-.076a10.44 10.44 0 01-1.26-1.893l.066-.11a10.7 10.7 0 01.932-1.765m.391 2.782c-.128.397-.252.8-.37 1.208" />
@@ -261,7 +237,40 @@ return (
           </div>
         </div>
       )}
-      
+
+      {!isCollapsed && (
+        <div className="px-3 mt-4">
+          <div className="p-3 rounded-xl border border-white/10 bg-zinc-900/50 backdrop-blur-md">
+            <div className="flex items-center gap-2 mb-2">
+              <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+              </svg>
+              <span className="text-xs font-medium text-zinc-300">Theme / Vibe</span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => document.documentElement.setAttribute('data-theme', 'cyberpunk')}
+                className="flex-1 py-1.5 text-xs rounded-lg bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white hover:from-fuchsia-500 hover:to-violet-500 transition-all"
+              >
+                Cyberpunk
+              </button>
+              <button
+                onClick={() => document.documentElement.setAttribute('data-theme', 'forest')}
+                className="flex-1 py-1.5 text-xs rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500 transition-all"
+              >
+                Forest
+              </button>
+              <button
+                onClick={() => document.documentElement.setAttribute('data-theme', 'minimalist')}
+                className="flex-1 py-1.5 text-xs rounded-lg bg-zinc-600 text-white hover:bg-zinc-500 transition-all"
+              >
+                Minimal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className={`flex-1 overflow-y-auto mt-6 ${isCollapsed ? '-mx-2 px-2' : '-mx-3 px-3'}`}>
         {!isCollapsed && (
           <h2 className={`mb-3 text-xs font-light uppercase tracking-wider pl-3 ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>Recent</h2>

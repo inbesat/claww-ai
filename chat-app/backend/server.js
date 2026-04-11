@@ -25,7 +25,10 @@ const nodemailer = require('nodemailer');
 const path = require('path');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: ['https://claww-ai.vercel.app', 'http://localhost:5173', 'http://localhost:3001'],
+  credentials: true
+}));
 app.use(express.json());
 
 let pinecone, pineconeIndex;
@@ -180,6 +183,85 @@ async function buildPrompt(message, forceSearch = false) {
     systemPrompt: buildSystemPrompt(),
     userPrompt: finalUserPrompt
   };
+}
+
+// 🔧 TOOLS DEFINITION
+const tools = [
+  {
+    type: 'function',
+    function: {
+      name: 'get_stock_price',
+      description: 'Get current stock price and market data for a given symbol',
+      parameters: {
+        type: 'object',
+        properties: {
+          symbol: { type: 'string', description: 'Stock ticker symbol (e.g., AAPL, GOOGL, MSFT)' }
+        },
+        required: ['symbol']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'web_search',
+      description: 'Search the web for current information, news, or real-time data',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'Search query' }
+        },
+        required: ['query']
+      }
+    }
+  }
+];
+
+// 🔧 TOOL HANDLERS
+async function getStockPrice(symbol) {
+  try {
+    if (!process.env.ALPHA_VANTAGE_KEY) {
+      return { error: 'Stock API not configured', symbol };
+    }
+    const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${process.env.ALPHA_VANTAGE_KEY}`;
+    const response = await axios.get(url);
+    const quote = response.data['Global Quote'];
+    if (!quote || !quote['05. price']) {
+      return { error: 'Symbol not found', symbol };
+    }
+    return {
+      symbol: quote['01. symbol'],
+      price: quote['05. price'],
+      change: quote['09. change'],
+      percentChange: quote['10. change percent'],
+      companyName: quote['01. symbol'],
+      volume: quote['06. volume'],
+      high: quote['03. high'],
+      low: quote['04. low']
+    };
+  } catch (err) {
+    console.error('[Stock] Error:', err.message);
+    return { error: err.message, symbol };
+  }
+}
+
+async function handleToolCalls(toolCalls, hf) {
+  const results = [];
+  for (const call of toolCalls) {
+    const { name, arguments: args } = call.function;
+    const params = typeof args === 'string' ? JSON.parse(args) : args;
+    console.log(`[Tool] Calling ${name}:`, params);
+    let result;
+    if (name === 'get_stock_price') {
+      result = await getStockPrice(params.symbol);
+    } else if (name === 'web_search') {
+      result = await searchWeb(params.query);
+    } else {
+      result = { error: `Unknown tool: ${name}` };
+    }
+    results.push({ tool_call_id: call.id, name, content: JSON.stringify(result) });
+  }
+  return results;
 }
 
 // 📄 PDF PARSER (Using pdf-parse)
@@ -364,6 +446,22 @@ app.post('/api/vault/upload', upload.single('file'), async (req, res) => {
     const file = req.file;
     console.log(`[Vault] Processing: ${file.originalname} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
     const ext = file.originalname.toLowerCase().split('.').pop();
+
+    // Check if document already exists in Pinecone
+    try {
+      const checkQuery = await pineconeIndex.query({
+        filter: { source: { $eq: file.originalname } },
+        topK: 1,
+        includeMetadata: true
+      });
+      if (checkQuery.matches && checkQuery.matches.length > 0) {
+        console.log(`[Vault] Document "${file.originalname}" already indexed. Skipping.`);
+        deleteFile(file.path);
+        return res.json({ success: true, chunks: checkQuery.matches.length, filename: file.originalname, duplicate: true });
+      }
+    } catch (checkErr) {
+      console.log(`[Vault] Checking existing docs: ${checkErr.message}`);
+    }
     
     const chunks = [];
     const chunkSize = 1000;
@@ -491,24 +589,104 @@ app.post('/api/vault/upload', upload.single('file'), async (req, res) => {
 // 🧠 NORMAL CHAT
 app.post('/api/chat', async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, isVaultMode } = req.body;
 
     if (!message) {
       return res.status(400).json({ error: 'Message required' });
     }
 
-    const { systemPrompt, userPrompt } = await buildPrompt(message);
+    let systemPrompt = buildSystemPrompt();
+    let userPrompt = message;
+
+    // Inject persona context
+    if (personaStore.persona && personaStore.persona.trim()) {
+      systemPrompt += `\n\nUSER BACKGROUND CONTEXT:\n${personaStore.persona}\nRemember this context when responding.`;
+    }
+
+    // Query Pinecone for vault context if enabled
+    if (isVaultMode && pineconeIndex && hf) {
+      console.log(`[Vault Mode] Querying knowledge base for: "${message}"`);
+      try {
+        const queryEmbedding = await hf.featureExtraction({
+          model: 'sentence-transformers/all-MiniLM-L6-v2',
+          inputs: message
+        });
+        
+        const queryResponse = await pineconeIndex.query({
+          vector: queryEmbedding,
+          topK: 3,
+          includeMetadata: true
+        });
+
+        if (queryResponse.matches && queryResponse.matches.length > 0) {
+          const vaultContext = queryResponse.matches
+            .map(m => `--- From ${m.metadata?.source || 'document'} ---\n${m.metadata?.text || ''}`)
+            .join('\n\n');
+          
+          userPrompt = `Context from Knowledge Vault:\n<vault_documents>\n${vaultContext}\n</vault_documents>\n\nBased on the documents above, answer: "${message}"`;
+          console.log(`[Vault Mode] Found ${queryResponse.matches.length} relevant documents`);
+        }
+      } catch (vaultErr) {
+        console.error('[Vault Mode] Error:', vaultErr.message);
+      }
+    }
 
     const completion = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt }
-      ]
+      ],
+      tools,
+      tool_choice: "auto"
     });
 
+    const assistantMessage = completion.choices[0].message;
+    
+    // Handle tool calls
+    if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
+      const toolCallIds = assistantMessage.tool_calls.map(c => c.id);
+      console.log(`[Tools] Executing ${toolCallIds.length} tool call(s)`);
+      
+      // Send intermediate "thinking" status first
+      res.write(`data: ${JSON.stringify({ toolActive: true, toolName: assistantMessage.tool_calls[0].function.name })}\n\n`);
+      
+      const toolResults = await handleToolCalls(assistantMessage.tool_calls);
+      
+      // Get final response with tool results
+      const finalCompletion = await groq.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+          assistantMessage,
+          ...toolResults.map(r => ({ role: "tool", tool_call_id: r.tool_call_id, content: r.content, name: r.name }))
+        ]
+      });
+      
+      const toolName = assistantMessage.tool_calls[0].function.name;
+      let stockMetadata = null;
+      if (toolName === 'get_stock_price') {
+        try {
+          const toolResult = JSON.parse(toolResults[0].content);
+          if (!toolResult.error) {
+            stockMetadata = toolResult;
+          }
+        } catch (e) {}
+      }
+      
+      const response = {
+        content: finalCompletion.choices[0].message.content,
+        toolUsed: toolName
+      };
+      if (stockMetadata) {
+        response.stockData = stockMetadata;
+      }
+      return res.json(response);
+    }
+
     return res.json({
-      content: completion.choices[0].message.content
+      content: assistantMessage.content
     });
 
   } catch (err) {

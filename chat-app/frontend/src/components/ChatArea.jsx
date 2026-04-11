@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
+import StockCard from './StockCard';
 import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const SynapseChart = ({ chartData, darkMode }) => {
@@ -218,7 +219,7 @@ const EmailActionCard = ({ actionJson, darkMode }) => {
   );
 };
 
-const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentStep, sessionId, isVoiceMode, isHandsFree, selectedVoiceIndex }) => {
+const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentStep, sessionId, isVoiceMode, isHandsFree, selectedVoiceIndex, toolActive, toolName }) => {
   const [isListening, setIsListening] = useState(false);
   const [voices, setVoices] = useState([]);
   const recognitionRef = useRef(null);
@@ -301,6 +302,17 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
 
   // Check if any message is currently streaming
   const hasStreamingMessage = messages.some(msg => msg.isStreaming);
+
+  const ToolActiveIndicator = ({ toolActive, toolName }) => {
+    if (!toolActive) return null;
+    const toolLabel = toolName === 'get_stock_price' ? 'Accessing Market Data...' : 'Searching the web...';
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-violet-900/40 border border-violet-500/30">
+        <span className="w-2 h-2 rounded-full bg-fuchsia-500 animate-pulse" />
+        <span className="text-xs text-fuchsia-300">{toolLabel}</span>
+      </div>
+    );
+  };
 
   const FeatureCard = ({ icon, title, description, darkMode }) => (
     <div 
@@ -418,6 +430,7 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
       className={`flex-1 overflow-y-auto h-[calc(100vh-180px)] py-6 px-4 md:pt-6 pt-20 ${darkMode ? 'bg-[#0a0a0a]' : 'bg-zinc-50'} scrollbar-thin scrollbar-thumb-zinc-700/50 scrollbar-track-transparent`}
     >
       <div className="max-w-[800px] mx-auto space-y-4 pb-4">
+        <ToolActiveIndicator toolActive={toolActive} toolName={toolName} />
         {messages.length === 0 && (
             <div className="text-center py-16">
             <div className="mb-8">
@@ -537,8 +550,29 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
             }
           }
           
+          // Parse stock metadata from message
+          let stockData = null;
+          const stockMatch = message.text?.match(/\[STOCK_DATA:\s*(\{.*?\})\]/s);
+          if (stockMatch) {
+            try {
+              stockData = JSON.parse(stockMatch[1]);
+              displayText = message.text.replace(stockMatch[0], '');
+            } catch (e) {
+              console.error('Stock data parse error:', e);
+            }
+          }
+          
           return (
             <div key={message.id}>
+              {stockData && (
+                <StockCard 
+                  symbol={stockData.symbol} 
+                  price={stockData.price} 
+                  change={stockData.change} 
+                  percentChange={stockData.percentChange}
+                  companyName={stockData.companyName}
+                />
+              )}
               {chartData ? (
                 <SynapseChart chartData={chartData} darkMode={darkMode} />
               ) : (
