@@ -102,19 +102,14 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, active
       const formData = new FormData();
       formData.append('file', file);
 
-      let endpoint = `${API_URL}/api/upload`;
-      if (file.type === 'application/pdf') {
-        endpoint = `${API_URL}/api/process-pdf`;
-      }
+       const controller = new AbortController();
+       const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000);
-
-       const response = await fetch(endpoint, {
-         method: 'POST',
-         body: formData,
-         signal: controller.signal,
-       });
+        const response = await fetch(`${file.type === 'application/pdf' ? `${API_URL}/api/process-pdf` : `${API_URL}/api/upload`}`, {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal,
+        });
 
        clearTimeout(timeoutId);
 

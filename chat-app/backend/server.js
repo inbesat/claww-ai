@@ -26,6 +26,12 @@ const nodemailer = require('nodemailer');
 const path = require('path');
 
 const app = express();
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  next();
+});
 app.use(cors({ origin: '*', credentials: true }));
 app.options('*', cors()); // Enable pre-flight for all routes
 app.use(express.json());
@@ -330,6 +336,7 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 
 // 📄 PDF PROCESSING
 app.post('/api/process-pdf', upload.single('file'), async (req, res) => {
+  console.log("!!! HELLO FROM RENDER: Received PDF for processing !!!");
   console.log("Processing PDF request...");
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
