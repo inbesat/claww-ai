@@ -110,29 +110,36 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, active
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        body: formData,
-        signal: controller.signal,
-      });
+       const response = await fetch(endpoint, {
+         method: 'POST',
+         body: formData,
+         signal: controller.signal,
+       });
 
-      clearTimeout(timeoutId);
+       clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        if (response.status === 413) {
-          throw new Error('File too large. Maximum size is 50MB.');
-        }
-        throw new Error(`Upload failed: ${response.status}`);
-      }
+       if (!response.ok) {
+         if (response.status === 413) {
+           throw new Error('File too large. Maximum size is 50MB.');
+         }
+         throw new Error(`Upload failed: ${response.status}`);
+       }
 
-      const data = await response.json();
+       const data = await response.json();
 
-      if (file.type === 'application/pdf' && data.preview) {
-        onFileProcessed(data);
-        setAttachedFileName('');
-      } else {
-        setFileContext(data.content);
-      }
+       if (file.type === 'application/pdf') {
+         // Handle PDF response from /api/process-pdf: { text, fileName, numPages }
+         onFileProcessed({
+           text: data.text,
+           fileName: data.fileName,
+           numPages: data.numPages
+         });
+         setAttachedFileName('');
+       } else {
+         // Handle other file response from /api/upload: { message, textLength }
+         // For now, we'll store a simple indication that file was processed
+         setFileContext(`${data.message} (${data.textLength} characters extracted)`);
+       }
     } catch (err) {
       console.error('Upload error:', err);
       alert(err.message || 'Failed to process file');

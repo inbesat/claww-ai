@@ -27,6 +27,7 @@ const path = require('path');
 
 const app = express();
 app.use(cors({ origin: '*', credentials: true }));
+app.options('*', cors()); // Enable pre-flight for all routes
 app.use(express.json());
 
 let pinecone, pineconeIndex;
@@ -329,6 +330,7 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 
 // 📄 PDF PROCESSING
 app.post('/api/process-pdf', upload.single('file'), async (req, res) => {
+  console.log("Processing PDF request...");
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     
@@ -336,14 +338,13 @@ app.post('/api/process-pdf', upload.single('file'), async (req, res) => {
     console.log(`[Process PDF] Received: ${file.originalname} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
     
     if (!file.originalname.toLowerCase().endsWith('.pdf')) {
-      deleteFile(file.path);
       return res.status(400).json({ error: 'Only PDF files are supported' });
     }
-
-    const dataBuffer = fs.readFileSync(file.path);
+    
+    const dataBuffer = req.file.buffer;
     let extractedText = null;
     let numPages = 0;
-
+    
     try {
       const data = await pdf(dataBuffer);
       extractedText = data.text;
@@ -352,22 +353,19 @@ app.post('/api/process-pdf', upload.single('file'), async (req, res) => {
     } catch (pdfErr) {
       console.error('[Process PDF] Text extraction failed:', pdfErr.message);
     }
-
-    deleteFile(file.path);
-
+    
     if (!extractedText) {
       return res.status(400).json({ error: 'Could not extract text from PDF.' });
     }
-
+    
     return res.json({ 
       text: extractedText, 
       fileName: file.originalname,
       numPages
     });
-
+    
   } catch (err) {
     console.error('PDF processing error:', err);
-    if (req.file) deleteFile(req.file.path);
     return res.status(500).json({ error: err.message || 'PDF processing failed' });
   }
 });
