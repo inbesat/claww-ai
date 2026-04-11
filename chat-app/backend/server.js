@@ -21,6 +21,12 @@ const fs = require('fs');
 const axios = require('axios');
 const Tesseract = require('tesseract.js');
 const cheerio = require('cheerio');
+const nodemailer = require('nodemailer');
+const path = require('path');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
 
 let pinecone, pineconeIndex;
 try {
