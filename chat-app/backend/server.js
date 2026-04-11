@@ -312,7 +312,7 @@ app.post('/api/process-pdf', upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     
     const file = req.file;
-    console.log("File received:", file.originalname, "Size:", file.size);
+    console.log(`[Process PDF] Received: ${file.originalname} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
     
     if (!file.originalname.toLowerCase().endsWith('.pdf')) {
       deleteFile(file.path);
@@ -322,12 +322,15 @@ app.post('/api/process-pdf', upload.single('file'), async (req, res) => {
     const dataBuffer = fs.readFileSync(file.path);
     let extractedText = null;
     let preview = null;
+    let numPages = 0;
 
     try {
       const pdfData = await pdf(dataBuffer);
       extractedText = pdfData.text;
+      numPages = pdfData.numpages;
+      console.log(`[Process PDF] Extracted ${numPages} pages, ${extractedText.length} characters`);
     } catch (pdfErr) {
-      console.error('PDF text extraction failed:', pdfErr.message);
+      console.error('[Process PDF] Text extraction failed:', pdfErr.message);
     }
 
     if (gm) {
@@ -356,7 +359,8 @@ app.post('/api/process-pdf', upload.single('file'), async (req, res) => {
     return res.json({ 
       text: extractedText || '', 
       preview, 
-      fileName: file.originalname 
+      fileName: file.originalname,
+      numPages
     });
 
   } catch (err) {
@@ -425,13 +429,21 @@ app.post('/api/vault/upload', upload.single('file'), async (req, res) => {
     }
 
     const file = req.file;
+    console.log(`[Vault] Processing: ${file.originalname} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
     const ext = file.originalname.toLowerCase().split('.').pop();
     let text = '';
 
     if (ext === 'pdf') {
-      const dataBuffer = fs.readFileSync(file.path);
-      const data = await pdf(dataBuffer);
-      text = data.text;
+      try {
+        const dataBuffer = fs.readFileSync(file.path);
+        const data = await pdf(dataBuffer);
+        text = data.text;
+        console.log(`[Vault] PDF parsed: ${data.numpages} pages`);
+      } catch (pdfErr) {
+        console.error('[Vault] PDF parse error:', pdfErr.message);
+        deleteFile(file.path);
+        return res.status(400).json({ error: 'Could not parse PDF. It may be encrypted or corrupted.' });
+      }
     } else if (ext === 'txt') {
       text = fs.readFileSync(file.path, 'utf-8');
     } else if (ext === 'docx') {
@@ -445,13 +457,18 @@ app.post('/api/vault/upload', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'Could not extract enough text from file' });
     }
 
+    // Smart RAG chunking with overlap (~1000 chars, 200 overlap)
     const chunks = [];
     const chunkSize = 1000;
-    for (let i = 0; i < text.length; i += chunkSize) {
-      chunks.push(text.slice(i, i + chunkSize));
+    const overlap = 200;
+    for (let i = 0; i < text.length; i += (chunkSize - overlap)) {
+      const chunk = text.slice(i, i + chunkSize).trim();
+      if (chunk.length > 50) {
+        chunks.push(chunk);
+      }
     }
 
-    console.log(`[Vault] Generating embeddings for ${chunks.length} chunks...`);
+    console.log(`[Vault] Created ${chunks.length} chunks from ${text.length} chars`);
     const embeddings = await hf.featureExtraction({
       model: 'sentence-transformers/all-MiniLM-L6-v2',
       inputs: chunks

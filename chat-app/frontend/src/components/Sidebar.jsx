@@ -91,17 +91,20 @@ const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat
     onDeleteChat(chatId);
   };
 
-const SynapseLogo = ({ className = "w-6 h-6" }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.2"/>
-    <path d="M8 12L12 8L16 12L12 16L8 12Z" fill="currentColor" className="animate-pulse"/>
-    <path d="M12 8V2M12 22V16M16 12H22M2 12H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-  </svg>
+const SynapseLogo = ({ className = "w-6 h-6", glow = false }) => (
+  <div className={`relative flex items-center justify-center ${glow ? 'after:absolute after:inset-0 after:bg-violet-500/30 after:blur-xl after:rounded-full' : ''}`}>
+    <svg className={`${className} relative z-10`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1" strokeOpacity="0.1" />
+      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.4" strokeDasharray="4 2" />
+      <path d="M12 4V8M12 16V20M4 12H8M16 12H20" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeOpacity="0.6"/>
+      <path d="M12 8.5L15.5 12L12 15.5L8.5 12L12 8.5Z" fill="currentColor" className="animate-pulse" />
+    </svg>
+  </div>
 );
 
 return (
     <div className={`flex flex-col h-full transition-all ${darkMode ? 'bg-[#0a0a0a]' : 'bg-white'}`}>
-      <div className={`flex items-center gap-3 px-3 py-4 ${isCollapsed ? 'justify-center' : ''}`}>
+      <div className={`flex items-center gap-2 px-2 py-4 ${isCollapsed ? 'justify-center' : ''}`}>
         {isMobileOpen ? (
           <button
             onClick={onCloseMobile}
@@ -121,9 +124,9 @@ return (
             </svg>
           </button>
         )}
+        <SynapseLogo className={`${isCollapsed ? 'w-8 h-8' : 'w-8 h-8'} text-violet-500 drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]`} />
         {!isCollapsed && (
-          <span className="text-xl font-bold bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent flex items-center gap-2">
-            <SynapseLogo className="w-6 h-6" />
+          <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
             Synapse
           </span>
         )}

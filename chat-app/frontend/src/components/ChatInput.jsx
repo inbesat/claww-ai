@@ -107,13 +107,22 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, active
         endpoint = `${API_URL}/api/process-pdf`;
       }
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+
       const response = await fetch(endpoint, {
         method: 'POST',
         body: formData,
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        throw new Error('Upload failed');
+        if (response.status === 413) {
+          throw new Error('File too large. Maximum size is 50MB.');
+        }
+        throw new Error(`Upload failed: ${response.status}`);
       }
 
       const data = await response.json();
@@ -126,7 +135,7 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, active
       }
     } catch (err) {
       console.error('Upload error:', err);
-      alert('Failed to process file');
+      alert(err.message || 'Failed to process file');
       handleRemoveFile();
     } finally {
       setIsUploading(false);
@@ -212,7 +221,7 @@ return (
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               <span className={`text-sm flex-1 truncate ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>
-                {isUploading ? 'Processing...' : attachedFileName}
+                {isUploading ? `Reading ${attachedFileName}...` : attachedFileName}
               </span>
               <button
                 type="button"
