@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = (import.meta.env.VITE_API_URL || 'https://claww-ai-3.onrender.com').trim();
 
 const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, activeCanvas, onToggleCanvas }) => {
   const [message, setMessage] = useState('');
