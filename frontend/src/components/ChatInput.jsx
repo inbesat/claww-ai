@@ -190,7 +190,7 @@ const handleRemoveFile = () => {
   };
 
 return (
-    <div className="fixed bottom-0 left-0 right-0 bg-black/40 backdrop-blur-xl border-t border-white/10 px-2 md:px-4 py-3 md:py-4 z-50">
+    <div className="fixed bottom-0 left-0 md:left-64 right-0 bg-black/40 backdrop-blur-xl border-t border-white/10 px-2 md:px-4 py-3 md:py-4 z-50 shadow-[0_-4px_20px_rgba(217,70,239,0.1)]">
       <div className="max-w-[800px] mx-auto">
         {attachedFileName && imageContext && (
           <div className="mb-3 flex items-center gap-2">
@@ -256,7 +256,7 @@ return (
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className={`p-3 ml-1 rounded-lg transition-colors ${darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
+               className={`p-3 ml-1 rounded-lg transition-all duration-300 hover:scale-110 ${darkMode ? 'text-zinc-500 hover:text-fuchsia-400 hover:bg-zinc-800' : 'text-zinc-400 hover:text-fuchsia-400 hover:bg-zinc-200'}`}
               title="Attach file"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -266,7 +266,7 @@ return (
             <button
               type="button"
               onClick={() => setShowToolsMenu(prev => !prev)}
-              className={`p-3 rounded-lg transition-all duration-300 ${showToolsMenu || isImageMode || isSearchMode || isCodeMode || activeCanvas || isCanvasMode || isListening ? 'text-violet-400 bg-violet-500/20' : darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
+               className={`p-3 rounded-lg transition-all duration-300 hover:scale-110 ${showToolsMenu || isImageMode || isSearchMode || isCodeMode || activeCanvas || isCanvasMode || isListening ? 'text-violet-400 bg-violet-500/20' : darkMode ? 'text-zinc-500 hover:text-fuchsia-400 hover:bg-zinc-800/50' : 'text-zinc-400 hover:text-fuchsia-400 hover:bg-zinc-200'}`}
               title="Tools"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -343,7 +343,7 @@ return (
               type="button"
               onClick={toggleListening}
               disabled={isLoading || isUploading}
-              className={`p-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${isListening ? 'text-red-500 bg-red-500/20 animate-pulse' : darkMode ? 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200'}`}
+               className={`p-3 rounded-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed ${isListening ? 'text-red-500 bg-red-500/20 animate-pulse' : darkMode ? 'text-zinc-500 hover:text-fuchsia-400 hover:bg-zinc-800/50' : 'text-zinc-400 hover:text-fuchsia-400 hover:bg-zinc-200'}`}
               title={isListening ? 'Stop recording' : 'Voice input'}
             >
               {isListening ? (
