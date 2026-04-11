@@ -28,59 +28,8 @@ try {
   if (process.env.PINECONE_API_KEY) {
     pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
     pineconeIndex = pinecone.Index('synapse-vault');
-    console.log('[Pinecone] Connected');
-  }
-} catch (e) {
-  console.log('[Pinecone] Not configured');
-}
-
-let hf;
-try {
-  if (process.env.HF_TOKEN) {
-    const { HfInference } = require('@huggingface/inference');
-    hf = new HfInference(process.env.HF_TOKEN);
-    console.log('[HuggingFace] Connected');
-  }
-} catch (e) {
-  console.log('[HuggingFace] Not configured');
-}
-
-const nodemailer = require('nodemailer');
-
-process.on('unhandledRejection', (reason, promise) => { console.error('Unhandled Rejection:', reason); });
-
-const app = express();
-const PORT = process.env.PORT || 10000;
-
-app.get('/', (req, res) => res.status(200).send('Synapse API Backend'));
-app.get('/health', (req, res) => res.status(200).send('System Online'));
-
-let playwright;
-try {
-  playwright = require('playwright');
-} catch (e) {
-  console.log('[Browser] Playwright not available');
-}
-
-app.use(cors());
-
-// 📦 MIDDLEWARE
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ limit: '100mb', extended: true }));
-app.use(express.raw({ type: 'application/pdf', limit: '100mb' }));
-
-// ✅ GROQ CLIENT
-const groq = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY,
-  baseURL: 'https://api.groq.com/openai/v1'
-});
-
-// ✅ PINECONE & HF CLIENTS
-let pinecone, pineconeIndex;
-if (process.env.PINECONE_API_KEY) {
-  pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
-  pineconeIndex = pinecone.Index('synapse-vault');
-  console.log('[Pinecone] Connected to synapse-vault index');
+    console.log('[Pinecone] Connected to synapse-vault index');
+    console.log('✅ Pinecone Initialized Successfully');
 }
 
 let hf;
