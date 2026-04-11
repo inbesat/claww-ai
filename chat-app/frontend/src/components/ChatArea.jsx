@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
 import StockCard from './StockCard';
+import ChartVisualizer from './ChartVisualizer';
 import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const SynapseChart = ({ chartData, darkMode }) => {
@@ -564,6 +565,12 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
           
           return (
             <div key={message.id}>
+              {message.metadata?.chartData && (
+                <ChartVisualizer 
+                  data={message.metadata.chartData.data} 
+                  type={message.metadata.chartData.type} 
+                />
+              )}
               {stockData && (
                 <StockCard 
                   symbol={stockData.symbol} 

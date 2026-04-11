@@ -169,7 +169,9 @@ GOOD EXAMPLE: $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
 
 3. DOCUMENT CONTEXT: If the user provides 'Document Context', read it carefully and base your answer entirely on that extracted text. Do not ignore it.
 
-4. DATA VISUALIZATION: When asked for charts, graphs, or data visualization, output a JSON code block with language 'chart-data' containing: { "type": "bar|line|area", "data": [{key: value, ...}], "colors": ["#violet", "#fuchsia"] }.`;
+4. DATA VISUALIZATION: When asked for charts, graphs, or data visualization, output a JSON code block with language 'chart-data' containing: { "type": "bar|line|area", "data": [{key: value, ...}], "colors": ["#violet", "#fuchsia"] }.
+CRITICAL UI RULE: NEVER generate text-based graphs, ASCII charts, or auto-render data visualizations in your text response. If the user EXPLICITLY asks for a chart or graph, you must output a clean text summary, and attach the chart data in a JSON tool call block.
+`;
 }
 
 async function buildPrompt(message, forceSearch = false) {
