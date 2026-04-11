@@ -218,7 +218,78 @@ const EmailActionCard = ({ actionJson, darkMode }) => {
   );
 };
 
-const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentStep, sessionId }) => {
+const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentStep, sessionId, isVoiceMode, isHandsFree, selectedVoiceIndex }) => {
+  const [isListening, setIsListening] = useState(false);
+  const [voices, setVoices] = useState([]);
+  const recognitionRef = useRef(null);
+  
+  useEffect(() => {
+    const loadVoices = () => {
+      const availableVoices = window.speechSynthesis.getVoices();
+      setVoices(availableVoices);
+    };
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }, []);
+  
+  const speak = (text) => {
+    if (!text || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    if (voices[selectedVoiceIndex]) {
+      utterance.voice = voices[selectedVoiceIndex];
+    }
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    utterance.onend = () => {
+      if (isHandsFree && isVoiceMode) {
+        startListening();
+      }
+    };
+    window.speechSynthesis.speak(utterance);
+  };
+  
+  const startListening = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      console.log('Speech recognition not supported');
+      return;
+    }
+    
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    
+    recognitionRef.current = new SpeechRecognition();
+    recognitionRef.current.continuous = false;
+    recognitionRef.current.interimResults = true;
+    
+    recognitionRef.current.onstart = () => setIsListening(true);
+    recognitionRef.current.onend = () => setIsListening(false);
+    recognitionRef.current.onerror = () => setIsListening(false);
+    
+    recognitionRef.current.start();
+  };
+  
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      window.speechSynthesis?.cancel();
+    };
+  }, []);
+  
+  useEffect(() => {
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg && !lastMsg.isStreaming && lastMsg.sender === 'ai' && isVoiceMode && !isHandsFree) {
+      const textOnly = lastMsg.text?.replace(/[#*`\[\]]/g, '').slice(0, 500);
+      if (textOnly && textOnly.length > 10) {
+        speak(textOnly);
+      }
+    }
+  }, [messages, isLoading]);
+  
   const chatAreaRef = useRef(null);
   const scrollAnchorRef = useRef(null);
 
@@ -303,6 +374,18 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
     </svg>
   );
 
+  const ChartIcon = () => (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </svg>
+  );
+
+  const MicrophoneIcon = () => (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+    </svg>
+  );
+
   const StatusBanner = ({ text, darkMode, agentStep }) => {
     const activeStep = agentStep || (text ? (text.match(/\[AGENT_STEP:([^\]]+)\]/)?.[1] || 
       (text.includes('[PLANNING]') ? 'Planning' : 
@@ -349,7 +432,7 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto mt-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 max-w-6xl mx-auto mt-8">
               <FeatureCard 
                 icon={<GlobeIcon />}
                 title="Web Search"
@@ -376,20 +459,32 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
               />
               <FeatureCard 
                 icon={<LayoutIcon />}
-                title="Canvas"
-                description="Interactive workspace for live coding, document editing, and side-by-side previews."
+                title="Multiplayer Canvas"
+                description="Real-time collaborative coding with inviteable friends."
                 darkMode={darkMode}
               />
               <FeatureCard 
                 icon={<DatabaseIcon />}
-                title="Knowledge Vault"
-                description="Your personal long-term memory. Upload full libraries and chat with all your data at once."
+                title="100-Page PDF Vault"
+                description="Advanced RAG for deep analysis of massive documents."
                 darkMode={darkMode}
               />
               <FeatureCard 
                 icon={<AgentIcon />}
-                title="Agentic Workflows"
-                description="Autonomous planning and execution for complex tasks."
+                title="Browser Agent"
+                description="AI that browses live websites and extracts data."
+                darkMode={darkMode}
+              />
+              <FeatureCard 
+                icon={<ChartIcon />}
+                title="Visual Flowcharts"
+                description="Generate Mermaid.js diagrams and charts instantly."
+                darkMode={darkMode}
+              />
+              <FeatureCard 
+                icon={<MicrophoneIcon />}
+                title="Voice Mode"
+                description="Hands-free interaction with native speech-to-text."
                 darkMode={darkMode}
               />
               <FeatureCard 
@@ -461,6 +556,37 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
         })}
 
         <StatusBanner text={currentStatus} darkMode={darkMode} agentStep={currentAgentStep} />
+        
+        {isVoiceMode && (
+          <div className={`fixed bottom-20 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-4 py-2 rounded-full backdrop-blur-xl ${darkMode ? 'bg-zinc-900/90 border border-zinc-700' : 'bg-white/90 border border-gray-200'}`}>
+            <button
+              onClick={isListening ? () => recognitionRef.current?.stop() : startListening}
+              className={`p-2 rounded-full transition-all ${isListening ? 'bg-red-500 animate-pulse' : 'bg-violet-600 hover:bg-violet-500'}`}
+              title={isListening ? 'Stop listening' : 'Start voice input'}
+            >
+              <MicrophoneIcon />
+            </button>
+            
+            <button
+              onClick={() => setIsHandsFree(!isHandsFree)}
+              className={`px-3 py-1.5 text-xs rounded-full transition-all ${isHandsFree ? 'bg-green-600 text-white' : darkMode ? 'bg-zinc-700 text-zinc-300' : 'bg-gray-200 text-gray-600'}`}
+              title={isHandsFree ? 'Hands-free mode ON' : 'Hands-free mode OFF'}
+            >
+              {isHandsFree ? '🤖 Auto' : '🎤 Manual'}
+            </button>
+            
+            <select
+              value={selectedVoiceIndex}
+              onChange={(e) => setSelectedVoiceIndex(Number(e.target.value))}
+              className={`text-xs px-2 py-1 rounded-full ${darkMode ? 'bg-zinc-800 text-zinc-300' : 'bg-gray-100 text-gray-600'}`}
+            >
+              {voices.slice(0, 10).map((voice, i) => (
+                <option key={i} value={i}>{voice.name.split(' ')[0]}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        
         <div ref={scrollAnchorRef} />
       </div>
     </div>

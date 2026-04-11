@@ -6,6 +6,40 @@ import 'katex/dist/katex.min.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { saveAs } from 'file-saver';
 import { io } from 'socket.io-client';
+import mermaid from 'mermaid';
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  securityLevel: 'loose',
+});
+
+const MermaidDiagram = ({ code, darkMode }) => {
+  const [svg, setSvg] = useState('');
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const render = async () => {
+      try {
+        const id = `mermaid-${Date.now()}`;
+        const { svg } = await mermaid.render(id, code);
+        setSvg(svg);
+      } catch (e) {
+        console.error('Mermaid render error:', e);
+        setSvg('<text>Diagram error</text>');
+      }
+    };
+    render();
+  }, [code]);
+
+  return (
+    <div 
+      ref={containerRef}
+      className={`my-4 p-4 rounded-lg overflow-x-auto ${darkMode ? 'bg-zinc-900' : 'bg-gray-50'}`}
+      dangerouslySetInnerHTML={{ __html: svg }}
+    />
+  );
+};
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -522,6 +556,10 @@ components={{
             const codeString = String(children).replace(/\n$/, '');
             const previewableLanguages = ['html', 'css', 'javascript', 'xml', 'js', 'css', 'html'];
             const canPreview = previewableLanguages.includes(language?.toLowerCase());
+            
+            if (language?.toLowerCase() === 'mermaid') {
+              return <MermaidDiagram code={codeString} darkMode={darkMode} />;
+            }
             
             if (!inline && (match || children)) {
               return (

@@ -3,7 +3,14 @@ import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
 import ChatInput from './components/ChatInput';
 import { LargePreviewableCodeBlock } from './components/MessageBubble';
+import mermaid from 'mermaid';
 import './index.css';
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  securityLevel: 'loose',
+});
 
 const STORAGE_KEY = 'claw_chats';
 const HISTORY_KEY = 'claw_history';
@@ -47,6 +54,9 @@ function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentAgentStep, setCurrentAgentStep] = useState(null);
+  const [isVoiceMode, setIsVoiceMode] = useState(false);
+  const [isHandsFree, setIsHandsFree] = useState(false);
+  const [selectedVoiceIndex, setSelectedVoiceIndex] = useState(0);
 
   // Session ID
   const [sessionId, setSessionId] = useState(() => {
@@ -445,6 +455,9 @@ function App() {
                 onOpenCanvas={setActiveCanvas}
                 currentAgentStep={currentAgentStep}
                 sessionId={sessionId}
+                isVoiceMode={isVoiceMode}
+                isHandsFree={isHandsFree}
+                selectedVoiceIndex={selectedVoiceIndex}
               />
 
               <ChatInput
