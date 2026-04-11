@@ -1,4 +1,6 @@
-require('dotenv').config();
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
@@ -7,7 +9,8 @@ const OpenAI = require('openai');
 const multer = require('multer');
 
 process.on('uncaughtException', (err) => {
-  console.error('SYSTEM ERROR:', err.message);
+  console.error('SERVER_START_ERROR:', err.message);
+  console.error(err.stack);
 });
 
 const pdf = require('pdf-parse');
@@ -49,9 +52,8 @@ process.on('unhandledRejection', (reason, promise) => { console.error('Unhandled
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-app.get('/', (req, res) => res.send('Synapse Backend is Active'));
-app.get('/health', (req, res) => res.status(200).send('OK'));
-app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+app.get('/', (req, res) => res.status(200).send('Synapse API Backend'));
+app.get('/health', (req, res) => res.status(200).send('System Online'));
 
 let playwright;
 try {
@@ -809,6 +811,10 @@ app.post('/api/browser', async (req, res) => {
   }
 });
 
-httpServer.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Synapse Server is LIVE on port ${PORT}`);
+const PORT = process.env.PORT || 10000;
+const server = httpServer.listen(PORT, '0.0.0.0', () => {
+  console.log('====================================');
+  console.log(`🚀 SYNAPSE IS LIVE ON PORT: ${PORT}`);
+  console.log('====================================');
 });
+server.timeout = 120000;
