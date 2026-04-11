@@ -7,28 +7,41 @@ const OpenAI = require('openai');
 const multer = require('multer');
 
 process.on('uncaughtException', (err) => {
-  console.error('FATAL ERROR:', err.message);
-  console.error(err.stack);
-  process.exit(1);
+  console.error('CRITICAL:', err.message);
 });
 
-let pdfjsLib;
-try {
-  pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
-  pdfjsLib.GlobalWorkerOptions.workerSrc = false;
-  console.log("✅ PDF.js Loaded Successfully");
-} catch (err) {
-  console.error("❌ PDF.js Load Failed:", err.message);
-}
+const pdf = require('pdf-parse');
+console.log('✅ PDF-parse loaded');
 
 const mammoth = require('mammoth');
-const { fromPath } = require('pdf2pic');
 const fs = require('fs');
 const axios = require('axios');
 const Tesseract = require('tesseract.js');
 const cheerio = require('cheerio');
-const { Pinecone } = require('@pinecone-database/pinecone');
-const { HfInference } = require('@huggingface/inference');
+
+let pinecone, pineconeIndex;
+try {
+  const { Pinecone } = require('@pinecone-database/pinecone');
+  if (process.env.PINECONE_API_KEY) {
+    pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
+    pineconeIndex = pinecone.Index('synapse-vault');
+    console.log('[Pinecone] Connected');
+  }
+} catch (e) {
+  console.log('[Pinecone] Not configured');
+}
+
+let hf;
+try {
+  if (process.env.HF_TOKEN) {
+    const { HfInference } = require('@huggingface/inference');
+    hf = new HfInference(process.env.HF_TOKEN);
+    console.log('[HuggingFace] Connected');
+  }
+} catch (e) {
+  console.log('[HuggingFace] Not configured');
+}
+
 const nodemailer = require('nodemailer');
 
 process.on('unhandledRejection', (reason, promise) => { console.error('Unhandled Rejection:', reason); });
@@ -46,33 +59,6 @@ try {
 } catch (e) {
   console.log('[Browser] Playwright not available');
 }
-
-let gm;
-try {
-  const gmModule = require('gm');
-  const isProduction = process.env.NODE_ENV === 'production';
-  
-  const gmConfig = { 
-    imageMagick: false
-  };
-  
-  if (!isProduction) {
-    gmConfig.appPath = 'E:/claw-code-main (3) (1)/claw-code-main/claw-code-main/GraphicsMagick-1.3.46-Q16/';
-  }
-  
-  const gmInstance = gmModule.subClass(gmConfig);
-  
-  const gsBinary = isProduction ? 'gs' : 'gswin64c';
-  gmInstance.setGhostscriptBinary(gsBinary);
-  console.log(`[GraphicsMagick] Ghostscript binary set to: ${gsBinary}`);
-  
-  gm = gmInstance;
-} catch (e) {
-  console.warn('GraphicsMagick not available, thumbnail generation may fail');
-}
-
-const app = express();
-const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 
@@ -242,41 +228,24 @@ async function buildPrompt(message, forceSearch = false) {
   };
 }
 
-// 📄 PDF PARSER (Page-by-page streaming for memory efficiency)
+// 📄 PDF PARSER (Using pdf-parse)
 async function parsePDF(filePath) {
   try {
     const dataBuffer = fs.readFileSync(filePath);
-    const pdf = await pdfjsLib.getDocument({ data: dataBuffer }).promise;
-    let fullText = '';
+    const data = await pdf(dataBuffer);
     
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items.map(item => item.str).join(' ');
-      fullText += pageText + '\n';
-      
-      if (i % 10 === 0) {
-        console.log(`[ParsePDF] Processed page ${i} of ${pdf.numPages}`);
-      }
-      
-      page.cleanup();
-    }
-    
-    pdf.destroy();
-    
-    if (fullText.trim().length > 20) {
-      return fullText;
+    if (data.text && data.text.trim().length > 20) {
+      console.log(`[ParsePDF] Extracted ${data.numpages} pages`);
+      return data.text;
     }
 
-    console.log("PDF lacks text, attempting OCR...");
-    const options = {
-      density: 300,
-      saveFilename: "temp_page",
-      savePath: "./uploads",
-      format: "png",
-      width: 2550,
-      height: 3300
-    };
+    console.log("PDF lacks text");
+    return null;
+  } catch (err) {
+    console.error('PDF parse error:', err.message);
+    return null;
+  }
+}
     const storeAsImage = fromPath(filePath, options);
     const convertedImage = await storeAsImage(1);
     
@@ -347,7 +316,7 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
   }
 });
 
-// 📄 PDF PROCESSING WITH THUMBNAIL
+// 📄 PDF PROCESSING
 app.post('/api/process-pdf', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
@@ -362,59 +331,25 @@ app.post('/api/process-pdf', upload.single('file'), async (req, res) => {
 
     const dataBuffer = fs.readFileSync(file.path);
     let extractedText = null;
-    let preview = null;
     let numPages = 0;
 
     try {
-      const pdf = await pdfjsLib.getDocument({ data: dataBuffer }).promise;
-      numPages = pdf.numPages;
-      
-      let fullText = '';
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const textContent = await page.getTextContent();
-        const pageText = textContent.items.map(item => item.str).join(' ');
-        fullText += pageText + '\n';
-        page.cleanup();
-        
-        if (i % 10 === 0) {
-          console.log(`[Process PDF] Processed page ${i} of ${pdf.numPages}`);
-        }
-      }
-      
-      extractedText = fullText;
-      pdf.destroy();
-      console.log(`[Process PDF] Extracted ${numPages} pages, ${extractedText.length} characters`);
+      const data = await pdf(dataBuffer);
+      extractedText = data.text;
+      numPages = data.numpages;
+      console.log(`[Process PDF] Extracted ${numPages} pages, ${extractedText?.length || 0} characters`);
     } catch (pdfErr) {
       console.error('[Process PDF] Text extraction failed:', pdfErr.message);
     }
 
-    if (gm) {
-      try {
-        console.log("Rendering PDF thumbnail for:", file.originalname);
-        const thumbnailBuffer = await new Promise((resolve, reject) => {
-          gm(file.path + '[0]')
-            .resize(500, null)
-            .toBuffer('PNG', (err, buffer) => {
-              if (err) reject(err);
-              else resolve(buffer);
-            });
-        });
-        preview = `data:image/png;base64,${thumbnailBuffer.toString('base64')}`;
-      } catch (gmErr) {
-        console.error('Thumbnail generation failed:', gmErr.message, gmErr.stack);
-      }
-    }
-
     deleteFile(file.path);
 
-    if (!extractedText && !preview) {
-      return res.status(400).json({ error: 'Could not process PDF. It may be password-protected or corrupted.' });
+    if (!extractedText) {
+      return res.status(400).json({ error: 'Could not extract text from PDF.' });
     }
 
     return res.json({ 
-      text: extractedText || '', 
-      preview, 
+      text: extractedText, 
       fileName: file.originalname,
       numPages
     });
@@ -495,46 +430,29 @@ app.post('/api/vault/upload', upload.single('file'), async (req, res) => {
     if (ext === 'pdf') {
       try {
         const dataBuffer = fs.readFileSync(file.path);
-        const pdf = await pdfjsLib.getDocument({ data: dataBuffer }).promise;
-        console.log(`[Vault] PDF loaded: ${pdf.numPages} pages`);
+        const data = await pdf(dataBuffer);
+        
+        console.log(`[Vault] PDF loaded: ${data.numpages} pages`);
         
         let pageTextBuffer = '';
+        const text = data.text || '';
         
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-          const pageText = textContent.items.map(item => item.str).join(' ');
-          
-          pageTextBuffer += pageText + '\n';
-          
-          // Process chunks as we accumulate text
-          while (pageTextBuffer.length >= chunkSize) {
-            const chunk = pageTextBuffer.slice(0, chunkSize).trim();
-            if (chunk.length > 50) {
-              chunks.push(chunk);
-            }
-            pageTextBuffer = pageTextBuffer.slice(chunkSize - overlap);
+        while (pageTextBuffer.length >= chunkSize) {
+          const chunk = pageTextBuffer.slice(0, chunkSize).trim();
+          if (chunk.length > 50) {
+            chunks.push(chunk);
           }
-          
-          // Heartbeat log every 10 pages
-          console.log(`[Streaming] Page ${i} indexed...`);
-          
-          // Memory management: pause every 20 pages to allow GC
-          if (i % 20 === 0) {
-            page.cleanup();
-            await new Promise(r => setTimeout(r, 100));
-            if (global.gc) global.gc();
-          } else {
-            page.cleanup();
+          pageTextBuffer = pageTextBuffer.slice(chunkSize - overlap);
+        }
+        
+        // Simple chunking for the full text
+        for (let i = 0; i < text.length; i += (chunkSize - overlap)) {
+          const chunk = text.slice(i, i + chunkSize).trim();
+          if (chunk.length > 50) {
+            chunks.push(chunk);
           }
         }
         
-        // Process remaining text in buffer
-        if (pageTextBuffer.trim().length > 50) {
-          chunks.push(pageTextBuffer.trim());
-        }
-        
-        pdf.destroy();
         console.log(`[Vault] PDF parsed: ${chunks.length} chunks created`);
         
       } catch (pdfErr) {
