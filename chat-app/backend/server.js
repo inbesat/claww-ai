@@ -24,7 +24,9 @@ const { Pinecone } = require('@pinecone-database/pinecone');
 const { HfInference } = require('@huggingface/inference');
 const nodemailer = require('nodemailer');
 
-process.on('uncaughtException', (err) => console.error('CRITICAL CRASH:', err));
+process.on('uncaughtException', (err) => {
+  console.error('SYSTEM CRASH:', err.stack);
+});
 process.on('unhandledRejection', (reason, promise) => { console.error('Unhandled Rejection:', reason); });
 
 const app = express();
