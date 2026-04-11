@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node --max-old-space-size=450 server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "postinstall": "npm rebuild"
   },
   "dependencies": {
     "@huggingface/inference": "^2.6.4",

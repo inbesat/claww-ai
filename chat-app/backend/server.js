@@ -6,12 +6,19 @@ const { Server } = require('socket.io');
 const OpenAI = require('openai');
 const multer = require('multer');
 
+process.on('uncaughtException', (err) => {
+  console.error('FATAL ERROR:', err.message);
+  console.error(err.stack);
+  process.exit(1);
+});
+
 let pdfjsLib;
 try {
   pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
   pdfjsLib.GlobalWorkerOptions.workerSrc = false;
-} catch (e) {
-  console.error('[PDF.js] Failed to load:', e.message);
+  console.log("✅ PDF.js Loaded Successfully");
+} catch (err) {
+  console.error("❌ PDF.js Load Failed:", err.message);
 }
 
 const mammoth = require('mammoth');
@@ -24,14 +31,12 @@ const { Pinecone } = require('@pinecone-database/pinecone');
 const { HfInference } = require('@huggingface/inference');
 const nodemailer = require('nodemailer');
 
-process.on('uncaughtException', (err) => {
-  console.error('SYSTEM CRASH:', err.stack);
-});
 process.on('unhandledRejection', (reason, promise) => { console.error('Unhandled Rejection:', reason); });
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 10000;
 
+app.get('/', (req, res) => res.send('Synapse Backend is Active'));
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
@@ -887,5 +892,5 @@ app.post('/api/browser', async (req, res) => {
 });
 
 httpServer.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🚀 Synapse Server is LIVE on port ${PORT}`);
 });
