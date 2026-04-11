@@ -302,21 +302,18 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
   // Check if any message is currently streaming
   const hasStreamingMessage = messages.some(msg => msg.isStreaming);
 
-  const FeatureCard = ({ icon, title, description, darkMode }) => (
-    <div className={`aspect-square flex flex-col items-center justify-center text-center p-6 rounded-3xl backdrop-blur-xl border transition-all duration-500 cursor-pointer ${
-      darkMode 
-        ? 'bg-white/5 border-white/10 hover:bg-violet-600/10 hover:border-violet-500/40' 
-        : 'bg-black/5 border-black/10 hover:bg-violet-100/50'
-    }`}>
-      <div className={`p-3 rounded-xl mb-3 ${
-        darkMode ? 'bg-violet-500/20' : 'bg-violet-100'
-      }`}>
+  const FeatureCard = ({ icon, title, description, darkMode, index }) => (
+    <div 
+      className="aspect-square w-full flex flex-col items-center justify-center text-center p-4 rounded-3xl backdrop-blur-xl border transition-all duration-500 cursor-pointer hover:scale-[1.02] fade-in-up bg-white/[0.03] border-white/[0.08] hover:bg-violet-600/10 hover:border-violet-500/40"
+      style={{ animationDelay: `${index * 0.05}s` }}
+    >
+      <div className="p-3 rounded-xl mb-3 bg-violet-500/20">
         <div className="text-violet-500 w-6 h-6">{icon}</div>
       </div>
-      <h3 className={`font-bold text-sm mb-1 ${darkMode ? 'text-[#fafafa]' : 'text-zinc-900'}`}>
+      <h3 className="font-bold text-sm mb-1 text-[#fafafa]">
         {title}
       </h3>
-      <p className={`text-[10px] leading-tight opacity-60 ${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+      <p className="text-[10px] leading-tight opacity-60 text-zinc-400">
         {description}
       </p>
     </div>
@@ -423,75 +420,75 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
     >
       <div className="max-w-[800px] mx-auto space-y-4 pb-4">
         {messages.length === 0 && (
-          <div className="text-center py-16">
+            <div className="text-center py-16">
             <div className="mb-8">
               <div className="flex justify-center mb-6">
                 <SynapseLogo className="w-20 h-20 text-violet-500" glow={true} />
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-violet-500 to-fuchsia-500 text-transparent bg-clip-text mb-4">
+              <h1 className="text-5xl font-black tracking-tighter bg-gradient-to-b from-white via-white to-zinc-500 bg-clip-text text-transparent mb-2">
                 Welcome to Synapse AI
               </h1>
-              <p className={`text-lg ${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+              <p className="text-lg text-zinc-500">
                 How can I help you today?
               </p>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 max-w-5xl mx-auto mt-8">
-              <FeatureCard 
+              <FeatureCard index={0}
                 icon={<SynapseLogo />}
                 title="Web Search"
                 description="Get real-time answers and live data from the internet."
                 darkMode={darkMode}
               />
-              <FeatureCard 
+              <FeatureCard index={1}
                 icon={<CodeIcon />}
                 title="Code Mode"
                 description="Generate production-ready code with an elite AI developer."
                 darkMode={darkMode}
               />
-              <FeatureCard 
+              <FeatureCard index={2}
                 icon={<SparklesIcon />}
                 title="Image Gen"
                 description="Create stunning visuals from text descriptions."
                 darkMode={darkMode}
               />
-              <FeatureCard 
+              <FeatureCard index={3}
                 icon={<FileIcon />}
                 title="Document Analysis"
                 description="Upload PDFs and ask questions about their content."
                 darkMode={darkMode}
               />
-              <FeatureCard 
+              <FeatureCard index={4}
                 icon={<LayoutIcon />}
                 title="Multiplayer Canvas"
                 description="Real-time collaborative coding with inviteable friends."
                 darkMode={darkMode}
               />
-              <FeatureCard 
+              <FeatureCard index={5}
                 icon={<DatabaseIcon />}
                 title="100-Page PDF Vault"
                 description="Advanced RAG for deep analysis of massive documents."
                 darkMode={darkMode}
               />
-              <FeatureCard 
+              <FeatureCard index={6}
                 icon={<AgentIcon />}
                 title="Browser Agent"
                 description="AI that browses live websites and extracts data."
                 darkMode={darkMode}
               />
-              <FeatureCard 
+              <FeatureCard index={7}
                 icon={<ChartIcon />}
                 title="Visual Flowcharts"
                 description="Generate Mermaid.js diagrams and charts instantly."
                 darkMode={darkMode}
               />
-              <FeatureCard 
+              <FeatureCard index={8}
                 icon={<MicrophoneIcon />}
                 title="Voice Mode"
                 description="Hands-free interaction with native speech-to-text."
                 darkMode={darkMode}
               />
-              <FeatureCard 
+              <FeatureCard index={9}
                 icon={<FingerprintIcon />}
                 title="Persona Memory"
                 description="A tailored experience that remembers who you are."

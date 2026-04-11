@@ -493,7 +493,7 @@ app.post('/api/vault/upload', upload.single('file'), async (req, res) => {
           }
           
           // Heartbeat log every 10 pages
-          console.log(`[Streaming] Processed page ${i} of ${pdf.numPages}`);
+          console.log(`[Streaming] Page ${i} indexed...`);
           
           // Memory management: pause every 20 pages to allow GC
           if (i % 20 === 0) {
