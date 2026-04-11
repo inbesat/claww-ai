@@ -16,6 +16,13 @@ const { Pinecone } = require('@pinecone-database/pinecone');
 const { HfInference } = require('@huggingface/inference');
 const nodemailer = require('nodemailer');
 
+let playwright;
+try {
+  playwright = require('playwright');
+} catch (e) {
+  console.log('[Browser] Playwright not available');
+}
+
 let gm;
 try {
   const gmModule = require('gm');
@@ -531,6 +538,9 @@ app.post('/api/chat/stream', async (req, res) => {
     // Inject agentic workflow instructions if message contains "Plan:" or "Agent Mode"
     if (message.toLowerCase().includes('plan:') || message.toLowerCase().includes('agent mode')) {
       systemPromptText += `\n\nAGENTIC WORKFLOW: When executing complex tasks, use these thinking tags:\n- [PLANNING] Describe your step-by-step approach\n- [RESEARCHING] Gather necessary information\n- [EXECUTING] Implement the solution\nEnd each section clearly so the UI can display status.`;
+    
+    // Add browser agent instruction
+    systemPromptText += `\n\nBROWSER AGENT: If the user asks to browse a website, get flight prices, or perform live web actions, output a hidden JSON block exactly formatted like this: \`[BROWSER_ACTION: {"url": "https://...", "task": "screenshot"}]\`. Use "screenshot" to capture the page or "extract" to get the HTML content.`;
     }
 
     if (imageContext) {
@@ -689,6 +699,49 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('[Socket] Client disconnected:', socket.id);
   });
+});
+
+// 🌍 BROWSER AGENT
+const browserAgent = async (url, task = 'screenshot') => {
+  if (!playwright) {
+    return { error: 'Browser automation not available on this server' };
+  }
+  
+  let browser;
+  try {
+    browser = await playwright.chromium.launch({ headless: true });
+    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+    
+    if (task === 'screenshot') {
+      const screenshot = await page.screenshot({ encoding: 'base64' });
+      return { screenshot, url };
+    } else if (task === 'extract') {
+      const content = await page.content();
+      return { content: content.slice(0, 10000), url };
+    }
+    
+    await browser.close();
+    return { success: true, url };
+  } catch (err) {
+    if (browser) await browser.close();
+    return { error: err.message };
+  }
+};
+
+app.post('/api/browser', async (req, res) => {
+  const { url, task } = req.body;
+  
+  if (!url) {
+    return res.status(400).json({ error: 'URL required' });
+  }
+  
+  try {
+    const result = await browserAgent(url, task);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 httpServer.listen(PORT, () => {

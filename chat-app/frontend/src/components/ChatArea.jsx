@@ -118,6 +118,51 @@ const SynapseChart = ({ chartData, darkMode }) => {
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
+const BrowserActionCard = ({ actionJson, darkMode }) => {
+  const [status, setStatus] = useState('loading');
+  const [result, setResult] = useState(null);
+  const { url, task } = JSON.parse(actionJson);
+  
+  useEffect(() => {
+    const browse = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/browser`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, task })
+        });
+        const data = await res.json();
+        if (data.error) {
+          setStatus('error');
+        } else if (data.screenshot) {
+          setStatus('complete');
+          setResult(data.screenshot);
+        } else {
+          setStatus('complete');
+        }
+      } catch (err) {
+        setStatus('error');
+      }
+    };
+    browse();
+  }, []);
+  
+  return (
+    <div className={`mt-3 p-4 rounded-xl border ${darkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-gray-50 border-gray-200'}`}>
+      <div className="flex items-center gap-2 mb-2">
+        <span className={`w-2 h-2 rounded-full ${status === 'loading' ? 'bg-blue-500 animate-pulse' : status === 'error' ? 'bg-red-500' : 'bg-green-500'}`} />
+        <span className={darkMode ? 'text-zinc-300' : 'text-gray-700'}>
+          {status === 'loading' ? '🌐 Browsing...' : status === 'error' ? '❌ Browser failed' : '✅ Browser complete'}
+        </span>
+        <span className="text-xs text-zinc-500 ml-auto">{url}</span>
+      </div>
+      {result && (
+        <img src={`data:image/png;base64,${result}`} alt="Screenshot" className="w-full rounded" />
+      )}
+    </div>
+  );
+};
+
 const EmailActionCard = ({ actionJson, darkMode }) => {
   const [status, setStatus] = useState('preparing');
   
@@ -385,6 +430,18 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
             }
           }
           
+          // Parse and clean browser action from text
+          const browserMatch = message.text?.match(/\[BROWSER_ACTION:\s*(\{.*?\})\]/s);
+          let browserActionJson = null;
+          if (browserMatch) {
+            try {
+              browserActionJson = browserMatch[1];
+              displayText = message.text.replace(browserMatch[0], '');
+            } catch (e) {
+              console.error('Browser action parse error:', e);
+            }
+          }
+          
           return (
             <div key={message.id}>
               {chartData ? (
@@ -398,6 +455,7 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
                 />
               )}
               {emailActionJson && <EmailActionCard actionJson={emailActionJson} darkMode={darkMode} />}
+              {browserActionJson && <BrowserActionCard actionJson={browserActionJson} darkMode={darkMode} />}
             </div>
           );
         })}

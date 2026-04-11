@@ -146,11 +146,17 @@ export const LargePreviewableCodeBlock = ({ code, language, darkMode, sessionId 
   const [activeTab, setActiveTab] = useState('code');
   const [localCode, setLocalCode] = useState(code);
   const [isLiveCollab, setIsLiveCollab] = useState(false);
+  const [consoleOutput, setConsoleOutput] = useState('');
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [execMode, setExecMode] = useState('');
   const socketRef = useRef(null);
   const isLocalUpdate = useRef(false);
+  const pyodideRef = useRef(null);
   
+  const langMap = { python: 'python3', javascript: 'node-js', js: 'node-js', python3: 'python3', 'node-js': 'node-js', cpp: 'cpp', c: 'c', rust: 'rust', java: 'java' };
   const previewableLanguages = ['html', 'css', 'javascript', 'xml', 'js', 'css', 'html'];
   const canPreview = previewableLanguages.includes(language?.toLowerCase());
+  const canExecute = ['python', 'javascript', 'python3', 'js', 'node-js'].includes(language?.toLowerCase());
 
   useEffect(() => {
     if (!sessionId) return;
@@ -205,6 +211,57 @@ export const LargePreviewableCodeBlock = ({ code, language, darkMode, sessionId 
     window.open(netlifyUrl, '_blank');
   };
 
+  const loadPyodide = async () => {
+    if (pyodideRef.current) return pyodideRef.current;
+    if (!window.loadPyodide) {
+      await new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js';
+        script.onload = resolve;
+        document.head.appendChild(script);
+      });
+    }
+    pyodideRef.current = await window.loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/' });
+    return pyodideRef.current;
+  };
+
+  const executeCode = async () => {
+    setIsExecuting(true);
+    setConsoleOutput('');
+    const lang = language?.toLowerCase() || 'javascript';
+    
+    try {
+      if (lang === 'python' || lang === 'python3') {
+        setExecMode('⚡ Local (Pyodide)');
+        const pyodide = await loadPyodide();
+        pyodide.runPython(localCode);
+        setConsoleOutput('Execution complete.');
+      } else if (lang === 'javascript' || lang === 'js' || lang === 'node-js') {
+        setExecMode('⚡ Local (Node.js)');
+        try {
+          const result = new Function(localCode)();
+          setConsoleOutput(result !== undefined ? String(result) : 'Execution complete.');
+        } catch (e) {
+          setConsoleOutput(`Error: ${e.message}`);
+        }
+      } else {
+        setExecMode('☁️ Cloud (Piston)');
+        const mappedLang = langMap[lang] || lang;
+        const response = await fetch('https://emacs.piston.rs/api/v2/execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ language: mappedLang, version: '*', files: [{ content: localCode }] })
+        });
+        const result = await response.json();
+        setConsoleOutput(result.run?.output || result.run?.stderr || 'No output.');
+      }
+    } catch (err) {
+      setConsoleOutput(`Error: ${err.message}`);
+    } finally {
+      setIsExecuting(false);
+    }
+  };
+
   const containerClass = darkMode 
     ? 'bg-[#1e1e1e] border border-zinc-700' 
     : 'bg-white border border-gray-200';
@@ -230,22 +287,50 @@ export const LargePreviewableCodeBlock = ({ code, language, darkMode, sessionId 
               >
                 Code
               </button>
-              <button
-                onClick={() => setActiveTab('preview')}
-                className={`px-2.5 py-1 text-xs rounded-md transition-all ${
-                  activeTab === 'preview'
-                    ? 'bg-violet-600 text-white'
-                    : darkMode 
-                      ? 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700' 
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Preview
-              </button>
+              {canPreview ? (
+                <button
+                  onClick={() => setActiveTab('preview')}
+                  className={`px-2.5 py-1 text-xs rounded-md transition-all ${
+                    activeTab === 'preview'
+                      ? 'bg-violet-600 text-white'
+                      : darkMode 
+                        ? 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700' 
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Preview
+                </button>
+              ) : canExecute ? (
+                <button
+                  onClick={() => setActiveTab('console')}
+                  className={`px-2.5 py-1 text-xs rounded-md transition-all ${
+                    activeTab === 'console'
+                      ? 'bg-violet-600 text-white'
+                      : darkMode 
+                        ? 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700' 
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Console
+                </button>
+              ) : null}
             </div>
           )}
         </div>
         <div className="flex items-center gap-2">
+          {canExecute && (
+            <button
+              onClick={executeCode}
+              disabled={isExecuting}
+              className="px-2.5 py-1 text-xs rounded-md flex items-center gap-1 transition-all bg-green-600 hover:bg-green-500 text-white disabled:opacity-50"
+              title="Run Code"
+            >
+              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              {isExecuting ? 'Running...' : 'Run'}
+            </button>
+          )}
           <button
             onClick={handleDownload}
             className={`px-2.5 py-1 text-xs rounded-md flex items-center gap-1 transition-all ${
@@ -291,16 +376,45 @@ export const LargePreviewableCodeBlock = ({ code, language, darkMode, sessionId 
       )}
       
       {activeTab === 'code' ? (
-        <div className="relative">
-          <textarea
-            value={localCode}
-            onChange={handleCodeChange}
-            className={`w-full min-h-[200px] p-3 font-mono text-sm resize-y bg-transparent outline-none ${
-              darkMode ? 'text-zinc-200' : 'text-zinc-800'
-            }`}
-            spellCheck={false}
-          />
-        </div>
+        <>
+          <div className="relative">
+            <textarea
+              value={localCode}
+              onChange={handleCodeChange}
+              className={`w-full min-h-[200px] p-3 font-mono text-sm resize-y bg-transparent outline-none ${
+                darkMode ? 'text-zinc-200' : 'text-zinc-800'
+              }`}
+              spellCheck={false}
+            />
+          </div>
+          {canExecute && activeTab === 'code' && (
+            <div className={`border-t ${darkMode ? 'border-zinc-700 bg-black' : 'border-gray-200 bg-gray-50'}`}>
+              <div className="flex items-center justify-between px-3 py-1.5">
+                <button
+                  onClick={() => setActiveTab('console')}
+                  className={`px-2.5 py-1 text-xs rounded-md transition-all ${
+                    activeTab === 'console'
+                      ? 'bg-zinc-700 text-white'
+                      : darkMode
+                        ? 'text-zinc-400 hover:text-zinc-200'
+                        : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Console
+                </button>
+                {execMode && (
+                  <span className="text-xs text-zinc-500">{execMode}</span>
+                )}
+              </div>
+              {activeTab === 'console' && (
+                <div className={`px-3 pb-3 font-mono text-sm text-green-400 whitespace-pre-wrap ${darkMode ? 'bg-black' : 'bg-gray-100'}`}>
+                  {isExecuting ? 'Executing...' : consoleOutput || 'Click Run to execute code'}
+                  <div className="mt-2 text-xs text-zinc-600">⚡ Powered by Local Pyodide + Piston</div>
+                </div>
+              )}
+            </div>
+          )}
+        </>
       ) : (
         <iframe
           title="preview"
