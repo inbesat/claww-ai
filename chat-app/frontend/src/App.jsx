@@ -6,11 +6,7 @@ import { LargePreviewableCodeBlock } from './components/MessageBubble';
 import mermaid from 'mermaid';
 import './index.css';
 
-mermaid.initialize({
-  startOnLoad: false,
-  theme: 'dark',
-  securityLevel: 'loose',
-});
+try { mermaid.initialize?.({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' }) } catch(e) {}
 
 const STORAGE_KEY = 'claw_chats';
 const HISTORY_KEY = 'claw_history';
