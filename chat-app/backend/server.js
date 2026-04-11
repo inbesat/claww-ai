@@ -7,7 +7,7 @@ const OpenAI = require('openai');
 const multer = require('multer');
 
 process.on('uncaughtException', (err) => {
-  console.error('CRITICAL:', err.message);
+  console.error('SYSTEM ERROR:', err.message);
 });
 
 const pdf = require('pdf-parse');
