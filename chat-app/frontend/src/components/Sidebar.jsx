@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat, onRenameChat, darkMode, isCollapsed, onToggleCollapse, isMobileOpen, onCloseMobile }) => {
+const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat, onRenameChat, darkMode, isCollapsed, onToggleCollapse, isMobileOpen, onCloseMobile, onOpenCodex }) => {
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [isUploadingVault, setIsUploadingVault] = useState(false);
@@ -346,7 +346,16 @@ return (
         </div>
       </div>
       
-      <div className={`pt-4 border-t mt-4 ${darkMode ? 'border-zinc-800/30' : 'border-zinc-200'}`}>
+      <div className="pt-4 border-t mt-4 flex flex-col gap-2">
+        <button
+          onClick={onOpenCodex}
+          className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs text-zinc-500 hover:text-fuchsia-400 hover:bg-zinc-800/50 transition-all"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+          Synapse User Guide
+        </button>
         <p className={`text-xs text-center font-light tracking-wide ${darkMode ? 'text-zinc-600' : 'text-zinc-400'}`}>Claw AI v1.0</p>
       </div>
     </div>

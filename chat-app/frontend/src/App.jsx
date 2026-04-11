@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
 import ChatInput from './components/ChatInput';
+import CodexModal from './components/CodexModal';
 import { LargePreviewableCodeBlock } from './components/MessageBubble';
 import mermaid from 'mermaid';
 import './index.css';
@@ -63,6 +64,7 @@ function App() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [toolActive, setToolActive] = useState(false);
   const [toolName, setToolName] = useState(null);
+  const [showCodex, setShowCodex] = useState(false);
 
   // Session ID
   const [sessionId, setSessionId] = useState(() => {
@@ -87,6 +89,15 @@ function App() {
     url.searchParams.set('session', sessionId);
     window.history.replaceState({}, '', url.toString());
   }, [sessionId]);
+
+  // Welcome Tour - show on first visit only
+  useEffect(() => {
+    const tourSeen = localStorage.getItem('synapse_tour_seen');
+    if (!tourSeen) {
+      setShowCodex(true);
+      localStorage.setItem('synapse_tour_seen', 'true');
+    }
+  }, []);
 
   const messageIdRef = useRef(0);
 
@@ -407,6 +418,8 @@ function App() {
       className={`min-h-screen flex ${darkMode ? 'dark' : ''}`}
       onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
     >
+      <CodexModal isOpen={showCodex} onClose={() => setShowCodex(false)} />
+      
       <div className="fixed pointer-events-none blur-[120px] opacity-[0.08] w-[600px] h-[600px] rounded-full z-0 transition-all duration-700"
         style={{
           left: mousePos.x - 300,
@@ -425,6 +438,7 @@ function App() {
           darkMode={darkMode}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
+          onOpenCodex={() => setShowCodex(true)}
         />
       </div>
 
@@ -444,6 +458,7 @@ function App() {
               onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
               isMobileOpen={true}
               onCloseMobile={() => setIsSidebarOpen(false)}
+              onOpenCodex={() => setShowCodex(true)}
             />
           </div>
         </div>
