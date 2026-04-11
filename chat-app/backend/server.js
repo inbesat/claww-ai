@@ -6,6 +6,7 @@ const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 const OpenAI = require('openai');
+const Groq = require('groq-sdk');
 const multer = require('multer');
 
 process.on('uncaughtException', (err) => {
@@ -48,6 +49,10 @@ try {
 if (!process.env.GROQ_API_KEY) {
   throw new Error("❌ GROQ_API_KEY missing");
 }
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY
+});
 if (!process.env.SERP_API_KEY) {
   throw new Error("❌ SERP_API_KEY missing");
 }
