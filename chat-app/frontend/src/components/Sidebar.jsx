@@ -206,6 +206,8 @@ return (
       )}
 
       {!isCollapsed && (
+        <div className="px-3 mt-4">
+          <div className={`p-3 rounded-xl border ${darkMode ? 'border-zinc-800 bg-zinc-900/50' : 'border-zinc-200 bg-white'}`}>
             <div className="flex items-center gap-2 mb-2">
               <svg className="w-4 h-4 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 8m0 0h8m-8 0c1.656-1.066 3-2.78 3-5.085a6.958 6.958 0 01-1.002-3.02 6.961 6.961 0 01-.023-3.036m-3.038 3.127l.052-.085a9.94 9.94 0 01-.032-1.372m4.244 4.803l-.085-.076a10.44 10.44 0 01-1.26-1.893l.066-.11a10.7 10.7 0 01.932-1.765m.391 2.782c-.128.397-.252.8-.37 1.208" />
