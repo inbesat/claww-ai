@@ -26,10 +26,7 @@ const nodemailer = require('nodemailer');
 const path = require('path');
 
 const app = express();
-app.use(cors({
-  origin: ['https://claww-ai.vercel.app', 'http://localhost:5173', 'http://localhost:3001'],
-  credentials: true
-}));
+app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json());
 
 let pinecone, pineconeIndex;
@@ -59,7 +56,7 @@ if (!process.env.SERP_API_KEY) {
 
 // 📦 MULTER UPLOAD CONFIG
 const upload = multer({
-  dest: 'uploads/',
+  storage: multer.memoryStorage(),
   limits: { fileSize: 50 * 1024 * 1024 }
 });
 
@@ -317,36 +314,16 @@ function deleteFile(filePath) {
 
 // 📁 FILE UPLOAD
 app.post('/api/upload', upload.single('file'), async (req, res) => {
+  console.log("Upload request received!");
   try {
-    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-
-    const file = req.file;
-    const ext = file.originalname.toLowerCase().split('.').pop();
-    let content = null;
-    let type = ext;
-
-    if (ext === 'txt') {
-      content = fs.readFileSync(file.path, 'utf-8');
-    } else if (ext === 'pdf') {
-      content = await parsePDF(file.path);
-      if (!content) return res.status(400).json({ error: 'Could not extract text from PDF.' });
-    } else if (['jpg', 'jpeg', 'png'].includes(ext)) {
-      content = await extractTextFromImage(file.path);
-    } else if (ext === 'docx') {
-      const result = await mammoth.extractRawText({ path: file.path });
-      content = result.value;
-    } else {
-      deleteFile(file.path);
-      return res.status(400).json({ error: 'Unsupported file type' });
-    }
-
-    deleteFile(file.path);
-    return res.json({ content, type });
-
+    if (!req.file) return res.status(400).json({ error: "No file" });
+    // Just extract text to confirm it works
+    const pdf = require('pdf-parse');
+    const data = await pdf(req.file.buffer);
+    res.json({ message: "PDF Uploaded", textLength: data.text.length });
   } catch (err) {
-    console.error('Upload error:', err);
-    if (req.file) deleteFile(req.file.path);
-    return res.status(500).json({ error: 'Upload failed' });
+    console.error(err);
+    res.status(500).json({ error: "Upload crash" });
   }
 });
 
