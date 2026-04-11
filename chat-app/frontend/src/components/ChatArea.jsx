@@ -303,32 +303,30 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
   const hasStreamingMessage = messages.some(msg => msg.isStreaming);
 
   const FeatureCard = ({ icon, title, description, darkMode }) => (
-    <div className={`group p-5 rounded-2xl border transition-all duration-300 cursor-pointer hover:scale-[1.02] ${
+    <div className={`aspect-square flex flex-col items-center justify-center text-center p-6 rounded-3xl backdrop-blur-xl border transition-all duration-500 cursor-pointer ${
       darkMode 
-        ? 'bg-zinc-900/50 border-zinc-800 hover:border-violet-500/50 hover:shadow-lg hover:shadow-violet-500/10' 
-        : 'bg-white border-gray-200 shadow-sm hover:border-violet-500/50 hover:shadow-lg hover:shadow-violet-500/10'
+        ? 'bg-white/5 border-white/10 hover:bg-violet-600/10 hover:border-violet-500/40' 
+        : 'bg-black/5 border-black/10 hover:bg-violet-100/50'
     }`}>
-      <div className="flex items-start gap-4">
-        <div className={`p-2.5 rounded-xl ${
-          darkMode ? 'bg-violet-500/20' : 'bg-violet-100'
-        }`}>
-          <div className="text-violet-500">{icon}</div>
-        </div>
-        <div>
-          <h3 className={`font-semibold text-base mb-1 ${darkMode ? 'text-[#fafafa]' : 'text-zinc-900'}`}>
-            {title}
-          </h3>
-          <p className={`text-sm ${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
-            {description}
-          </p>
-        </div>
+      <div className={`p-3 rounded-xl mb-3 ${
+        darkMode ? 'bg-violet-500/20' : 'bg-violet-100'
+      }`}>
+        <div className="text-violet-500 w-6 h-6">{icon}</div>
       </div>
+      <h3 className={`font-bold text-sm mb-1 ${darkMode ? 'text-[#fafafa]' : 'text-zinc-900'}`}>
+        {title}
+      </h3>
+      <p className={`text-[10px] leading-tight opacity-60 ${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+        {description}
+      </p>
     </div>
   );
 
-  const GlobeIcon = () => (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+  const SynapseLogo = ({ className = "w-6 h-6" }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.2"/>
+      <path d="M8 12L12 8L16 12L12 16L8 12Z" fill="currentColor" className="animate-pulse"/>
+      <path d="M12 8V2M12 22V16M16 12H22M2 12H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
     </svg>
   );
 
@@ -432,9 +430,9 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 max-w-6xl mx-auto mt-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 max-w-5xl mx-auto mt-8">
               <FeatureCard 
-                icon={<GlobeIcon />}
+                icon={<SynapseLogo />}
                 title="Web Search"
                 description="Get real-time answers and live data from the internet."
                 darkMode={darkMode}
