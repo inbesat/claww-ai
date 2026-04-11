@@ -661,9 +661,7 @@ components={{
     );
   };
 
-  return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} gap-3 group animate-fade-in`}>
-      const SynapseLogo = ({ className = "w-6 h-6", glow = false }) => (
+const SynapseLogo = ({ className = "w-6 h-6", glow = false }) => (
   <div className={`relative flex items-center justify-center ${glow ? 'after:absolute after:inset-0 after:bg-violet-500/30 after:blur-xl after:rounded-full' : ''}`}>
     <svg className={`${className} relative z-10`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1" strokeOpacity="0.1" />
@@ -674,57 +672,59 @@ components={{
   </div>
 );
 
-{!isUser && (
-  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-violet-500/30 border border-violet-400/30">
-    <SynapseLogo className="w-5 h-5 text-white" glow={true} />
-  </div>
-)}
-      <div className="relative">
-          <div className={`max-w-[85%] ${bubbleClasses} px-5 py-3.5 rounded-2xl shadow-sm animate-slide-up`}>
-          <div className="text-[15px] leading-relaxed">
-            {(() => {
-              const rawText = message.text || '';
-              const embeddedImage = message.image;
-              const isBase64Image = rawText.startsWith('data:image') || (embeddedImage && embeddedImage.startsWith('data:image'));
-              
-              if (isBase64Image) {
-                return (
-                  <>
-                    {rawText && <div className="mb-2">{renderMarkdown(rawText)}</div>}
-                    <img 
-                      src={embeddedImage || rawText} 
-                      alt="AI Generated" 
-                      className="rounded-xl max-w-full border border-zinc-700 shadow-lg" 
-                    />
-                  </>
-                );
-              }
-              
-              const cleanText = typeof rawText === 'string' ? rawText.replace(/^\s*\(|\)\s*$/g, '').trim() : rawText;
-              return isUser ? (
-                renderMarkdown(cleanText)
-              ) : (
+return (
+  <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} gap-3 group animate-fade-in`}>
+    {!isUser && (
+      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-violet-500/30 border border-violet-400/30">
+        <SynapseLogo className="w-5 h-5 text-white" glow={true} />
+      </div>
+    )}
+    <div className="relative">
+      <div className={`max-w-[85%] ${bubbleClasses} px-5 py-3.5 rounded-2xl shadow-sm animate-slide-up`}>
+        <div className="text-[15px] leading-relaxed">
+          {(() => {
+            const rawText = message.text || '';
+            const embeddedImage = message.image;
+            const isBase64Image = rawText.startsWith('data:image') || (embeddedImage && embeddedImage.startsWith('data:image'));
+            
+            if (isBase64Image) {
+              return (
                 <>
-                  {renderMarkdown(cleanText)}
-                  {isStreaming && <span className="inline-block w-0.5 h-4 ml-0.5 bg-zinc-400 animate-pulse" />}
+                  {rawText && <div className="mb-2">{renderMarkdown(rawText)}</div>}
+                  <img 
+                    src={embeddedImage || rawText} 
+                    alt="AI Generated" 
+                    className="rounded-xl max-w-full border border-zinc-700 shadow-lg" 
+                  />
                 </>
               );
-            })()}
-          </div>
-        </div>
-        {!isUser && !isStreaming && (
-          <div className="absolute -top-1 -right-1 flex gap-1">
-            <SpeakButton />
-            {copied ? (
-              <span className="text-xs bg-violet-600 text-white px-2 py-1 rounded-lg shadow-sm">Copied!</span>
+            }
+            
+            const cleanText = typeof rawText === 'string' ? rawText.replace(/^\s*\(|\)\s*$/g, '').trim() : rawText;
+            return isUser ? (
+              renderMarkdown(cleanText)
             ) : (
-              <CopyButton />
-            )}
-          </div>
-        )}
+              <>
+                {renderMarkdown(cleanText)}
+                {isStreaming && <span className="inline-block w-0.5 h-4 ml-0.5 bg-zinc-400 animate-pulse" />}
+              </>
+            );
+          })()}
+        </div>
       </div>
+      {!isUser && !isStreaming && (
+        <div className="absolute -top-1 -right-1 flex gap-1">
+          <SpeakButton />
+          {copied ? (
+            <span className="text-xs bg-violet-600 text-white px-2 py-1 rounded-lg shadow-sm">Copied!</span>
+          ) : (
+            <CopyButton />
+          )}
+        </div>
+      )}
     </div>
-  );
+  </div>
+);
 };
 
 export default MessageBubble;
