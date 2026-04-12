@@ -317,30 +317,37 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
 
   const FeatureCard = ({ icon, title, description, darkMode }) => (
     <div 
-      className="h-auto md:aspect-square w-full flex flex-col items-center justify-center text-center p-4 rounded-3xl backdrop-blur-xl border transition-all duration-500 cursor-pointer hover:scale-[1.02] bg-white/[0.03] border-white/[0.08] hover:shadow-[0_0_30px_-5px_rgba(168,85,247,0.4)] hover:border-fuchsia-500/50 hover:bg-white/[0.07]"
+      className="group relative overflow-hidden transition-all duration-500 hover:-translate-y-1 cursor-pointer border border-white/5 bg-white/5 hover:bg-white/10 rounded-3xl backdrop-blur-xl"
+      style={{ boxShadow: '0 0 0px var(--glow-color)' }}
     >
-      <div className="p-3 rounded-xl mb-3 bg-violet-500/20">
-        <div className="text-violet-500 w-6 h-6">{icon}</div>
+      <div 
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none"
+        style={{ boxShadow: 'inset 0 0 30px var(--glow-color)' }}
+      />
+      <div className="h-auto md:aspect-square w-full flex flex-col items-center justify-center text-center p-4">
+        <div className="p-3 rounded-xl mb-3 bg-[var(--accent-primary)]/20 transition-transform duration-500 group-hover:scale-110">
+          <div className="w-6 h-6" style={{ color: 'var(--accent-primary)' }}>{icon}</div>
+        </div>
+        <h3 className="font-bold text-sm mb-1 text-[#fafafa]">
+          {title}
+        </h3>
+        <p className="text-[11px] leading-relaxed opacity-60 text-zinc-400">
+          {description}
+        </p>
       </div>
-      <h3 className="font-bold text-sm mb-1 text-[#fafafa]">
-        {title}
-      </h3>
-      <p className="text-[11px] leading-relaxed opacity-60 text-zinc-400">
-        {description}
-      </p>
     </div>
   );
 
-  const SynapseLogo = ({ className = "w-6 h-6", glow = false }) => (
-    <div className={`relative flex items-center justify-center ${glow ? 'after:absolute after:inset-0 after:bg-violet-500/30 after:blur-xl after:rounded-full' : ''}`}>
-      <svg className={`${className} relative z-10`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1" strokeOpacity="0.1" />
-        <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.4" strokeDasharray="4 2" />
-        <path d="M12 4V8M12 16V20M4 12H8M16 12H20" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeOpacity="0.6"/>
-        <path d="M12 8.5L15.5 12L12 15.5L8.5 12L12 8.5Z" fill="currentColor" className="animate-pulse" />
-      </svg>
-    </div>
-  );
+const SynapseLogo = ({ className = "w-6 h-6", glow = false }) => (
+  <div className={`relative flex items-center justify-center ${glow ? 'after:absolute after:inset-0 after:bg-[var(--accent-primary)]/30 after:blur-xl after:rounded-full' : ''}`}>
+    <svg className={`${className} relative z-10`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="10" stroke="var(--accent-primary)" strokeWidth="1" strokeOpacity="0.1" />
+      <circle cx="12" cy="12" r="8" stroke="var(--accent-primary)" strokeWidth="1.5" strokeOpacity="0.4" strokeDasharray="4 2" />
+      <path d="M12 4V8M12 16V20M4 12H8M16 12H20" stroke="var(--accent-primary)" strokeWidth="1.2" strokeLinecap="round" strokeOpacity="0.6"/>
+      <path d="M12 8.5L15.5 12L12 15.5L8.5 12L12 8.5Z" fill="var(--accent-primary)" className="animate-pulse" />
+    </svg>
+  </div>
+);
 
   const CodeIcon = () => (
     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -564,7 +571,18 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
           }
           
           return (
-            <div key={message.id}>
+            <div 
+              key={message.id} 
+              className={`animate-message ${message.sender === 'user' ? 'flex justify-end' : 'flex justify-start'}`}
+            >
+              <div 
+                className={`max-w-[85%] md:max-w-[75%] px-4 py-3 rounded-2xl ${
+                  message.sender === 'user'
+                    ? 'rounded-br-md'
+                    : 'rounded-bl-md bg-[var(--theme-bg-subtle)]/80 backdrop-blur-md border shadow-sm'
+                }`}
+                style={message.sender === 'user' ? { background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' } : { borderColor: 'var(--theme-border)' }}
+              >
               {message.metadata?.chartData && (
                 <ChartVisualizer 
                   data={message.metadata.chartData.data} 
@@ -580,18 +598,16 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
                   companyName={stockData.companyName}
                 />
               )}
-              {chartData ? (
-                <SynapseChart chartData={chartData} darkMode={darkMode} />
-              ) : (
-                <MessageBubble 
-                  message={{ ...message, text: displayText }} 
-                  darkMode={darkMode} 
-                  onOpenCanvas={onOpenCanvas} 
-                  sessionId={sessionId}
-                />
-              )}
+              <MessageBubble 
+                message={{ ...message, text: displayText }} 
+                darkMode={darkMode} 
+                onOpenCanvas={onOpenCanvas} 
+                sessionId={sessionId}
+                isUser={message.sender === 'user'}
+              />
               {emailActionJson && <EmailActionCard actionJson={emailActionJson} darkMode={darkMode} />}
               {browserActionJson && <BrowserActionCard actionJson={browserActionJson} darkMode={darkMode} />}
+              </div>
             </div>
           );
         })}

@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import ThemeVibe from './ThemeVibe';
 
 const themes = [
   { id: 'cyberpunk', name: 'Cyberpunk', colors: ['#a855f7', '#ec4899'] },
@@ -20,7 +19,12 @@ const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat
   const [isUploadingVault, setIsUploadingVault] = useState(false);
   const [persona, setPersona] = useState('');
   const [isSavingPersona, setIsSavingPersona] = useState(false);
+  const [openSections, setOpenSections] = useState({ identity: false, vault: false, persona: false, theme: true });
   const vaultInputRef = useRef(null);
+
+  const toggleSection = (section) => {
+    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
 
    useEffect(() => {
      const API_URL = (import.meta.env.VITE_API_URL || 'https://claww-ai-3.onrender.com').trim();
@@ -179,34 +183,46 @@ return (
         </button>
       </div>
 
-      {!isCollapsed && (
+{!isCollapsed && (
         <div className="px-3 mt-4">
-          <div className="p-3 rounded-xl border border-white/10 bg-zinc-900/50 backdrop-blur-md">
-            <div className="flex items-center gap-2 mb-2">
-              <svg className="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-              </svg>
-              <span className="text-xs font-medium text-zinc-300">Knowledge Vault</span>
-            </div>
-            <input
-              ref={vaultInputRef}
-              type="file"
-              multiple
-              accept=".pdf,.txt,.docx"
-              onChange={handleVaultUpload}
-              className="hidden"
-              id="vault-upload"
-            />
-            <label
-              htmlFor="vault-upload"
-              className={`block w-full text-center text-xs py-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                isUploadingVault 
-                  ? 'bg-zinc-700/50 text-zinc-400 cursor-wait'
-                  : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-white/5'
-              }`}
+          <div className="rounded-xl border border-white/10 bg-[var(--theme-bg-subtle)]/50 backdrop-blur-md">
+            <button
+              onClick={() => toggleSection('vault')}
+              className="w-full flex items-center justify-between px-3 py-2.5"
             >
-{isUploadingVault ? 'Indexing 100+ pages... this may take a minute 📚' : 'Add Documents'}
-            </label>
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s8-1.79 8-4" />
+                </svg>
+                <span className="text-xs font-medium" style={{ color: 'var(--theme-text)' }}>Knowledge Vault</span>
+              </div>
+              <svg className={`w-4 h-4 transition-transform duration-200 ${openSections.vault ? 'rotate-180' : ''}`} style={{ color: 'var(--theme-text-muted)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {openSections.vault && (
+              <div className="px-3 pb-3">
+                <input
+                  ref={vaultInputRef}
+                  type="file"
+                  multiple
+                  accept=".pdf,.txt,.docx"
+                  onChange={handleVaultUpload}
+                  className="hidden"
+                  id="vault-upload"
+                />
+                <label
+                  htmlFor="vault-upload"
+                  className={`block w-full text-center text-xs py-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                    isUploadingVault 
+                      ? 'bg-zinc-700/50 text-zinc-400 cursor-wait'
+                      : 'bg-[var(--theme-bg-subtle)] hover:bg-[var(--theme-border)] text-[var(--theme-text)] border'
+                  }`}
+                >
+                  {isUploadingVault ? 'Indexing 100+ pages... 📚' : 'Add Documents'}
+                </label>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -222,99 +238,127 @@ return (
 
       {!isCollapsed && (
         <div className="px-3 mt-4">
-          <div className={`p-3 rounded-xl border`} style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg-subtle)' }}>
-            <div className="flex items-center gap-2 mb-2">
-              <svg className="w-4 h-4 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 8m0 0h8m-8 0c1.656-1.066 3-2.78 3-5.085a6.958 6.958 0 01-1.002-3.02 6.961 6.961 0 01-.023-3.036m-3.038 3.127l.052-.085a9.94 9.94 0 01-.032-1.372m4.244 4.803l-.085-.076a10.44 10.44 0 01-1.26-1.893l.066-.11a10.7 10.7 0 01.932-1.765m.391 2.782c-.128.397-.252.8-.37 1.208" />
-              </svg>
-              <span className="text-xs font-medium">Personal Identity</span>
-            </div>
-            <textarea
-              value={persona}
-              onChange={handlePersonaChange}
-              placeholder="I am a developer, use friendly tone..."
-              className={`w-full text-xs p-2 rounded-lg resize-none border ${
-                darkMode 
-                  ? 'bg-zinc-800 border-zinc-700 text-zinc-300 placeholder-zinc-500' 
-                  : 'bg-zinc-50 border-zinc-200 text-zinc-700 placeholder-zinc-400'
-              }`}
-              rows={2}
-            />
+          <div className="rounded-xl border bg-[var(--theme-bg-subtle)]/50 backdrop-blur-md" style={{ borderColor: 'var(--theme-border)' }}>
             <button
-              onClick={handleSavePersona}
-              disabled={isSavingPersona}
-              className={`mt-2 w-full text-xs py-1.5 rounded-lg transition-all ${
-                isSavingPersona
-                  ? 'bg-zinc-700 text-zinc-400'
-                  : 'bg-violet-600 text-white hover:bg-violet-500'
-              }`}
+              onClick={() => toggleSection('identity')}
+              className="w-full flex items-center justify-between px-3 py-2.5"
             >
-              {isSavingPersona ? 'Saved!' : 'Save Identity'}
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 8m0 0h8m-8 0c1.656-1.066 3-2.78 3-5.085a6.958 6.958 0 01-1.002-3.02 6.961 6.961 0 01-.023-3.036m-3.038 3.127l.052-.085a9.94 9.94 0 01-.032-1.372m4.244 4.803l-.085-.076a10.44 10.44 0 01-1.26-1.893l.066-.11a10.7 10.7 0 01.932-1.765m.391 2.782c-.128.397-.252.8-.37 1.208" />
+                </svg>
+                <span className="text-xs font-medium" style={{ color: 'var(--theme-text)' }}>Personal Identity</span>
+              </div>
+              <svg className={`w-4 h-4 transition-transform duration-200 ${openSections.identity ? 'rotate-180' : ''}`} style={{ color: 'var(--theme-text-muted)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
             </button>
-          </div>
-        </div>
-      )}
-
-      {!isCollapsed && (
-        <div className="px-3 mt-4">
-          <div className="p-3 rounded-xl border border-white/10 bg-zinc-900/50 backdrop-blur-md">
-            <div className="flex items-center gap-2 mb-3">
-              <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-              </svg>
-              <span className="text-xs font-medium text-zinc-300">Theme / Vibe</span>
-            </div>
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={() => document.documentElement.setAttribute('data-theme', 'cyberpunk')}
-                className="w-full py-2 text-xs rounded-lg text-center bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white hover:from-fuchsia-500 hover:to-violet-500 transition-all shadow-lg shadow-fuchsia-500/20"
-              >
-                Cyberpunk
-              </button>
-              <button
-                onClick={() => document.documentElement.setAttribute('data-theme', 'forest')}
-                className="w-full py-2 text-xs rounded-lg text-center bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500 transition-all"
-              >
-                Forest
-              </button>
-              <button
-                onClick={() => document.documentElement.setAttribute('data-theme', 'minimalist')}
-                className="w-full py-2 text-xs rounded-lg text-center bg-zinc-600 text-white hover:bg-zinc-500 transition-all"
-              >
-                Minimal
-              </button>
-</div>
-          </div>
-        </div>
-      )}
-
-      {!isCollapsed && (
-        <div className="px-3 mt-4">
-          <div className="p-3 rounded-xl border border-white/10 bg-zinc-900/50 backdrop-blur-md">
-            <div className="flex items-center gap-2 mb-3">
-              <svg className="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387.477a2 2 0 00-1.186 1.186l-.477 2.387a2 2 0 01-.547 1.022l.001.002a2 2 0 001.545.546l2.387-.477a2 2 0 001.186-1.186l.477-2.387a2 2 0 01.547-1.022l.002-.002zM15.5 7.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
-              </svg>
-              <span className="text-xs font-medium text-zinc-300">AI Persona & Tone</span>
-            </div>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {tonePresets.map((preset) => (
+            {openSections.identity && (
+              <div className="px-3 pb-3">
+                <textarea
+                  value={persona}
+                  onChange={handlePersonaChange}
+                  placeholder="I am a developer, use friendly tone..."
+                  className="w-full text-xs p-2 rounded-lg resize-none border bg-[var(--theme-bg-subtle)] border-[var(--theme-border)] text-[var(--theme-text)] placeholder-[var(--theme-text-muted)]"
+                  rows={2}
+                />
                 <button
-                  key={preset.label}
-                  onClick={() => setAiTone(preset.prompt)}
-                  className="text-xs px-2.5 py-1 rounded-full bg-white/5 border border-white/10 hover:bg-fuchsia-500/30 hover:border-fuchsia-500/50 transition-colors text-zinc-300 hover:text-white"
+                  onClick={handleSavePersona}
+                  disabled={isSavingPersona}
+                  className="mt-2 w-full text-xs py-1.5 rounded-lg transition-all bg-[var(--accent-primary)] text-white hover:opacity-90"
                 >
-                  {preset.label}
+                  {isSavingPersona ? 'Saved!' : 'Save Identity'}
                 </button>
-              ))}
-            </div>
-            <textarea
-              value={aiTone}
-              onChange={(e) => setAiTone(e.target.value)}
-              placeholder="e.g., Act as a senior Python developer and be concise."
-              className="w-full text-xs p-2 rounded-lg resize-none border bg-zinc-800/50 border-white/10 text-zinc-300 placeholder-zinc-500"
-              rows={2}
-            />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!isCollapsed && (
+        <div className="px-3 mt-4">
+          <div className="rounded-xl border border-white/10 bg-[var(--theme-bg-subtle)]/50 backdrop-blur-md">
+            <button
+              onClick={() => toggleSection('theme')}
+              className="w-full flex items-center justify-between px-3 py-2.5"
+            >
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                </svg>
+                <span className="text-xs font-medium" style={{ color: 'var(--theme-text)' }}>Theme / Vibe</span>
+              </div>
+              <svg className={`w-4 h-4 transition-transform duration-200 ${openSections.theme ? 'rotate-180' : ''}`} style={{ color: 'var(--theme-text-muted)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {openSections.theme && (
+              <div className="px-3 pb-3">
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => { document.documentElement.setAttribute('data-theme', 'cyberpunk'); setTheme?.('cyberpunk'); }}
+                    className="w-full py-2 text-xs rounded-lg text-center bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white hover:from-fuchsia-500 hover:to-violet-500 transition-all shadow-lg shadow-fuchsia-500/20"
+                  >
+                    Cyberpunk
+                  </button>
+                  <button
+                    onClick={() => { document.documentElement.setAttribute('data-theme', 'forest'); setTheme?.('forest'); }}
+                    className="w-full py-2 text-xs rounded-lg text-center bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500 transition-all"
+                  >
+                    Forest
+                  </button>
+                  <button
+                    onClick={() => { document.documentElement.setAttribute('data-theme', 'minimal'); setTheme?.('minimal'); }}
+                    className="w-full py-2 text-xs rounded-lg text-center bg-zinc-600 text-white hover:bg-zinc-500 transition-all"
+                  >
+                    Minimal
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!isCollapsed && (
+        <div className="px-3 mt-4">
+          <div className="rounded-xl border border-white/10 bg-[var(--theme-bg-subtle)]/50 backdrop-blur-md">
+            <button
+              onClick={() => toggleSection('persona')}
+              className="w-full flex items-center justify-between px-3 py-2.5"
+            >
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387.477a2 2 0 00-1.186 1.186l-.477 2.387a2 2 0 01-.547 1.022l.001.002a2 2 0 001.545.546l2.387-.477a2 2 0 001.186-1.186l.477-2.387a2 2 0 01.547-1.022l.002-.002zM15.5 7.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
+                </svg>
+                <span className="text-xs font-medium" style={{ color: 'var(--theme-text)' }}>AI Persona & Tone</span>
+              </div>
+              <svg className={`w-4 h-4 transition-transform duration-200 ${openSections.persona ? 'rotate-180' : ''}`} style={{ color: 'var(--theme-text-muted)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {openSections.persona && (
+              <div className="px-3 pb-3">
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {tonePresets.map((preset) => (
+                    <button
+                      key={preset.label}
+                      onClick={() => setAiTone(preset.prompt)}
+                      className="text-xs px-2.5 py-1 rounded-full bg-white/5 border border-white/10 hover:bg-[var(--accent-primary)]/30 hover:border-[var(--accent-primary)]/50 transition-colors text-zinc-300 hover:text-white"
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  value={aiTone}
+                  onChange={(e) => setAiTone(e.target.value)}
+                  placeholder="e.g., Act as a senior Python developer and be concise."
+                  className="w-full text-xs p-2 rounded-lg resize-none border bg-[var(--theme-bg-subtle)] border-[var(--theme-border)] text-[var(--theme-text)] placeholder-[var(--theme-text-muted)]"
+                  rows={2}
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -391,10 +435,6 @@ return (
       </div>
       
       <div className="pt-4 border-t mt-4 flex flex-col gap-2">
-        <div className="px-3 mt-4">
-          <ThemeVibe currentTheme={theme} onThemeChange={setTheme} />
-        </div>
-
         <button
           onClick={onOpenCodex}
           className="flex items-center justify-center gap-2 py-3 px-3 rounded-lg text-xs font-bold text-white transition-all"

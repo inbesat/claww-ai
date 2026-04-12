@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 
 const API_URL = (import.meta.env.VITE_API_URL || 'https://claww-ai-3.onrender.com').trim();
 
-const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, activeCanvas, onToggleCanvas }) => {
+const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, activeCanvas, onToggleCanvas, sessionId }) => {
   const [message, setMessage] = useState('');
   const [fileContext, setFileContext] = useState(null);
   const [attachedFileName, setAttachedFileName] = useState('');
@@ -100,51 +100,50 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, active
      setIsUploading(true);
      setIsProcessing(true);
 
-     try {
-       const formData = new FormData();
-       formData.append('file', file);
-
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000);
-
-         const response = await fetch(`${file.type === 'application/pdf' ? `${API_URL}/api/process-pdf` : `${API_URL}/api/upload`}`, {
-           method: 'POST',
-           body: formData,
-           signal: controller.signal,
-         });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          if (response.status === 413) {
-            throw new Error('File too large. Maximum size is 50MB.');
-          }
-          throw new Error(`Upload failed: ${response.status}`);
+try {
+        const formData = new FormData();
+        formData.append('file', file);
+        if (sessionId) {
+          formData.append('sessionId', sessionId);
         }
 
-        const data = await response.json();
+         const controller = new AbortController();
+         const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-        if (file.type === 'application/pdf') {
-          // Handle PDF response from /api/process-pdf: { text, fileName, numPages }
-          onFileProcessed({
-            text: data.text,
-            fileName: data.fileName,
-            numPages: data.numPages
+          const response = await fetch(`${file.type === 'application/pdf' ? `${API_URL}/api/process-pdf` : `${API_URL}/api/upload`}`, {
+            method: 'POST',
+            body: formData,
+            signal: controller.signal,
           });
-          setAttachedFileName('');
-          
-          // Auto-summary trigger
-          setMessage(`I've read your PDF (${data.numPages || 'unknown'} pages). Here's a quick overview...`);
-        } else {
-          // Handle other file response from /api/upload: { message, textLength }
-          setFileContext(`${data.message} (${data.textLength} characters extracted)`);
-          
-          // Auto-summary trigger
-          setMessage("I've processed your file. What would you like to know about it?");
-        }
-        
-        // Success notification
-        alert?.(`✓ File successfully indexed: ${file.name}`);
+
+         clearTimeout(timeoutId);
+
+         if (!response.ok) {
+           if (response.status === 413) {
+             throw new Error('File too large. Maximum size is 50MB.');
+           }
+           throw new Error(`Upload failed: ${response.status}`);
+         }
+
+         const data = await response.json();
+
+         if (file.type === 'application/pdf') {
+           onFileProcessed({
+             text: data.text,
+             fileName: data.fileName,
+             numPages: data.numPages
+           });
+           setAttachedFileName('');
+         } else {
+           setFileContext(`${data.message} (${data.textLength} characters extracted)`);
+         }
+         
+         alert?.(`✓ File successfully indexed: ${file.name}`);
+         
+         // Auto-trigger AI summary
+         setTimeout(() => {
+           onSendMessage(`I just uploaded "${file.name}". Please give me a quick summary of its contents and key points.`);
+         }, 500);
      } catch (err) {
        console.error('Upload error:', err);
        alert(err.message || 'Failed to process file');

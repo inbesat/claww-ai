@@ -542,6 +542,7 @@ function App() {
                 darkMode={darkMode}
                 activeCanvas={activeCanvas}
                 onToggleCanvas={setActiveCanvas}
+                sessionId={sessionId}
               />
             </div>
           </div>

@@ -367,6 +367,15 @@ app.post('/api/process-pdf', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'Could not extract text from PDF.' });
     }
     
+    const sessionId = req.body.sessionId || 'default';
+    const truncatedText = extractedText.length > 15000 
+      ? extractedText.substring(0, 15000) + '\n\n[Document truncated due to length...]'
+      : extractedText;
+    
+    addToHistory(sessionId, 'system', `[DOCUMENT_CONTEXT]\nDocument: ${file.originalname}\n\n${truncatedText}\n[/DOCUMENT_CONTEXT]`, { isDocument: true, fileName: file.originalname });
+    
+    console.log(`[Process PDF] Injected into history for session: ${sessionId}`);
+    
     return res.json({ 
       text: extractedText, 
       fileName: file.originalname,
@@ -749,6 +758,12 @@ app.post('/api/chat/stream', async (req, res) => {
       systemPromptText += searchContextInjection;
     }
 
+    // Inject prior document contexts from history if available
+    const priorDocumentContext = getDocumentContext(chatSessionId);
+    if (priorDocumentContext) {
+      systemPromptText += `\n\n[DOCUMENT_CONTEXT] Earlier uploaded documents:\n${priorDocumentContext}\n[/DOCUMENT_CONTEXT]\n\nWhen answering questions about these documents, you MUST use the text from above.`;
+    }
+
     // Inject persona context
     if (personaStore.persona && personaStore.persona.trim()) {
       systemPromptText += `\n\nUSER BACKGROUND CONTEXT:\n${personaStore.persona}\nRemember this context when responding.`;
@@ -992,6 +1007,14 @@ function getSearchContext(sessionId) {
   const history = getHistory(sessionId);
   return history
     .filter(msg => msg.metadata?.isSearchResult)
+    .map(msg => msg.content)
+    .join('\n\n');
+}
+
+function getDocumentContext(sessionId) {
+  const history = getHistory(sessionId);
+  return history
+    .filter(msg => msg.metadata?.isDocument)
     .map(msg => msg.content)
     .join('\n\n');
 }

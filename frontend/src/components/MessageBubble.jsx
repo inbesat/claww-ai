@@ -461,15 +461,15 @@ export const LargePreviewableCodeBlock = ({ code, language, darkMode, sessionId 
   );
 };
 
-const MessageBubble = ({ message, darkMode, onOpenCanvas, sessionId }) => {
-  const isUser = message.sender === 'user';
+const MessageBubble = ({ message, darkMode, onOpenCanvas, sessionId, isUser: propIsUser }) => {
+  const isUser = propIsUser ?? message.sender === 'user';
   const isStreaming = message.isStreaming;
   const [copied, setCopied] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   
   const bubbleClasses = isUser
-    ? 'bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white shadow-lg shadow-violet-500/20 rounded-2xl rounded-br-sm'
-    : 'bg-white dark:bg-[#121212] border border-gray-200 dark:border-zinc-800 shadow-sm rounded-2xl rounded-bl-sm';
+    ? 'text-white shadow-lg rounded-2xl rounded-br-sm'
+    : 'bg-[var(--theme-bg-subtle)]/80 backdrop-blur-md border shadow-sm rounded-2xl rounded-bl-sm';
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(message.text);
@@ -673,14 +673,17 @@ const SynapseLogo = ({ className = "w-6 h-6", glow = false }) => (
 );
 
 return (
-  <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} gap-3 group animate-fade-in`}>
+  <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} gap-3 group animate-message`}>
     {!isUser && (
-      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-violet-500/30 border border-violet-400/30">
+      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg border border-[var(--accent-primary)]/30" style={{ background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' }}>
         <SynapseLogo className="w-5 h-5 text-white" glow={true} />
       </div>
     )}
     <div className="relative">
-      <div className={`max-w-[85%] ${bubbleClasses} px-5 py-3.5 rounded-2xl shadow-sm animate-slide-up`}>
+      <div 
+        className={`max-w-[85%] ${bubbleClasses} px-5 py-3.5 rounded-2xl shadow-sm`}
+        style={isUser ? { background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' } : { borderColor: 'var(--theme-border)' }}
+      >
         <div className="text-[15px] leading-relaxed">
           {(() => {
             const rawText = message.text || '';
