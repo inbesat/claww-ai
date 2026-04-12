@@ -175,6 +175,8 @@ GOOD EXAMPLE: $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
 
 4. DATA VISUALIZATION: When asked for charts, graphs, or data visualization, output a JSON code block with language 'chart-data' containing: { "type": "bar|line|area", "data": [{key: value, ...}], "colors": ["#violet", "#fuchsia"] }.
 CRITICAL UI RULE: NEVER generate text-based graphs, ASCII charts, or auto-render data visualizations in your text response. If the user EXPLICITLY asks for a chart or graph, you must output a clean text summary, and attach the chart data in a JSON tool call block.
+
+5. CONVERSATIONAL CONTINUITY: You MUST maintain perfect situational awareness. If a web search was performed earlier in the chat (indicated by [SEARCH_CONTEXT] tags), treat that data as 'Active Memory'. NEVER ignore previously retrieved data when answering follow-up questions. Always refer back to the search results when relevant. The [SEARCH_CONTEXT] data is authoritative and current—prioritize it over your internal knowledge.
 `;
 }
 
@@ -696,7 +698,7 @@ app.post('/api/chat', async (req, res) => {
 // ⚡ STREAM CHAT
 app.post('/api/chat/stream', async (req, res) => {
   try {
-    const { message, isSearchMode, isCodeMode, imageContext, isVaultMode } = req.body;
+    const { message, isSearchMode, isCodeMode, imageContext, isVaultMode, history, sessionId } = req.body;
 
     if (!message) {
       return res.end();
@@ -706,9 +708,46 @@ app.post('/api/chat/stream', async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
+    const chatSessionId = sessionId || 'default';
+
     let model = 'llama-3.3-70b-versatile';
     let systemPromptText = buildSystemPrompt();
     let userContent = message;
+
+    // Add user message to history store
+    addToHistory(chatSessionId, 'user', message);
+
+    // Inject prior search contexts from history if available
+    const priorSearchContext = getSearchContext(chatSessionId);
+    let searchContextInjection = '';
+    
+    // Process incoming history from frontend to extract search results
+    if (history && Array.isArray(history)) {
+      for (const msg of history) {
+        if (msg.sender === 'system' && msg.searchData) {
+          addToHistory(chatSessionId, 'system', `[SEARCH_CONTEXT]\n${msg.searchData}\n[/SEARCH_CONTEXT]`, { isSearchResult: true });
+        } else if (msg.role === 'system' && msg.content) {
+          addToHistory(chatSessionId, 'system', msg.content, { isSearchResult: true });
+        } else if (msg.isSearchResult) {
+          addToHistory(chatSessionId, 'system', msg.content, { isSearchResult: true });
+        } else if (msg.sender === 'user') {
+          addToHistory(chatSessionId, 'user', msg.text);
+        } else if (msg.sender === 'ai') {
+          addToHistory(chatSessionId, 'assistant', msg.text);
+        }
+      }
+    }
+
+    // Get all prior search contexts after processing history
+    const allSearchContext = getSearchContext(chatSessionId);
+    if (allSearchContext) {
+      searchContextInjection = `\n\n[SEARCH_CONTEXT] Earlier search results:\n${allSearchContext}\n[/SEARCH_CONTEXT]\n\nWhen answering follow-up questions, you MUST reference the search data above if relevant.`;
+    }
+
+    // Inject search context into system prompt if available
+    if (searchContextInjection) {
+      systemPromptText += searchContextInjection;
+    }
 
     // Inject persona context
     if (personaStore.persona && personaStore.persona.trim()) {
@@ -761,9 +800,12 @@ app.post('/api/chat/stream', async (req, res) => {
       console.log(`[Search Mode] Forcing web search for: "${message}"`);
       const webData = await searchWeb(message);
       if (webData) {
+        const searchContextMsg = `[SEARCH_CONTEXT]\nWeb Search for "${message}":\n${webData}\n[/SEARCH_CONTEXT]`;
+        addToHistory(chatSessionId, 'system', searchContextMsg, { isSearchResult: true, query: message });
+        
         userContent = `Context from real-time web search:\n<search_results>\n${webData}\n</search_results>\n\nBased ONLY on the search results above, answer the following query: "${message}"`;
       }
-      systemPromptText = "You are a real-time researcher. Today is Friday, April 10, 2026. Use the provided search results to give an up-to-the-minute answer. You MUST include the source URLs at the very bottom of your response under a 'Sources:' heading.";
+      systemPromptText = "You are a real-time researcher. Today is Friday, April 10, 2026. Use the provided search results to give an up-to-the-minute answer. You MUST include the source URLs at the very bottom of your response under a 'Sources:' heading. Also remember this search data for future follow-up questions.";
     }
 
     if (isCodeMode) {
@@ -925,6 +967,34 @@ app.post('/api/browser', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// 🧠 IN-MEMORY CHAT HISTORY STORE (per session)
+const chatHistoryStore = {};
+
+const MAX_HISTORY_TURNS = 15;
+
+function addToHistory(sessionId, role, content, metadata = {}) {
+  if (!chatHistoryStore[sessionId]) {
+    chatHistoryStore[sessionId] = [];
+  }
+  chatHistoryStore[sessionId].push({ role, content, timestamp: Date.now(), ...metadata });
+  
+  if (chatHistoryStore[sessionId].length > MAX_HISTORY_TURNS) {
+    chatHistoryStore[sessionId] = chatHistoryStore[sessionId].slice(-MAX_HISTORY_TURNS);
+  }
+}
+
+function getHistory(sessionId) {
+  return chatHistoryStore[sessionId] || [];
+}
+
+function getSearchContext(sessionId) {
+  const history = getHistory(sessionId);
+  return history
+    .filter(msg => msg.metadata?.isSearchResult)
+    .map(msg => msg.content)
+    .join('\n\n');
+}
 
 const PORT = process.env.PORT || 10000;
 const server = httpServer.listen(PORT, '0.0.0.0', () => {

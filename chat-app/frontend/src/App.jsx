@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
 import ChatInput from './components/ChatInput';
 import CodexModal from './components/CodexModal';
+import ThemeVibe from './components/ThemeVibe';
 import { LargePreviewableCodeBlock } from './components/MessageBubble';
 import mermaid from 'mermaid';
 import './index.css';
@@ -67,6 +68,12 @@ function App() {
   const [showCodex, setShowCodex] = useState(false);
   const [aiTone, setAiTone] = useState(() => localStorage.getItem('ai_tone') || '');
 
+  // Theme state
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    return saved || 'cyberpunk';
+  });
+
   // Session ID
   const [sessionId, setSessionId] = useState(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -99,6 +106,16 @@ function App() {
       localStorage.setItem('synapse_tour_seen', 'true');
     }
   }, []);
+
+  // Initialize theme on mount
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  // Save theme to localStorage
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
   const messageIdRef = useRef(0);
 
@@ -259,10 +276,17 @@ function App() {
         return;
       }
 
-      const sanitizedHistory = currentMessages.map(msg => ({
-        ...msg,
-        text: msg.text?.startsWith('data:image') ? '[AI Generated Image]' : msg.text
-      }));
+      const sanitizedHistory = currentMessages.map(msg => {
+        const cleanMsg = {
+          ...msg,
+          text: msg.text?.startsWith('data:image') ? '[AI Generated Image]' : msg.text
+        };
+        if (msg.searchData) {
+          cleanMsg.searchData = msg.searchData;
+          cleanMsg.isSearchResult = true;
+        }
+        return cleanMsg;
+      });
 
       const response = await fetch(`${API_URL}/api/chat/stream`, {
         method: 'POST',
@@ -271,11 +295,10 @@ function App() {
           message: outboundMessage,
           sessionId,
           history: sanitizedHistory,
+          isSearchMode: isSearchMode || message.match(/news|headlines|happened|president|minister|who is|latest|current|event|yesterday|today|tomorrow|forecast|score|price|weather|ipl|match|who won|result|election|trump|musk|biden|government|stock|growth|gdp/i),
           systemPrompt:
             (SYSTEM_PROMPTS.find(p => p.id === systemPrompt)?.prompt ||
             SYSTEM_PROMPTS[0].prompt) + "\n\nIf the user explicitly asks you to send an email, you must output a hidden JSON block exactly formatted like this at the end of your response: `[EMAIL_ACTION: {\"to\": \"target@domain.com\", \"subject\": \"...\", \"body\": \"...\"}]`. Do not output markdown inside the JSON.",
-          isSearchMode,
-          isCodeMode,
           imageContext,
           isVaultMode
         }),
@@ -430,20 +453,22 @@ function App() {
         }}
       />
       <div className={`hidden md:flex ${isSidebarCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 z-10`}>
-        <Sidebar
-          sessionId={sessionId}
-          chatHistory={chatHistory}
-          onNewChat={handleNewChat}
-          onSelectChat={(id) => setSessionId(id)}
-          onDeleteChat={handleDeleteChat}
-          onRenameChat={handleRenameChat}
-          darkMode={darkMode}
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
-          onOpenCodex={() => setShowCodex(true)}
-          aiTone={aiTone}
-          setAiTone={setAiTone}
-        />
+<Sidebar
+              sessionId={sessionId}
+              chatHistory={chatHistory}
+              onNewChat={handleNewChat}
+              onSelectChat={(id) => setSessionId(id)}
+              onDeleteChat={handleDeleteChat}
+              onRenameChat={handleRenameChat}
+              darkMode={darkMode}
+              isCollapsed={isSidebarCollapsed}
+              onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
+              onOpenCodex={() => setShowCodex(true)}
+              aiTone={aiTone}
+              setAiTone={setAiTone}
+              theme={theme}
+              setTheme={setTheme}
+            />
       </div>
 
       {isSidebarOpen && (
@@ -465,6 +490,8 @@ function App() {
               onOpenCodex={() => setShowCodex(true)}
               aiTone={aiTone}
               setAiTone={setAiTone}
+              theme={theme}
+              setTheme={setTheme}
             />
           </div>
         </div>

@@ -1,4 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ThemeVibe from './ThemeVibe';
+
+const themes = [
+  { id: 'cyberpunk', name: 'Cyberpunk', colors: ['#a855f7', '#ec4899'] },
+  { id: 'forest', name: 'Forest', colors: ['#10b981', '#34d399'] },
+  { id: 'minimal', name: 'Minimal', colors: ['#64748b', '#94a3b8'] },
+];
 
 const tonePresets = [
   { label: "Default ⚡️", prompt: "" },
@@ -7,7 +14,7 @@ const tonePresets = [
   { label: "Cute GF 💖", prompt: "Act as my sweet, supportive, and cute girlfriend. Use emojis, be affectionate, and ask how my day is going." }
 ];
 
-const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat, onRenameChat, darkMode, isCollapsed, onToggleCollapse, isMobileOpen, onCloseMobile, onOpenCodex, aiTone, setAiTone }) => {
+const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat, onRenameChat, darkMode, isCollapsed, onToggleCollapse, isMobileOpen, onCloseMobile, onOpenCodex, aiTone, setAiTone, theme, setTheme }) => {
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [isUploadingVault, setIsUploadingVault] = useState(false);
@@ -119,18 +126,18 @@ const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat
   };
 
 const SynapseLogo = ({ className = "w-6 h-6", glow = false }) => (
-  <div className={`relative flex items-center justify-center ${glow ? 'after:absolute after:inset-0 after:bg-violet-500/30 after:blur-xl after:rounded-full' : ''}`}>
+  <div className={`relative flex items-center justify-center ${glow ? 'after:absolute after:inset-0 after:bg-[var(--accent-primary)]/30 after:blur-xl after:rounded-full' : ''}`}>
     <svg className={`${className} relative z-10`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1" strokeOpacity="0.1" />
-      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.4" strokeDasharray="4 2" />
-      <path d="M12 4V8M12 16V20M4 12H8M16 12H20" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeOpacity="0.6"/>
-      <path d="M12 8.5L15.5 12L12 15.5L8.5 12L12 8.5Z" fill="currentColor" className="animate-pulse" />
+      <circle cx="12" cy="12" r="10" stroke="var(--accent-primary)" strokeWidth="1" strokeOpacity="0.1" />
+      <circle cx="12" cy="12" r="8" stroke="var(--accent-primary)" strokeWidth="1.5" strokeOpacity="0.4" strokeDasharray="4 2" />
+      <path d="M12 4V8M12 16V20M4 12H8M16 12H20" stroke="var(--accent-primary)" strokeWidth="1.2" strokeLinecap="round" strokeOpacity="0.6"/>
+      <path d="M12 8.5L15.5 12L12 15.5L8.5 12L12 8.5Z" fill="var(--accent-primary)" className="animate-pulse" />
     </svg>
   </div>
 );
 
 return (
-    <div className={`flex flex-col h-full transition-all ${darkMode ? 'bg-[#0a0a0a]' : 'bg-white'}`}>
+    <div className={`flex flex-col h-full transition-all`} style={{ backgroundColor: 'var(--theme-bg)' }}>
       <div className={`flex items-center gap-2 px-2 py-4 ${isCollapsed ? 'justify-center' : ''}`}>
         {isMobileOpen ? (
           <button
@@ -151,9 +158,9 @@ return (
             </svg>
           </button>
         )}
-        <SynapseLogo className={`${isCollapsed ? 'w-8 h-8' : 'w-8 h-8'} text-violet-500 drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]`} />
+        <SynapseLogo className={`${isCollapsed ? 'w-8 h-8' : 'w-8 h-8'}`} glow />
         {!isCollapsed && (
-          <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
+          <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] bg-clip-text text-transparent">
             Synapse
           </span>
         )}
@@ -162,7 +169,8 @@ return (
       <div className="px-3">
         <button 
           onClick={onNewChat}
-          className={`w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white rounded-xl transition-all duration-300 text-sm font-light hover:shadow-lg hover:shadow-violet-500/20 active:scale-[0.98] border-none ${isCollapsed ? 'w-12 h-12 p-0' : ''}`}
+          className={`w-full flex items-center justify-center gap-2 px-4 py-3 text-white rounded-xl transition-all duration-300 text-sm font-light hover:shadow-lg active:scale-[0.98] border-none ${isCollapsed ? 'w-12 h-12 p-0' : ''}`}
+          style={{ background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))', boxShadow: '0 4px 15px var(--glow-color)' }}
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
             <path d="M12 5v14M5 12h14" />
@@ -214,7 +222,7 @@ return (
 
       {!isCollapsed && (
         <div className="px-3 mt-4">
-          <div className={`p-3 rounded-xl border ${darkMode ? 'border-zinc-800 bg-zinc-900/50' : 'border-zinc-200 bg-white'}`}>
+          <div className={`p-3 rounded-xl border`} style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg-subtle)' }}>
             <div className="flex items-center gap-2 mb-2">
               <svg className="w-4 h-4 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 8m0 0h8m-8 0c1.656-1.066 3-2.78 3-5.085a6.958 6.958 0 01-1.002-3.02 6.961 6.961 0 01-.023-3.036m-3.038 3.127l.052-.085a9.94 9.94 0 01-.032-1.372m4.244 4.803l-.085-.076a10.44 10.44 0 01-1.26-1.893l.066-.11a10.7 10.7 0 01.932-1.765m.391 2.782c-.128.397-.252.8-.37 1.208" />
@@ -322,13 +330,9 @@ return (
               onClick={() => onSelectChat(chat.id)}
               className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm transition-all duration-200 cursor-pointer ${
                 chat.id === sessionId 
-                  ? darkMode 
-                    ? 'bg-zinc-800/80 text-[#fafafa] border border-zinc-700/50 shadow-sm hover:shadow-md' 
-                    : 'bg-violet-50 text-violet-700 border border-violet-200 shadow-sm'
-                  : darkMode 
-                    ? 'text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200'
-                    : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
-              } ${isCollapsed ? 'justify-center px-2 w-14' : ''}`}
+                  ? 'bg-[var(--theme-bg-subtle)] text-[var(--theme-text)] border shadow-sm hover:shadow-md' 
+                  : 'text-[var(--theme-text-muted)] hover:bg-[var(--theme-bg-subtle)] hover:text-[var(--theme-text)]'
+              } ${isCollapsed ? 'justify-center px-2 w-14' : ''}`} style={{ borderColor: 'var(--theme-border)' }}
             >
               {isCollapsed ? (
                 <svg className="w-5 h-5 shrink-0 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -387,9 +391,14 @@ return (
       </div>
       
       <div className="pt-4 border-t mt-4 flex flex-col gap-2">
+        <div className="px-3 mt-4">
+          <ThemeVibe currentTheme={theme} onThemeChange={setTheme} />
+        </div>
+
         <button
           onClick={onOpenCodex}
-          className="flex items-center justify-center gap-2 py-3 px-3 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-fuchsia-600/20 to-transparent border-l-4 border-fuchsia-500 hover:bg-fuchsia-600/40 shadow-[0_0_15px_rgba(217,70,239,0.3)] transition-all"
+          className="flex items-center justify-center gap-2 py-3 px-3 rounded-lg text-xs font-bold text-white transition-all"
+          style={{ background: 'linear-gradient(to right, var(--accent-secondary), transparent)', borderLeft: '4px solid var(--accent-primary)', boxShadow: '0 0 15px var(--glow-color)' }}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />

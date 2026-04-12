@@ -6,34 +6,121 @@
 
 /* Theme Engine */
 :root {
+  /* Default - Cyberpunk */
   --accent-primary: #8b5cf6;
+  --accent-secondary: #d946ef;
   --aura-color: #8b5cf6;
-  --theme-bg: #0a0a0a;
+  --glow-color: rgba(139, 92, 246, 0.5);
+  --theme-bg: #09090b;
   --theme-bg-subtle: #18181b;
+  --theme-bg-glass: rgba(24, 24, 27, 0.7);
   --theme-text: #fafafa;
   --theme-text-muted: #a1a1aa;
-  --theme-border: #27272a;
+  --theme-border: #3f3f46;
+}
+
+[data-theme='cyberpunk'] {
+  --accent-primary: #a855f7;
+  --accent-secondary: #ec4899;
+  --aura-color: #a855f7;
+  --glow-color: rgba(168, 85, 247, 0.6);
+  --theme-bg: #09090b;
+  --theme-bg-subtle: #18181b;
+  --theme-bg-glass: rgba(24, 24, 27, 0.7);
+  --theme-text: #fafafa;
+  --theme-text-muted: #a1a1aa;
+  --theme-border: #3f3f46;
 }
 
 [data-theme='forest'] {
   --accent-primary: #10b981;
+  --accent-secondary: #34d399;
   --aura-color: #10b981;
-  --theme-bg: #052e16;
-  --theme-bg-subtle: #064e3b;
+  --glow-color: rgba(16, 185, 129, 0.5);
+  --theme-bg: #0c1612;
+  --theme-bg-subtle: #162b21;
+  --theme-bg-glass: rgba(22, 43, 33, 0.7);
   --theme-text: #ecfdf5;
   --theme-text-muted: #6ee7b7;
   --theme-border: #065f46;
 }
 
-[data-theme='minimalist'] {
+[data-theme='minimal'] {
   --accent-primary: #64748b;
-  --aura-color: #94a3b8;
-  --theme-bg: #ffffff;
-  --theme-bg-subtle: #f8fafc;
+  --accent-secondary: #94a3b8;
+  --aura-color: #64748b;
+  --glow-color: rgba(100, 116, 139, 0.3);
+  --theme-bg: #fafafa;
+  --theme-bg-subtle: #f1f5f9;
+  --theme-bg-glass: rgba(248, 250, 252, 0.85);
   --theme-text: #1e293b;
   --theme-text-muted: #64748b;
-  --theme-border: #e2e8f0;
+  --theme-border: #cbd5e1;
 }
+
+[data-theme='matrix'] {
+  --accent-primary: #00FF41;
+  --accent-secondary: #39FF14;
+  --aura-color: #00FF41;
+  --glow-color: rgba(0, 255, 65, 0.4);
+  --theme-bg: #000000;
+  --theme-bg-subtle: #0a0a0a;
+  --theme-bg-glass: rgba(0, 0, 0, 0.85);
+  --theme-text: #00FF41;
+  --theme-text-muted: #00CC33;
+  --theme-border: #003300;
+}
+
+[data-theme='vaporwave'] {
+  --accent-primary: #FF71CE;
+  --accent-secondary: #01CDFE;
+  --aura-color: #FF71CE;
+  --glow-color: rgba(255, 113, 206, 0.5);
+  --theme-bg: #1A1423;
+  --theme-bg-subtle: #2D1B4E;
+  --theme-bg-glass: rgba(45, 27, 78, 0.7);
+  --theme-text: #FF71CE;
+  --theme-text-muted: #01CDFE;
+  --theme-border: #5C2D8A;
+}
+
+[data-theme='nord'] {
+  --accent-primary: #88C0D0;
+  --accent-secondary: #5E81AC;
+  --aura-color: #88C0D0;
+  --glow-color: rgba(136, 192, 208, 0.3);
+  --theme-bg: #2E3440;
+  --theme-bg-subtle: #3B4252;
+  --theme-bg-glass: rgba(59, 66, 82, 0.7);
+  --theme-text: #ECEFF4;
+  --theme-text-muted: #D8DEE9;
+  --theme-border: #4C566A;
+}
+
+[data-theme='bloodmoon'] {
+  --accent-primary: #FF0000;
+  --accent-secondary: #8B0000;
+  --aura-color: #FF0000;
+  --glow-color: rgba(255, 0, 0, 0.4);
+  --theme-bg: #0D0000;
+  --theme-bg-subtle: #1A0000;
+  --theme-bg-glass: rgba(26, 0, 0, 0.85);
+  --theme-text: #FF3333;
+  --theme-text-muted: #CC0000;
+  --theme-border: #330000;
+}
+
+/* Utility classes using theme variables */
+.theme-bg { background-color: var(--theme-bg); }
+.theme-bg-subtle { background-color: var(--theme-bg-subtle); }
+.theme-bg-glass { background-color: var(--theme-bg-glass); backdrop-filter: blur(12px); }
+.theme-text { color: var(--theme-text); }
+.theme-text-muted { color: var(--theme-text-muted); }
+.theme-border { border-color: var(--theme-border); }
+.theme-accent { color: var(--accent-primary); }
+.theme-accent-bg { background-color: var(--accent-primary); }
+.theme-glow { box-shadow: 0 0 20px var(--glow-color); }
+.theme-glow-text { text-shadow: 0 0 10px var(--glow-color); }
 
 /* Stock Ticker Animations */
 @keyframes glow-green {

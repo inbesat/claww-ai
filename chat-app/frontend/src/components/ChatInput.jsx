@@ -134,15 +134,17 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, active
           setAttachedFileName('');
           
           // Auto-summary trigger
-          setMessage("I've read your PDF. Here is a quick overview...");
+          setMessage(`I've read your PDF (${data.numPages || 'unknown'} pages). Here's a quick overview...`);
         } else {
           // Handle other file response from /api/upload: { message, textLength }
-          // For now, we'll store a simple indication that file was processed
           setFileContext(`${data.message} (${data.textLength} characters extracted)`);
           
-          // Auto-summary trigger for non-PDF files too
+          // Auto-summary trigger
           setMessage("I've processed your file. What would you like to know about it?");
         }
+        
+        // Success notification
+        alert?.(`✓ File successfully indexed: ${file.name}`);
      } catch (err) {
        console.error('Upload error:', err);
        alert(err.message || 'Failed to process file');
@@ -203,11 +205,15 @@ const handleRemoveFile = () => {
 return (
     <div className="fixed bottom-0 left-0 md:left-64 right-0 bg-black/40 backdrop-blur-xl border-t border-white/10 px-2 md:px-4 py-3 md:py-4 z-50 shadow-[0_-4px_20px_rgba(217,70,239,0.1)]">
        <div className="max-w-[800px] mx-auto">
-         {isProcessing && (
-           <div className="text-fuchsia-400 text-sm animate-pulse mb-2">
-             Processing Document...
-           </div>
-         )}
+{isProcessing && (
+            <div className="flex items-center gap-2 mb-2 px-3 py-2 rounded-lg bg-[var(--theme-bg-subtle)] border border-[var(--theme-border)]">
+              <svg className="w-4 h-4 animate-spin" style={{ color: 'var(--accent-primary)' }} viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span className="text-sm" style={{ color: 'var(--accent-primary)' }}>Analyzing document...</span>
+            </div>
+          )}
          {attachedFileName && imageContext && (
           <div className="mb-3 flex items-center gap-2">
             <div className={`relative flex items-center gap-2 px-3 py-2 rounded-lg border ${darkMode ? 'bg-zinc-800/60 border-zinc-700' : 'bg-zinc-100 border-zinc-200'}`}>
@@ -261,7 +267,7 @@ return (
           </div>
         )}
         <form onSubmit={handleSubmit}>
-          <div className={`relative flex items-end rounded-2xl border transition-all duration-300 shadow-sm ${isImageMode ? 'shadow-[0_0_15px_rgba(139,92,246,0.5)] border-violet-500/70 ring-1 ring-violet-500/30' : darkMode ? 'bg-zinc-900/80 border-zinc-700/50 hover:border-zinc-600/50 focus-within:ring-1 focus-within:ring-violet-500/50 focus-within:border-violet-500/50' : 'bg-white border-zinc-200 hover:border-zinc-300 focus-within:ring-1 focus-within:ring-violet-500/50 focus-within:border-violet-500/50'} ${isImageMode ? (darkMode ? 'bg-zinc-900/90' : 'bg-violet-50') : ''}`}>
+          <div className={`relative flex items-end rounded-2xl border transition-all duration-300 shadow-sm ${isImageMode ? 'theme-glow border current border-opacity-70' : darkMode ? 'bg-[var(--theme-bg-subtle)] border-[var(--theme-border)] hover:border-[var(--accent-primary)] focus-within:ring-1 focus-within:ring-[var(--accent-primary)] focus-within:border-[var(--accent-primary)]' : 'bg-white border-zinc-200 hover:border-zinc-300 focus-within:ring-1 focus-within:ring-[var(--accent-primary)] focus-within:border-[var(--accent-primary)]'} ${isImageMode ? (darkMode ? 'bg-[var(--theme-bg-subtle)]' : 'bg-violet-50') : ''}`} style={isImageMode ? { boxShadow: '0 0 15px var(--glow-color)', borderColor: 'var(--accent-primary)' } : undefined}>
 <input
               ref={fileInputRef}
               type="file"
@@ -272,7 +278,7 @@ return (
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-               className={`p-3 ml-1 rounded-lg transition-all duration-300 hover:scale-110 ${darkMode ? 'text-zinc-500 hover:text-fuchsia-400 hover:bg-zinc-800' : 'text-zinc-400 hover:text-fuchsia-400 hover:bg-zinc-200'}`}
+               className={`p-3 ml-1 rounded-lg transition-all duration-300 hover:scale-110 ${darkMode ? 'text-[var(--theme-text-muted)] hover:text-[var(--accent-secondary)] hover:bg-[var(--theme-bg-subtle)]' : 'text-zinc-400 hover:text-fuchsia-400 hover:bg-zinc-200'}`}
               title="Attach file"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -388,7 +394,7 @@ return (
             <button
               type="submit"
               disabled={isLoading || isUploading || !message.trim()}
-              className="m-2 p-2.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 active:from-violet-700 active:to-fuchsia-700 text-white rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 hover:shadow-lg hover:shadow-violet-500/30 disabled:hover:shadow-none"
+              className="m-2 p-2.5 text-white rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 disabled:hover:shadow-none" style={{ background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))', boxShadow: '0 4px 15px var(--glow-color)' }}
             >
               {isLoading ? (
                 <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">

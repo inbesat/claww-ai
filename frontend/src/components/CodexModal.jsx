@@ -76,9 +76,9 @@ const CodexModal = ({ isOpen, onClose }) => {
 
           <Section 
             icon="🔍" 
-            title="3. Web Search (Live Intelligence)"
+            title="3. Deep Memory Search"
           >
-            <p className="mb-2"><strong>What it is:</strong> Synapse browses the web for real-time information.</p>
+            <p className="mb-2"><strong>What it is:</strong> Synapse doesn't just read web results—it remembers them forever.</p>
             <p><strong>How to use:</strong> Ask about anything after 2023:</p>
             <ul className="list-disc list-inside mt-2 space-y-1 text-zinc-300">
               <li><em>"Latest news on SpaceX?"</em></li>
@@ -86,7 +86,10 @@ const CodexModal = ({ isOpen, onClose }) => {
               <li><em>"Who won the election yesterday?"</em></li>
             </ul>
             <p className="mt-2 text-zinc-300">Synapse uses SerpApi to fetch top Google results, then summarizes them naturally.</p>
-            <p className="mt-2 text-zinc-500 text-xs">Look for the <strong>🔍 Pulsing dot</strong> in the chat to know when search is active.</p>
+            <div className="mt-3 p-3 rounded-lg bg-violet-500/10 border border-violet-500/20">
+              <p className="text-sm text-fuchsia-400 font-medium">🧠 Active Memory</p>
+              <p className="text-xs text-zinc-400 mt-1">Search results are stored in context. Ask follow-up questions without repeating the query—Synapse knows what you searched.</p>
+            </div>
           </Section>
 
           <Section 
@@ -137,49 +140,56 @@ const CodexModal = ({ isOpen, onClose }) => {
           </Section>
 
           <Section 
-            icon="🧠" 
-            title="8. The Brain (AI Persona)"
+            icon="🎭" 
+            title="8. Creator Override (Personas)"
           >
-            <p className="mb-2"><strong>What it is:</strong> Take complete control over Synapse's personality and communication style.</p>
-            <p><strong>How to use:</strong> Use the <strong>AI Persona & Tone</strong> box in the sidebar to give Synapse a custom system prompt.</p>
-            <p className="mt-2">Example prompts:</p>
-            <ul className="list-disc list-inside mt-1 space-y-1 text-zinc-300">
-              <li><em>"Act as a strict senior Python developer"</em></li>
-              <li><em>"Be a witty comedy writer"</em></li>
-              <li><em>"Respond in haiku only"</em></li>
-            </ul>
-            <p className="mt-3"><strong>Quick Presets:</strong> Feeling lazy? Click one of the one-tap presets to instantly change the vibe:</p>
+            <p className="mb-2"><strong>What it is:</strong> Bored of the standard AI voice? Use the Persona menu to switch Synapse into different characters.</p>
+            <p><strong>How to use:</strong> Use the <strong>AI Persona & Tone</strong> box in the sidebar or click a quick preset:</p>
             <div className="mt-2 flex flex-wrap gap-2">
               <span className="text-xs px-2.5 py-1 rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-300">Default ⚡️</span>
               <span className="text-xs px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-zinc-300">Hacker</span>
               <span className="text-xs px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-zinc-300">Funny Friend</span>
               <span className="text-xs px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-zinc-300">Cute GF 💖</span>
             </div>
-            <p className="mt-2 text-zinc-400 text-xs">The AI adapts its behavior immediately on your next message.</p>
-            <p className="mt-3 text-zinc-400"><strong>Factory Reset:</strong> Need to get back to business? Just click the <strong>Default ⚡️</strong> preset to clear all custom instructions and return Synapse to its standard, highly capable default state.</p>
+            <p className="mt-3">Or craft your own:</p>
+            <ul className="list-disc list-inside mt-1 space-y-1 text-zinc-300">
+              <li><em>"Act as a strict senior Python developer"</em></li>
+              <li><em>"Be a witty comedy writer"</em></li>
+              <li><em>"Respond in haiku only"</em></li>
+            </ul>
+            <p className="mt-3 text-zinc-400"><strong>Factory Reset:</strong> Click <strong>Default ⚡️</strong> to clear all custom instructions.</p>
           </Section>
 
           <Section 
             icon="🎭" 
-            title="7. The Atmosphere (Theme Engine)"
+            title="7. The Shape-Shifter (Theme Engine)"
           >
-            <p className="mb-2"><strong>What it is:</strong> A CSS-variable UI engine that transforms the entire app's aesthetic.</p>
-            <p><strong>How to use:</strong> Use the <strong>Theme / Vibe</strong> buttons in the sidebar:</p>
-            <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
+            <p className="mb-2"><strong>What it is:</strong> Synapse adapts to your vibe. Click the Theme button in the sidebar to instantly switch the entire UI.</p>
+            <p><strong>How to use:</strong> Click any theme button in the sidebar:</p>
+            <div className="mt-3 grid grid-cols-4 gap-2 text-center text-xs">
               <div className="p-2 rounded-lg bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white">
                 <p className="font-bold">Cyberpunk</p>
-                <p>Fuchsia/Cyan</p>
               </div>
               <div className="p-2 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
                 <p className="font-bold">Forest</p>
-                <p>Emerald/Gold</p>
               </div>
-              <div className="p-2 rounded-lg bg-zinc-600 text-white">
+              <div className="p-2 rounded-lg bg-zinc-500 text-white">
                 <p className="font-bold">Minimal</p>
-                <p>Slate/White</p>
+              </div>
+              <div className="p-2 rounded-lg bg-gradient-to-r from-green-600 to-green-400 text-black">
+                <p className="font-bold">Matrix</p>
+              </div>
+              <div className="p-2 rounded-lg bg-gradient-to-r from-pink-500 to-cyan-400 text-black">
+                <p className="font-bold">Vaporwave</p>
+              </div>
+              <div className="p-2 rounded-lg bg-gradient-to-r from-sky-600 to-blue-600 text-white">
+                <p className="font-bold">Nord</p>
+              </div>
+              <div className="p-2 rounded-lg bg-gradient-to-r from-red-700 to-red-900 text-white">
+                <p className="font-bold">Blood Moon</p>
               </div>
             </div>
-            <p className="mt-2 text-zinc-300">The <strong>Aura background</strong> automatically adapts to your selected theme's colors.</p>
+            <p className="mt-2 text-zinc-300">All buttons, glows, and accents change instantly—while preserving the glassmorphism look.</p>
           </Section>
 
           <div className="bg-white/5 p-5 rounded-xl border border-white/10">
@@ -193,7 +203,7 @@ const CodexModal = ({ isOpen, onClose }) => {
               <LegendItem icon="🟢" label="Green" desc="Stock UP" />
               <LegendItem icon="🔴" label="Red" desc="Stock DOWN" />
               <LegendItem icon="🖼️" label="Image" desc="Generate Image" />
-              <LegendItem icon="🎭" label="Theme" desc="Switch Vibe" />
+              <LegendItem icon="🎭" label="Theme" desc="Switch Vibe (7 themes)" />
               <LegendItem icon="📊" label="Chart" desc="Data Viz" />
               <LegendItem icon="📧" label="Email" desc="Send Email" />
               <LegendItem icon="🌐" label="Browser" desc="Web Agent" />
