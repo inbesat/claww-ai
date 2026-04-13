@@ -231,14 +231,26 @@ const CodexModal = ({ isOpen, onClose }) => {
             <p>Throw away your mouse. Press <strong>Cmd + K</strong> (or Ctrl + K on Windows) from anywhere in the app to open the Omni-Search glass modal. You can instantly search and trigger your custom macros, jump to past chat histories, switch themes, or toggle Zen Mode entirely from your keyboard.</p>
           </Section>
 
-          <Section icon="🎙️" title="Voice OS (Hands-Free)">
-            <p>Talk to Synapse like JARVIS. Click the <strong>Microphone</strong> icon in the chat box to dictate your prompts aloud. When the AI responds, click the <strong>Speaker</strong> icon at the bottom of its message to have Synapse read the answer back to you in real-time.</p>
-          </Section>
+           <Section icon="🎙️" title="Voice OS (Hands-Free)">
+             <p>Talk to Synapse like JARVIS. Click the <strong>Microphone</strong> icon in the chat box to dictate your prompts aloud. When the AI responds, click the <strong>Speaker</strong> icon at the bottom of its message to have Synapse read the answer back to you in real-time.</p>
+           </Section>
 
-          <div className="mt-8 mb-4 border-t border-white/10 pt-6">
-            <h3 className="text-lg font-bold text-emerald-400 flex items-center gap-2">🌌 Ultimate User Features</h3>
-            <p className="text-sm text-[var(--theme-text-muted)] mt-1">The absolute pinnacle of personalized AI orchestration.</p>
-          </div>
+           <div className="mt-8 mb-4 border-t border-white/10 pt-6">
+             <h3 className="text-lg font-bold text-emerald-400 flex items-center gap-2">🌌 Ultimate User Features</h3>
+             <p className="text-sm text-[var(--theme-text-muted)] mt-1">The absolute pinnacle of personalized AI orchestration.</p>
+           </div>
+
+           <div className="mt-8 mb-4 border-t border-white/10 pt-6">
+             <h3 className="text-lg font-bold text-red-500 flex items-center gap-2">
+               ⚔️ AI War Battle
+             </h3>
+             <p className="text-sm text-[var(--theme-text-muted)] mt-1">Sit back, grab popcorn, and watch the AIs fight it out.</p>
+           </div>
+
+           <Section icon="🥊" title="Multi-Agent Debates (The War Room)">
+             <p>Why ask one AI for an opinion when you can force two experts to debate it? Type the <strong>/debate</strong> command followed by two @mentions and a topic, and Synapse will automatically orchestrate a multi-round debate right in your chat window.</p>
+             <div className="mt-2 p-2 bg-black/20 rounded border border-white/5 text-xs text-zinc-400"><strong>Syntax:</strong> <code>/debate @SeniorDev @SecurityAuditor Should we use React or Vue?</code><br/><br/>The app will automatically split into two avatars. The Senior Dev will pitch their idea, and the Security Auditor will relentlessly critique it. They will go back and forth completely autonomously while you read the multi-perspective breakdown.</div>
+           </Section>
 
           <Section icon="🧠" title="Flying Thoughts Under One Roof (Strict Grounding)">
             <p>Turn Synapse into a closed-loop research assistant. When you toggle <strong>Strict Grounding</strong> ON in the Document Vault, you completely sandbox the AI's brain. It will physically refuse to use outside internet knowledge or hallucinate facts, forcing it to answer your prompts <em>only</em> using the documents you have uploaded.</p>

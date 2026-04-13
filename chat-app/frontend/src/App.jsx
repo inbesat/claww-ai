@@ -81,8 +81,178 @@ function App() {
 
   const [zenMode, setZenMode] = useState(false);
 
-  const [isNotebookMode, setIsNotebookMode] = useState(() => localStorage.getItem('synapse_notebook') === 'true');
-  const [transitionState, setTransitionState] = useState(null);
+const [isNotebookMode, setIsNotebookMode] = useState(() => localStorage.getItem('synapse_notebook') === 'true');
+    const [transitionState, setTransitionState] = useState(null);
+    // Notebook Mode State
+    const [notebookSearch, setNotebookSearch] = useState('');
+    const [selectedSources, setSelectedSources] = useState(new Set(['1 Quantum Numbers.pdf'])); // Default mock
+    // Debate state
+    const [isDebating, setIsDebating] = useState(false);
+   
+   // Toggle source selection
+   const toggleSource = (file) => {
+     const newSet = new Set(selectedSources);
+     if (newSet.has(file)) {
+       newSet.delete(file);
+     } else {
+       newSet.add(file);
+     }
+     setSelectedSources(newSet);
+   };
+   
+    // Trigger studio action with selected sources
+    const triggerStudioAction = (actionType) => {
+      const msg = `Based ONLY on these sources (${Array.from(selectedSources).join(', ')}), generate a ${actionType}.`;
+      handleSendMessage(new Event('submit'), msg);
+    };
+
+    // Multi-Agent Debate Orchestrator
+    const runDebate = async (persona1, persona2, topic) => {
+      // Prevent multiple simultaneous debates
+      if (isDebating) return;
+      
+      setIsDebating(true);
+      
+      try {
+        // Turn 1: Persona 1 presents initial argument
+        const turn1Msg = `@${persona1} Present your initial argument for: ${topic}`;
+        await sendDebateMessage(turn1Msg, persona1);
+        
+        // Turn 2: Persona 2 critiques Persona 1's argument
+        const turn2Msg = `@${persona2} Critique this argument from ${persona1}: `;
+        await sendDebateMessage(turn2Msg, persona2);
+        
+        // Turn 3: Persona 1 defends against Persona 2's critique
+        const turn3Msg = `@${persona1} Defend your position against this critique from ${persona2}: `;
+        await sendDebateMessage(turn3Msg, persona1);
+        
+        // Turn 4: Persona 2 provides final counter-argument and closing thoughts
+        const turn4Msg = `@${persona2} Provide your final counter-argument and closing thoughts against ${persona1}: `;
+        await sendDebateMessage(turn4Msg, persona2);
+      } catch (err) {
+        console.error('Debate error:', err);
+        setError(err.message || 'Debate failed');
+      } finally {
+        setIsDebating(false);
+      }
+    };
+
+    // Helper function to send a debate message and wait for completion
+    const sendDebateMessage = async (message, personaName) => {
+      return new Promise((resolve, reject) => {
+        const aiMessageId = ++messageIdRef.current;
+        setMessages(prev => ({
+          ...prev,
+          [sessionId]: [
+            ...(prev[sessionId] || []),
+            {
+              id: aiMessageId,
+              text: '',
+              sender: 'ai',
+              isStreaming: true,
+              personaName: personaName // Store persona name for UI
+            }
+          ]
+        }));
+        
+        // Prepare sanitized history (same as in handleSendMessage)
+        const sanitizedHistory = currentMessages.map(msg => {
+          const cleanMsg = {
+            ...msg,
+            text: msg.text?.startsWith('data:image') ? '[AI Generated Image]' : msg.text
+          };
+          if (msg.searchData) {
+            cleanMsg.searchData = msg.searchData;
+            cleanMsg.isSearchResult = true;
+          }
+          return cleanMsg;
+        });
+        
+        // Call the API
+        fetch(`${API_URL}/api/chat/stream`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message,
+            sessionId,
+            history: sanitizedHistory,
+            systemPrompt:
+              (SYSTEM_PROMPTS.find(p => p.id === systemPrompt)?.prompt ||
+              SYSTEM_PROMPTS[0].prompt) + "\n\nIf the user explicitly asks you to send an email, you must output a hidden JSON block exactly formatted like this at the end of your response: `[EMAIL_ACTION: {\"to\": \"target@domain.com\", \"subject\": \"...\", \"body\": \"...\"}]`. Do not output markdown inside the JSON.",
+            temperature,
+            memoryDepth,
+            useLocalLlm,
+            isNotebookMode
+          })
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          return response.body.getReader();
+        })
+        .then(reader => {
+          const decoder = new TextDecoder();
+          let fullContent = '';
+          
+          const processStream = async () => {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              
+              const chunk = decoder.decode(value, { stream: true });
+              const lines = chunk.split('\n');
+              
+              for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                  const data = line.slice(6);
+                  try {
+                    const parsed = JSON.parse(data);
+                    if (parsed.error) {
+                      throw new Error(parsed.error);
+                    }
+                    
+                    if (parsed.done) {
+                      // Mark message as complete
+                      setMessages(prev => ({
+                        ...prev,
+                        [sessionId]: prev[sessionId].map(msg => 
+                          msg.id === aiMessageId ? { ...msg, isStreaming: false } : msg
+                        )
+                      }));
+                      resolve();
+                      return;
+                    }
+                    
+                    if (parsed.content) {
+                      fullContent += parsed.content;
+                      setMessages(prev => ({
+                        ...prev,
+                        [sessionId]: prev[sessionId].map(msg => 
+                          msg.id === aiMessageId ? { ...msg, text: fullContent, personaName: personaName } : msg
+                        )
+                      }));
+                    }
+                  } catch (e) {
+                    // Ignore parse errors
+                  }
+                }
+              }
+            }
+          };
+          
+          processStream();
+        })
+        .catch(err => {
+          // Remove placeholder message on error
+          setMessages(prev => ({
+            ...prev,
+            [sessionId]: prev[sessionId].filter(msg => msg.id !== aiMessageId)
+          }));
+          reject(err);
+        });
+      });
+    };
 
   const handleNotebookToggle = () => {
     if (transitionState) return;
@@ -265,18 +435,37 @@ function App() {
 
   const currentMessages = messages[sessionId] || [];
 
-  const handleSendMessage = async (message, fileContext = null, isImageMode = false, isSearchMode = false, isCodeMode = false, imageContext = null, isCanvasMode = false, isVaultMode = false) => {
-    let contextParts = [];
-    if (fileContext) {
-      const truncatedContext = fileContext.length > 10000 
-        ? fileContext.substring(0, 10000) + '\n\n[Document truncated due to length...]' 
-        : fileContext;
-      contextParts.push(`Document Content:\n${truncatedContext}`);
-    }
-    
-    let outboundMessage = contextParts.length > 0
-      ? `Message: ${message}\n\n${contextParts.join('\n\n')}`
-      : message;
+   const handleSendMessage = async (message, fileContext = null, isImageMode = false, isSearchMode = false, isCodeMode = false, imageContext = null, isCanvasMode = false, isVaultMode = false) => {
+     // Intercept debate command: /debate @Persona1 @Persona2 [Topic]
+     const debateMatch = message.match(/^\/debate\s+@([a-zA-Z0-9_]+)\s+@([a-zA-Z0-9_]+)\s+(.*)/i);
+     if (debateMatch) {
+       // Show the user's command in the chat
+       const userMessage = {
+         id: ++messageIdRef.current,
+         text: message,
+         sender: 'user'
+       };
+       
+       setMessages(prev => ({
+         ...prev,
+         [sessionId]: [...(prev[sessionId] || []), userMessage]
+       }));
+       
+       // Start the debate
+       return runDebate(debateMatch[1], debateMatch[2], debateMatch[3]);
+     }
+     
+     let contextParts = [];
+     if (fileContext) {
+       const truncatedContext = fileContext.length > 10000 
+         ? fileContext.substring(0, 10000) + '\n\n[Document truncated due to length...]' 
+         : fileContext;
+       contextParts.push(`Document Content:\n${truncatedContext}`);
+     }
+     
+     let outboundMessage = contextParts.length > 0
+       ? `Message: ${message}\n\n${contextParts.join('\n\n')}`
+       : message;
 
     if (isCanvasMode) {
       setAutoOpenCanvas(true);
@@ -670,15 +859,40 @@ setMemoryDepth={setMemoryDepth}
 
         <div className={`flex-1 flex flex-col transition-all duration-700 ease-in-out ${activeCanvas ? '' : ''} ${transitionState === 'out' ? 'animate-dust-out' : transitionState === 'in' ? 'animate-dust-in' : ''}`}>
           <div className={`flex-1 flex ${activeCanvas ? 'gap-0' : ''}`}>
-            {isNotebookMode && (
-              <div className="hidden lg:flex w-72 flex-col bg-[#1e1e1e]/90 border-r border-white/10 p-4">
-                <h2 className="text-sm font-bold text-zinc-200 mb-4 flex items-center gap-2">📚 Sources</h2>
-                <button className="w-full py-2 bg-white/5 border border-white/10 rounded-lg text-xs text-zinc-300 hover:bg-white/10 transition-colors">+ Add sources</button>
-                <div className="mt-4 flex-1 overflow-y-auto">
-                  <p className="text-xs text-zinc-500 text-center mt-10">No sources added yet.</p>
-                </div>
-              </div>
-            )}
+{isNotebookMode && (
+  <div className="w-[320px] flex-col bg-[#131314] text-zinc-200 border-r border-white/5 p-4 animate-dust-in">
+    <h2 className="text-sm font-bold text-zinc-200 mb-4 flex items-center gap-2">📚 Sources</h2>
+    <input 
+      type="text" 
+      placeholder="Search sources..." 
+      value={notebookSearch} 
+      onChange={(e) => setNotebookSearch(e.target.value)}
+      className="w-full mb-4 px-3 py-2 bg-[#1a1a1a] border border-white/5 rounded-md text-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-400"
+    />
+    <div className="mt-4 flex-1 overflow-y-auto space-y-2">
+      {/* Mock file list - in a real app, this would come from the vault */}
+      {[ '1 Quantum Numbers.pdf', '2 Relativity Basics.docx', '3 Thermodynamics Notes.txt' ].filter(file => 
+        file.toLowerCase().includes(notebookSearch.toLowerCase())
+      ).map((file) => (
+        <div key={file} className="flex items-center">
+          <input
+            type="checkbox"
+            checked={selectedSources.has(file)}
+            onChange={() => toggleSource(file)}
+            className="mr-2 h-4 w-4 border-zinc-500 rounded text-zinc-600 focus:ring-zinc-400"
+          />
+          <span className="text-xs">{file}</span>
+        </div>
+      ))}
+    </div>
+    <button 
+      onClick={() => setIsSidebarOpen(true)}
+      className="w-full py-2 mt-4 bg-white/5 border border-white/10 rounded-lg text-xs text-zinc-300 hover:bg-white/10 transition-colors"
+    >
+      + Add sources
+    </button>
+  </div>
+)}
             <div className={`flex-1 relative flex flex-col min-w-0 transition-all duration-500 ${zenMode ? 'px-10 lg:px-40 border-none bg-transparent' : 'bg-white/5 border-l border-white/10'} ${activeCanvas ? 'w-[35%]' : ''}`}>
               <button
                 onClick={() => setIsSidebarOpen(true)}
@@ -725,29 +939,85 @@ setMemoryDepth={setMemoryDepth}
                 zenMode={zenMode}
               />
             </div>
-            {isNotebookMode && (
-              <div className="hidden xl:flex w-80 flex-col bg-[#1e1e1e]/90 border-l border-white/10 p-4">
-                <h2 className="text-sm font-bold text-zinc-200 mb-4">✨ Studio</h2>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
-                    <div className="text-lg mb-1">🎧</div>
-                    <div className="text-xs font-medium text-zinc-300">Audio Overview</div>
-                  </div>
-                  <div className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
-                    <div className="text-lg mb-1">📝</div>
-                    <div className="text-xs font-medium text-zinc-300">Study Guide</div>
-                  </div>
-                  <div className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
-                    <div className="text-lg mb-1">❓</div>
-                    <div className="text-xs font-medium text-zinc-300">Quiz</div>
-                  </div>
-                  <div className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
-                    <div className="text-lg mb-1">🗂️</div>
-                    <div className="text-xs font-medium text-zinc-300">Flashcards</div>
-                  </div>
-                </div>
-              </div>
-            )}
+{isNotebookMode && (
+  <div className="w-[340px] flex-col bg-[#131314] text-zinc-200 border-l border-white/5 p-4 animate-dust-in">
+    <h2 className="text-sm font-bold text-zinc-200 mb-4">✨ Studio</h2>
+    <div className="grid grid-cols-2 gap-2">
+      {/* Audio Overview */}
+      <div 
+        className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
+        onClick={() => triggerStudioAction('podcast script discussing the key themes')}
+      >
+        <div className="text-lg mb-1">🎧</div>
+        <div className="text-xs font-medium text-zinc-300">Audio Overview</div>
+      </div>
+      {/* Slide Deck */}
+      <div 
+        className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
+        onClick={() => triggerStudioAction('presentation slide deck outline')}
+      >
+        <div className="text-lg mb-1">📺</div>
+        <div className="text-xs font-medium text-zinc-300">Slide Deck</div>
+      </div>
+      {/* Video Overview */}
+      <div 
+        className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
+        onClick={() => triggerStudioAction('YouTube video script')}
+      >
+        <div className="text-lg mb-1">▶️</div>
+        <div className="text-xs font-medium text-zinc-300">Video Overview</div>
+      </div>
+      {/* Mind Map */}
+      <div 
+        className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
+        onClick={() => triggerStudioAction('markdown Mind Map (use mermaid.js if possible)')}
+      >
+        <div className="text-lg mb-1">🔀</div>
+        <div className="text-xs font-medium text-zinc-300">Mind Map</div>
+      </div>
+      {/* Reports */}
+      <div 
+        className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
+        onClick={() => triggerStudioAction('comprehensive executive summary report')}
+      >
+        <div className="text-lg mb-1">📄</div>
+        <div className="text-xs font-medium text-zinc-300">Reports</div>
+      </div>
+      {/* Flashcards */}
+      <div 
+        className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
+        onClick={() => triggerStudioAction('list of 10 QA flashcards')}
+      >
+        <div className="text-lg mb-1">🗂️</div>
+        <div className="text-xs font-medium text-zinc-300">Flashcards</div>
+      </div>
+      {/* Quiz */}
+      <div 
+        className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
+        onClick={() => triggerStudioAction('multiple-choice quiz with an answer key at the bottom')}
+      >
+        <div className="text-lg mb-1">❓</div>
+        <div className="text-xs font-medium text-zinc-300">Quiz</div>
+      </div>
+      {/* Infographic */}
+      <div 
+        className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
+        onClick={() => triggerStudioAction('visual infographic structure text outline')}
+      >
+        <div className="text-lg mb-1">📊</div>
+        <div className="text-xs font-medium text-zinc-300">Infographic</div>
+      </div>
+      {/* Data Table */}
+      <div 
+        className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
+        onClick={() => triggerStudioAction('markdown data table extracting all key metrics')}
+      >
+        <div className="text-lg mb-1">📋</div>
+        <div className="text-xs font-medium text-zinc-300">Data Table</div>
+      </div>
+    </div>
+  </div>
+)}
           </div>
 
           {activeCanvas && (

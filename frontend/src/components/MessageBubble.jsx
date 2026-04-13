@@ -563,7 +563,7 @@ const renderMarkdown = (text) => {
       <ReactMarkdown
         remarkPlugins={[remarkMath]}
         rehypePlugins={[rehypeKatex]}
-        className={`prose max-w-none ${darkMode ? 'prose-invert text-zinc-200' : 'text-zinc-800 prose-p:text-zinc-800 prose-headings:text-zinc-900 prose-strong:text-zinc-900'}`}
+        className={`prose max-w-none ${darkMode ? 'prose-invert text-zinc-200' : 'text-zinc-900 prose-p:text-zinc-900 prose-headings:text-zinc-900 prose-strong:text-zinc-900 prose-code:text-zinc-800 prose-a:text-blue-600'}`}
 components={{
           p: ({ children }) => <p className="mb-3 last:mb-0 leading-relaxed">{children}</p>,
           li: ({ children }) => <li className="mb-1">{children}</li>,
@@ -693,17 +693,23 @@ const SynapseLogo = ({ className = "w-6 h-6", glow = false }) => (
 
 return (
   <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} gap-3 group animate-message`}>
-    {!isUser && (
-      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg border border-[var(--accent-primary)]/30" style={{ background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' }}>
-        <SynapseLogo className="w-5 h-5 text-white" glow={true} />
-      </div>
-    )}
+     {!isUser && (
+       <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg border border-[var(--accent-primary)]/30" style={{ background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' }}>
+         {message.personaName ? (
+           <div className="w-5 h-5 flex items-center justify-center text-[var(--accent-primary)] font-bold">
+             @{message.personaName}
+           </div>
+         ) : (
+           <SynapseLogo className="w-5 h-5 text-white" glow={true} />
+         )}
+       </div>
+     )}
     <div className="relative">
       <div 
         className={`max-w-[85%] ${bubbleClasses} px-5 py-3.5 rounded-2xl shadow-sm`}
         style={isUser ? { background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' } : { borderColor: 'var(--theme-border)' }}
       >
-        <div className={`text-[15px] leading-relaxed ${darkMode ? '' : 'text-zinc-900'}`} style={{ color: isUser ? 'white' : undefined }}>
+        <div className={`text-[15px] leading-relaxed ${darkMode ? 'text-zinc-100' : 'text-zinc-900'}`} style={{ color: isUser ? 'white' : undefined }}>
           {(() => {
             const rawText = message.text || '';
             const embeddedImage = message.image;
