@@ -512,38 +512,34 @@ function App() {
           top: mousePos.y - 300,
           background: 'radial-gradient(circle, var(--aura-color, #8b5cf6) 0%, transparent 70%)'
         }}
-      />
-      <>
-      <div className={`hidden md:flex ${zenMode ? 'md:hidden w-0 overflow-hidden' : (isSidebarCollapsed ? 'w-20' : 'w-64')} transition-all duration-500 z-10`}>
-<Sidebar
-              sessionId={sessionId}
-              chatHistory={chatHistory}
-              onNewChat={handleNewChat}
-              onSelectChat={(id) => setSessionId(id)}
-              onDeleteChat={handleDeleteChat}
-              onRenameChat={handleRenameChat}
-              darkMode={darkMode}
-              isCollapsed={isSidebarCollapsed}
-              onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
-              onOpenCodex={() => setShowCodex(true)}
-              aiTone={aiTone}
-              setAiTone={setAiTone}
-              theme={theme}
-              setTheme={setTheme}
-              macros={macros}
-              setMacros={setMacros}
-              temperature={temperature}
-              setTemperature={setTemperature}
-              memoryDepth={memoryDepth}
-              setMemoryDepth={setMemoryDepth}
-              fontStyle={fontStyle}
-              setFontStyle={setFontStyle}
-              setDarkMode={setDarkMode}
 />
-          </div>
-        </div>
-      )}
-      </>
+      <div className={`hidden md:flex ${zenMode ? 'md:hidden w-0 overflow-hidden' : (isSidebarCollapsed ? 'w-20' : 'w-64')} transition-all duration-500 z-10`}>
+        <Sidebar
+          sessionId={sessionId}
+          chatHistory={chatHistory}
+          onNewChat={handleNewChat}
+          onSelectChat={(id) => setSessionId(id)}
+          onDeleteChat={handleDeleteChat}
+          onRenameChat={handleRenameChat}
+          darkMode={darkMode}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
+          onOpenCodex={() => setShowCodex(true)}
+          aiTone={aiTone}
+          setAiTone={setAiTone}
+          theme={theme}
+          setTheme={setTheme}
+          macros={macros}
+          setMacros={setMacros}
+          temperature={temperature}
+          setTemperature={setTemperature}
+          memoryDepth={memoryDepth}
+          setMemoryDepth={setMemoryDepth}
+          fontStyle={fontStyle}
+setFontStyle={setFontStyle}
+          setDarkMode={setDarkMode}
+        />
+      </div>
 
       {isSidebarOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
