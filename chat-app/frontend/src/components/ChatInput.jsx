@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 
 const API_URL = (import.meta.env.VITE_API_URL || 'https://claww-ai-3.onrender.com').trim();
 
-const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, activeCanvas, onToggleCanvas, sessionId }) => {
+const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, activeCanvas, onToggleCanvas, sessionId, macros = [], zenMode = false }) => {
   const [message, setMessage] = useState('');
   const [fileContext, setFileContext] = useState(null);
   const [attachedFileName, setAttachedFileName] = useState('');
@@ -16,6 +16,7 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, active
   const [isCanvasMode, setIsCanvasMode] = useState(false);
   const [isVaultMode, setIsVaultMode] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
+  const [showMacroMenu, setShowMacroMenu] = useState(false);
   const submittingRef = useRef(false);
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -202,7 +203,7 @@ const handleRemoveFile = () => {
   };
 
 return (
-    <div className="fixed bottom-0 left-0 md:left-64 right-0 bg-black/40 backdrop-blur-xl border-t border-white/10 px-2 md:px-4 py-3 md:py-4 z-50 shadow-[0_-4px_20px_rgba(217,70,239,0.1)]">
+    <div className={`fixed bottom-0 left-0 ${zenMode ? '' : 'md:left-64'} right-0 bg-black/40 backdrop-blur-xl border-t border-white/10 px-2 py-2 md:py-4 z-50 shadow-[0_-4px_20px_rgba(217,70,239,0.1)]`}>
        <div className="max-w-[800px] mx-auto">
 {isProcessing && (
             <div className="flex items-center gap-2 mb-2 px-3 py-2 rounded-lg bg-[var(--theme-bg-subtle)] border border-[var(--theme-border)]">
@@ -263,6 +264,26 @@ return (
                 </svg>
               </button>
             </div>
+          </div>
+        )}
+        {showMacroMenu && macros.length > 0 && (
+          <div className="absolute bottom-full mb-2 left-4 w-64 max-h-48 overflow-y-auto bg-[var(--theme-bg-glass)] backdrop-blur-xl border border-[var(--theme-border)] rounded-xl shadow-2xl p-2 z-50 flex flex-col gap-1">
+            <div className="text-[10px] font-medium text-[var(--theme-text-muted)] px-2 py-1 uppercase tracking-wider">Commands</div>
+            {macros.map((macro, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => {
+                  setMessage(macro.prompt);
+                  setShowMacroMenu(false);
+                  if (textareaRef.current) textareaRef.current.focus();
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--accent-primary)]/20 transition-colors text-left"
+              >
+                <span className="text-xs font-mono text-[var(--accent-primary)]">{macro.command}</span>
+                <span className="text-xs text-[var(--theme-text-muted)] truncate">{macro.prompt}</span>
+              </button>
+            ))}
           </div>
         )}
         <form onSubmit={handleSubmit}>
@@ -380,10 +401,18 @@ return (
             <textarea
               ref={textareaRef}
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setMessage(val);
+                if (val === '/' || val.endsWith(' /')) {
+                  setShowMacroMenu(true);
+                } else {
+                  setShowMacroMenu(false);
+                }
+              }}
               onKeyDown={handleKeyDown}
               placeholder={isLoading ? (isImageMode ? "Synapse AI is imagining your request..." : "AI is thinking...") : isImageMode ? "Describe the image you want to create..." : "Message Synapse AI..."}
-              className={`w-full px-2 py-4 bg-transparent focus:outline-none resize-none transition-all ${darkMode ? 'text-[#fafafa] placeholder-zinc-500' : 'text-zinc-900 placeholder-zinc-400'}`}
+              className={`w-full px-2 py-2 md:py-4 bg-transparent focus:outline-none resize-none transition-all ${darkMode ? 'text-[#fafafa] placeholder-zinc-500' : 'text-zinc-900 placeholder-zinc-400'}`}
               disabled={isLoading || isUploading}
               rows={1}
               spellCheck="false"

@@ -721,7 +721,7 @@ app.post('/api/chat', async (req, res) => {
 // ⚡ STREAM CHAT
 app.post('/api/chat/stream', async (req, res) => {
   try {
-    const { message, isSearchMode, isCodeMode, imageContext, isVaultMode, history, sessionId } = req.body;
+    const { message, isSearchMode, isCodeMode, imageContext, isVaultMode, history, sessionId, temperature, memoryDepth } = req.body;
 
     if (!message) {
       return res.end();
@@ -746,7 +746,8 @@ app.post('/api/chat/stream', async (req, res) => {
     
     // Process incoming history from frontend to extract search results
     if (history && Array.isArray(history)) {
-      for (const msg of history) {
+      const limitedHistory = history.slice(-(memoryDepth || 10));
+      for (const msg of limitedHistory) {
         if (msg.sender === 'system' && msg.searchData) {
           addToHistory(chatSessionId, 'system', `[SEARCH_CONTEXT]\n${msg.searchData}\n[/SEARCH_CONTEXT]`, { isSearchResult: true });
         } else if (msg.role === 'system' && msg.content) {
@@ -856,7 +857,8 @@ app.post('/api/chat/stream', async (req, res) => {
         { role: "system", content: systemPromptText },
         { role: "user", content: userContent }
       ],
-      stream: true
+      stream: true,
+      temperature: parseFloat(temperature) || 0.7
     });
 
     for await (const chunk of completion) {

@@ -19,13 +19,13 @@ const tonePresets = [
   { label: "Cute GF 💖", prompt: "Act as my sweet, supportive, and cute girlfriend. Use emojis, be affectionate, and ask how my day is going." }
 ];
 
-const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat, onRenameChat, darkMode, isCollapsed, onToggleCollapse, isMobileOpen, onCloseMobile, onOpenCodex, aiTone, setAiTone, theme, setTheme }) => {
+const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat, onRenameChat, darkMode, isCollapsed, onToggleCollapse, isMobileOpen, onCloseMobile, onOpenCodex, aiTone, setAiTone, theme, setTheme, macros, setMacros, temperature, setTemperature, memoryDepth, setMemoryDepth }) => {
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [isUploadingVault, setIsUploadingVault] = useState(false);
   const [persona, setPersona] = useState('');
   const [isSavingPersona, setIsSavingPersona] = useState(false);
-  const [openSections, setOpenSections] = useState({ identity: false, vault: false, persona: false, theme: true });
+  const [openSections, setOpenSections] = useState({ identity: false, vault: false, persona: false, theme: false, macros: false, engine: false });
   const vaultInputRef = useRef(null);
 
   const toggleSection = (section) => {
@@ -275,6 +275,140 @@ return (
                 >
                   {isSavingPersona ? 'Saved!' : 'Save Identity'}
                 </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!isCollapsed && (
+        <div className="px-3 mt-4">
+          <div className="rounded-xl border border-white/10 bg-[var(--theme-bg-subtle)]/50 backdrop-blur-md">
+            <button
+              onClick={() => toggleSection('macros')}
+              className="w-full flex items-center justify-between px-3 py-2.5"
+            >
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                </svg>
+                <span className="text-xs font-medium" style={{ color: 'var(--theme-text)' }}>Slash Commands</span>
+              </div>
+              <svg className={`w-4 h-4 transition-transform duration-200 ${openSections.macros ? 'rotate-180' : ''}`} style={{ color: 'var(--theme-text-muted)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {openSections.macros && (
+              <div className="px-3 pb-3">
+                <div className="flex flex-col gap-2 mb-3">
+                  {macros.map((macro, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-mono text-[var(--accent-primary)] truncate">{macro.command}</div>
+                        <div className="text-[10px] text-[var(--theme-text-muted)] truncate">{macro.prompt}</div>
+                      </div>
+                      <button
+                        onClick={() => setMacros(macros.filter((_, i) => i !== idx))}
+                        className="p-1 rounded hover:bg-red-500/20 text-red-400 shrink-0"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Command"
+                    className="flex-1 text-xs p-1.5 rounded border bg-[var(--theme-bg-subtle)] border-[var(--theme-border)] text-[var(--theme-text)] placeholder-[var(--theme-text-muted)]"
+                    id="new-macro-command"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Prompt"
+                    className="flex-1 text-xs p-1.5 rounded border bg-[var(--theme-bg-subtle)] border-[var(--theme-border)] text-[var(--theme-text)] placeholder-[var(--theme-text-muted)]"
+                    id="new-macro-prompt"
+                  />
+                  <button
+                    onClick={() => {
+                      const cmd = document.getElementById('new-macro-command').value.trim();
+                      const pr = document.getElementById('new-macro-prompt').value.trim();
+                      if (cmd && pr) {
+                        setMacros([...macros, { command: cmd.startsWith('/') ? cmd : '/' + cmd, prompt: pr }]);
+                        document.getElementById('new-macro-command').value = '';
+                        document.getElementById('new-macro-prompt').value = '';
+                      }
+                    }}
+                    className="px-3 py-1 text-xs rounded bg-[var(--accent-primary)] text-white hover:opacity-90"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!isCollapsed && (
+        <div className="px-3 mt-4">
+          <div className="rounded-xl border border-white/10 bg-[var(--theme-bg-subtle)]/50 backdrop-blur-md">
+            <button
+              onClick={() => toggleSection('engine')}
+              className="w-full flex items-center justify-between px-3 py-2.5"
+            >
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span className="text-xs font-medium" style={{ color: 'var(--theme-text)' }}>Engine Room</span>
+              </div>
+              <svg className={`w-4 h-4 transition-transform duration-200 ${openSections.engine ? 'rotate-180' : ''}`} style={{ color: 'var(--theme-text-muted)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {openSections.engine && (
+              <div className="px-3 pb-3 space-y-4">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] text-[var(--theme-text-muted)]">Creativity</span>
+                    <span className="text-[10px] font-mono text-[var(--accent-primary)]">{temperature}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={temperature}
+                    onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                    className="w-full h-1.5 rounded-lg appearance-none cursor-pointer bg-[var(--theme-border)] accent-[var(--accent-primary)]"
+                  />
+                  <div className="flex justify-between mt-1">
+                    <span className="text-[9px] text-[var(--theme-text-muted)]">Logical</span>
+                    <span className="text-[9px] text-[var(--theme-text-muted)]">Chaotic</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] text-[var(--theme-text-muted)]">Memory Depth</span>
+                    <span className="text-[10px] font-mono text-[var(--accent-primary)]">{memoryDepth}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="20"
+                    step="1"
+                    value={memoryDepth}
+                    onChange={(e) => setMemoryDepth(parseInt(e.target.value))}
+                    className="w-full h-1.5 rounded-lg appearance-none cursor-pointer bg-[var(--theme-border)] accent-[var(--accent-primary)]"
+                  />
+                  <div className="flex justify-between mt-1">
+                    <span className="text-[9px] text-[var(--theme-text-muted)]">Retaining last {memoryDepth} messages</span>
+                  </div>
+                </div>
               </div>
             )}
           </div>

@@ -68,6 +68,13 @@ function App() {
   const [showCodex, setShowCodex] = useState(false);
   const [aiTone, setAiTone] = useState(() => localStorage.getItem('ai_tone') || '');
 
+  const [macros, setMacros] = useState(() => JSON.parse(localStorage.getItem('synapse_macros')) || [{ command: '/roast', prompt: 'Read the following and absolutely destroy it with sarcastic critique: ' }, { command: '/eli5', prompt: 'Explain the following concept like I am a 5 year old: ' }]);
+
+  const [temperature, setTemperature] = useState(() => parseFloat(localStorage.getItem('synapse_temp')) || 0.7);
+  const [memoryDepth, setMemoryDepth] = useState(() => parseInt(localStorage.getItem('synapse_memory')) || 10);
+
+  const [zenMode, setZenMode] = useState(false);
+
   // Theme state
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -116,6 +123,29 @@ function App() {
   useEffect(() => {
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  // Zen Mode toggle with Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && zenMode) {
+        setZenMode(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [zenMode]);
+
+  useEffect(() => {
+    localStorage.setItem('synapse_macros', JSON.stringify(macros));
+  }, [macros]);
+
+  useEffect(() => {
+    localStorage.setItem('synapse_temp', temperature.toString());
+  }, [temperature]);
+
+  useEffect(() => {
+    localStorage.setItem('synapse_memory', memoryDepth.toString());
+  }, [memoryDepth]);
 
   const messageIdRef = useRef(0);
 
@@ -300,7 +330,9 @@ function App() {
             (SYSTEM_PROMPTS.find(p => p.id === systemPrompt)?.prompt ||
             SYSTEM_PROMPTS[0].prompt) + "\n\nIf the user explicitly asks you to send an email, you must output a hidden JSON block exactly formatted like this at the end of your response: `[EMAIL_ACTION: {\"to\": \"target@domain.com\", \"subject\": \"...\", \"body\": \"...\"}]`. Do not output markdown inside the JSON.",
           imageContext,
-          isVaultMode
+          isVaultMode,
+          temperature,
+          memoryDepth
         }),
       });
 
@@ -440,11 +472,27 @@ function App() {
 
   return (
     <div 
-      className={`min-h-screen flex ${darkMode ? 'dark' : ''}`}
+      className={`h-[100dvh] flex ${darkMode ? 'dark' : ''}`}
       onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
     >
       <CodexModal isOpen={showCodex} onClose={() => setShowCodex(false)} />
       
+      <button
+        onClick={() => setZenMode(!zenMode)}
+        className={`hidden md:flex absolute top-4 right-4 z-50 p-2 rounded-lg transition-all duration-300 ${zenMode ? 'opacity-100' : 'opacity-50 hover:opacity-100'} ${darkMode ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-white text-zinc-700 hover:bg-gray-100'} border ${darkMode ? 'border-zinc-700' : 'border-gray-200'}`}
+        title={zenMode ? 'Exit Zen Mode (Esc)' : 'Enter Zen Mode'}
+      >
+        {zenMode ? (
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        ) : (
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+          </svg>
+        )}
+      </button>
+
       <div className="fixed pointer-events-none blur-[120px] opacity-[0.08] w-[600px] h-[600px] rounded-full z-0 transition-all duration-700"
         style={{
           left: mousePos.x - 300,
@@ -452,7 +500,7 @@ function App() {
           background: 'radial-gradient(circle, var(--aura-color, #8b5cf6) 0%, transparent 70%)'
         }}
       />
-      <div className={`hidden md:flex ${isSidebarCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 z-10`}>
+      <div className={`hidden md:flex ${zenMode ? 'md:hidden w-0 overflow-hidden' : (isSidebarCollapsed ? 'w-20' : 'w-64')} transition-all duration-500 z-10`}>
 <Sidebar
               sessionId={sessionId}
               chatHistory={chatHistory}
@@ -468,6 +516,12 @@ function App() {
               setAiTone={setAiTone}
               theme={theme}
               setTheme={setTheme}
+              macros={macros}
+              setMacros={setMacros}
+              temperature={temperature}
+              setTemperature={setTemperature}
+              memoryDepth={memoryDepth}
+              setMemoryDepth={setMemoryDepth}
             />
       </div>
 
@@ -492,6 +546,12 @@ function App() {
               setAiTone={setAiTone}
               theme={theme}
               setTheme={setTheme}
+              macros={macros}
+              setMacros={setMacros}
+              temperature={temperature}
+              setTemperature={setTemperature}
+              memoryDepth={memoryDepth}
+              setMemoryDepth={setMemoryDepth}
             />
           </div>
         </div>
@@ -519,7 +579,7 @@ function App() {
         </div>
         <div className={`flex-1 flex flex-col ${activeCanvas ? '' : ''}`}>
           <div className={`flex-1 flex ${activeCanvas ? 'gap-0' : ''}`}>
-            <div className={`flex-1 flex flex-col ${activeCanvas ? 'w-[35%]' : ''}`}>
+            <div className={`flex-1 flex flex-col min-w-0 transition-all duration-500 ${zenMode ? 'px-10 lg:px-40 border-none bg-transparent' : 'bg-white/5 border-l border-white/10'} ${activeCanvas ? 'w-[35%]' : ''}`}>
               <ChatArea
                 messages={currentMessages}
                 isLoading={isLoading || isGeneratingImage}
@@ -543,6 +603,8 @@ function App() {
                 activeCanvas={activeCanvas}
                 onToggleCanvas={setActiveCanvas}
                 sessionId={sessionId}
+                macros={macros}
+                zenMode={zenMode}
               />
             </div>
           </div>

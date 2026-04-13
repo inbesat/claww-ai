@@ -328,10 +328,10 @@ const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentSte
         <div className="p-3 rounded-xl mb-3 bg-[var(--accent-primary)]/20 transition-transform duration-500 group-hover:scale-110">
           <div className="w-6 h-6" style={{ color: 'var(--accent-primary)' }}>{icon}</div>
         </div>
-        <h3 className="font-bold text-sm mb-1 text-[#fafafa]">
+        <h3 className="font-bold text-sm md:text-base mb-1 text-[#fafafa]">
           {title}
         </h3>
-        <p className="text-[11px] leading-relaxed opacity-60 text-zinc-400">
+        <p className="text-[10px] md:text-[11px] leading-relaxed opacity-60 text-zinc-400">
           {description}
         </p>
       </div>
@@ -453,7 +453,7 @@ const SynapseLogo = ({ className = "w-6 h-6", glow = false }) => (
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto mt-8 pb-32">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 p-4 md:p-0 max-w-5xl mx-auto mt-8 pb-32">
               <FeatureCard 
                 icon={<SynapseLogo />}
                 title="Web Search"

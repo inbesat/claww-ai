@@ -192,6 +192,25 @@ const CodexModal = ({ isOpen, onClose }) => {
             <p className="mt-2 text-zinc-300">All buttons, glows, and accents change instantly—while preserving the glassmorphism look.</p>
           </Section>
 
+          <div className="mt-8 mb-4 border-t border-white/10 pt-6">
+            <h3 className="text-lg font-bold text-[var(--accent-primary)] flex items-center gap-2">
+              🤓 Bonus Features for Nerdy Users
+            </h3>
+            <p className="text-sm text-[var(--theme-text-muted)] mt-1">Advanced tools to customize how Synapse OS processes your workflow.</p>
+          </div>
+
+          <Section icon="⚡" title="Slash Commands (Macros)">
+            <p>Why type the same prompt twice? Type <strong>/</strong> in the chat box to instantly pull up a menu of your custom prompt templates. You can create, edit, and delete your own macros in the Sidebar to automate your workflow.</p>
+          </Section>
+
+          <Section icon="⚙️" title="The Engine Room">
+            <p>Pop open the Engine Room accordion in the sidebar to get raw control over the AI's brain. Adjust the <strong>Creativity (Temperature)</strong> slider to make the AI highly logical (0.0) or chaotic and creative (1.0). Use the <strong>Memory Depth</strong> slider to control exactly how many past messages the AI keeps in its active context window.</p>
+          </Section>
+
+          <Section icon="🧘" title="Zen Mode">
+            <p>Need to do some deep, distraction-free writing? Click the expand icon in the top right corner of the screen (or press <strong>Escape</strong>) to instantly hide the sidebar, remove all UI borders, and center the chat.</p>
+          </Section>
+
           <div className="bg-white/5 p-5 rounded-xl border border-white/10">
             <h3 className="text-lg font-semibold text-zinc-100 mb-4 flex items-center gap-2">
               📖 The UI Legend
