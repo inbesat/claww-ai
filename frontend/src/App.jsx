@@ -94,12 +94,6 @@ const [isNotebookMode, setIsNotebookMode] = useState(() => localStorage.getItem(
         const fullPrompt = `Using the documents in my Vault, please generate a ${actionPrompt}.`;
         handleSendMessage(new Event('submit'), fullPrompt);
     };
-
-    // Helper function to trigger AI actions in Notebook Mode
-    const triggerNotebookAction = (actionPrompt) => {
-        const fullPrompt = `Using the documents in my Vault, please generate a ${actionPrompt}.`;
-        handleSendMessage(new Event('submit'), fullPrompt);
-    };
    
    // Toggle source selection
    const toggleSource = (file) => {
