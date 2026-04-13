@@ -665,7 +665,8 @@ setMemoryDepth={setMemoryDepth}
               handleNotebookToggle={handleNotebookToggle}
             />
           </div>
-        )}
+        </div>
+      )}
 
         <div className={`flex-1 flex flex-col transition-all duration-700 ease-in-out ${activeCanvas ? '' : ''} ${transitionState === 'out' ? 'animate-dust-out' : transitionState === 'in' ? 'animate-dust-in' : ''}`}>
           <div className={`flex-1 flex ${activeCanvas ? 'gap-0' : ''}`}>
