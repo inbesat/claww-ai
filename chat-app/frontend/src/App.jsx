@@ -486,9 +486,10 @@ function App() {
       className={`h-[100dvh] flex ${darkMode ? 'dark' : ''}`}
       style={{ fontFamily: fontStyle === 'mono' ? '"Fira Code", monospace' : fontStyle === 'space' ? '"Space Grotesk", sans-serif' : 'system-ui, sans-serif' }}
       onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
-    >
+>
       <CodexModal isOpen={showCodex} onClose={() => setShowCodex(false)} />
       
+      <>
       <button
         onClick={() => setZenMode(!zenMode)}
         className={`hidden md:flex absolute top-4 right-4 z-50 p-2 rounded-lg transition-all duration-300 ${zenMode ? 'opacity-100' : 'opacity-50 hover:opacity-100'} ${darkMode ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-white text-zinc-700 hover:bg-gray-100'} border ${darkMode ? 'border-zinc-700' : 'border-gray-200'}`}
@@ -512,6 +513,7 @@ function App() {
           background: 'radial-gradient(circle, var(--aura-color, #8b5cf6) 0%, transparent 70%)'
         }}
       />
+      <>
       <div className={`hidden md:flex ${zenMode ? 'md:hidden w-0 overflow-hidden' : (isSidebarCollapsed ? 'w-20' : 'w-64')} transition-all duration-500 z-10`}>
 <Sidebar
               sessionId={sessionId}
@@ -536,10 +538,12 @@ function App() {
               setMemoryDepth={setMemoryDepth}
               fontStyle={fontStyle}
               setFontStyle={setFontStyle}
-              darkMode={darkMode}
               setDarkMode={setDarkMode}
-            />
-      </div>
+/>
+          </div>
+        </div>
+      )}
+      </>
 
       {isSidebarOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
@@ -575,6 +579,7 @@ memoryDepth={memoryDepth}
             />
           </div>
         </div>
+      )}
 
         <div className={`flex-1 flex flex-col ${activeCanvas ? '' : ''}`}>
           <div className={`flex-1 flex ${activeCanvas ? 'gap-0' : ''}`}>
@@ -655,7 +660,7 @@ memoryDepth={memoryDepth}
             {error}
           </div>
         )}
-      </div>
+      </>
     </div>
   );
 }
