@@ -557,10 +557,10 @@ function App() {
 
 return (
     <div 
-      className={`h-[100dvh] flex ${darkMode ? 'dark' : ''}`}
+className={`h-[100dvh] flex ${darkMode ? 'dark' : ''}`}
       onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
     >
-<CodexModal isOpen={showCodex} onClose={() => setShowCodex(false)} />
+      <CodexModal isOpen={showCodex} onClose={() => setShowCodex(false)} />
       <CommandPalette 
         isOpen={showCommandPalette} 
         onClose={() => setShowCommandPalette(false)} 
@@ -570,12 +570,8 @@ return (
         setZenMode={setZenMode}
         setTheme={setTheme}
         setMessage={(msg) => {
-          // Insert message into input - this would require handling in ChatInput
-          // For now, we can simulate by setting a message in macros or similar
         }}
       />
-      
-      <>
       <button
         onClick={() => setZenMode(!zenMode)}
         className={`hidden md:flex absolute top-4 right-4 z-50 p-2 rounded-lg transition-all duration-300 ${zenMode ? 'opacity-100' : 'opacity-50 hover:opacity-100'} ${darkMode ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-white text-zinc-700 hover:bg-gray-100'} border ${darkMode ? 'border-zinc-700' : 'border-gray-200'}`}
@@ -657,14 +653,13 @@ setMemoryDepth={setMemoryDepth}
               setMacros={setMacros}
               temperature={temperature}
               setTemperature={setTemperature}
-memoryDepth={memoryDepth}
+              memoryDepth={memoryDepth}
               setMemoryDepth={setMemoryDepth}
               fontStyle={fontStyle}
               setFontStyle={setFontStyle}
-              darkMode={darkMode}
               setDarkMode={setDarkMode}
-useLocalLlm={useLocalLlm}
-setUseLocalLlm={setUseLocalLlm}
+              useLocalLlm={useLocalLlm}
+              setUseLocalLlm={setUseLocalLlm}
               isNotebookMode={isNotebookMode}
               setIsNotebookMode={setIsNotebookMode}
               handleNotebookToggle={handleNotebookToggle}
@@ -768,7 +763,7 @@ setUseLocalLlm={setUseLocalLlm}
             {error}
           </div>
         )}
-      </>
+      </div>
     </div>
   );
 }
