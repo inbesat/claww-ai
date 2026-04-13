@@ -759,14 +759,13 @@ setMemoryDepth={setMemoryDepth}
           )}
         </div>
 
-        {error && (
-          <div className="text-red-500 p-2 text-center">
-            {error}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+         {error && (
+           <div className="text-red-500 p-2 text-center">
+             {error}
+           </div>
+         )}
+     </div>
+   );
 }
 
 export default App;
