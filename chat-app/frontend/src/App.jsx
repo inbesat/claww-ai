@@ -88,6 +88,18 @@ const [isNotebookMode, setIsNotebookMode] = useState(() => localStorage.getItem(
     const [selectedSources, setSelectedSources] = useState(new Set(['1 Quantum Numbers.pdf'])); // Default mock
     // Debate state
     const [isDebating, setIsDebating] = useState(false);
+
+    // Helper function to trigger AI actions in Notebook Mode
+    const triggerNotebookAction = (actionPrompt) => {
+        const fullPrompt = `Using the documents in my Vault, please generate a ${actionPrompt}.`;
+        handleSendMessage(new Event('submit'), fullPrompt);
+    };
+
+    // Helper function to trigger AI actions in Notebook Mode
+    const triggerNotebookAction = (actionPrompt) => {
+        const fullPrompt = `Using the documents in my Vault, please generate a ${actionPrompt}.`;
+        handleSendMessage(new Event('submit'), fullPrompt);
+    };
    
    // Toggle source selection
    const toggleSource = (file) => {
@@ -861,7 +873,18 @@ setMemoryDepth={setMemoryDepth}
           <div className={`flex-1 flex ${activeCanvas ? 'gap-0' : ''}`}>
 {isNotebookMode && (
   <div className="w-[320px] flex-col bg-[#131314] text-zinc-200 border-r border-white/5 p-4 animate-dust-in">
-    <h2 className="text-sm font-bold text-zinc-200 mb-4 flex items-center gap-2">📚 Sources</h2>
+    <div className="flex items-center gap-2 mb-4">
+      <button 
+        onClick={() => setIsNotebookMode(false)} 
+        className="p-1.5 bg-white/5 hover:bg-[var(--accent-primary)]/20 rounded-md text-zinc-400 hover:text-[var(--accent-primary)] transition-all group" 
+        title="Return to Standard Chat"
+      >
+        <svg className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      </button>
+      <h2 className="text-[15px] font-medium">Sources</h2>
+    </div>
     <input 
       type="text" 
       placeholder="Search sources..." 
@@ -946,7 +969,7 @@ setMemoryDepth={setMemoryDepth}
       {/* Audio Overview */}
       <div 
         className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
-        onClick={() => triggerStudioAction('podcast script discussing the key themes')}
+        onClick={() => triggerNotebookAction('podcast script discussing the key themes')}
       >
         <div className="text-lg mb-1">🎧</div>
         <div className="text-xs font-medium text-zinc-300">Audio Overview</div>
@@ -954,7 +977,7 @@ setMemoryDepth={setMemoryDepth}
       {/* Slide Deck */}
       <div 
         className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
-        onClick={() => triggerStudioAction('presentation slide deck outline')}
+        onClick={() => triggerNotebookAction('presentation slide deck outline')}
       >
         <div className="text-lg mb-1">📺</div>
         <div className="text-xs font-medium text-zinc-300">Slide Deck</div>
@@ -962,7 +985,7 @@ setMemoryDepth={setMemoryDepth}
       {/* Video Overview */}
       <div 
         className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
-        onClick={() => triggerStudioAction('YouTube video script')}
+        onClick={() => triggerNotebookAction('YouTube video script')}
       >
         <div className="text-lg mb-1">▶️</div>
         <div className="text-xs font-medium text-zinc-300">Video Overview</div>
@@ -970,7 +993,7 @@ setMemoryDepth={setMemoryDepth}
       {/* Mind Map */}
       <div 
         className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
-        onClick={() => triggerStudioAction('markdown Mind Map (use mermaid.js if possible)')}
+        onClick={() => triggerNotebookAction('markdown Mind Map')}
       >
         <div className="text-lg mb-1">🔀</div>
         <div className="text-xs font-medium text-zinc-300">Mind Map</div>
@@ -978,7 +1001,7 @@ setMemoryDepth={setMemoryDepth}
       {/* Reports */}
       <div 
         className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
-        onClick={() => triggerStudioAction('comprehensive executive summary report')}
+        onClick={() => triggerNotebookAction('comprehensive executive summary report')}
       >
         <div className="text-lg mb-1">📄</div>
         <div className="text-xs font-medium text-zinc-300">Reports</div>
@@ -986,7 +1009,7 @@ setMemoryDepth={setMemoryDepth}
       {/* Flashcards */}
       <div 
         className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
-        onClick={() => triggerStudioAction('list of 10 QA flashcards')}
+        onClick={() => triggerNotebookAction('list of 10 QA flashcards')}
       >
         <div className="text-lg mb-1">🗂️</div>
         <div className="text-xs font-medium text-zinc-300">Flashcards</div>
@@ -994,7 +1017,7 @@ setMemoryDepth={setMemoryDepth}
       {/* Quiz */}
       <div 
         className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
-        onClick={() => triggerStudioAction('multiple-choice quiz with an answer key at the bottom')}
+        onClick={() => triggerNotebookAction('multiple-choice quiz with an answer key')}
       >
         <div className="text-lg mb-1">❓</div>
         <div className="text-xs font-medium text-zinc-300">Quiz</div>
@@ -1002,7 +1025,7 @@ setMemoryDepth={setMemoryDepth}
       {/* Infographic */}
       <div 
         className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
-        onClick={() => triggerStudioAction('visual infographic structure text outline')}
+        onClick={() => triggerNotebookAction('visual infographic text outline')}
       >
         <div className="text-lg mb-1">📊</div>
         <div className="text-xs font-medium text-zinc-300">Infographic</div>
@@ -1010,7 +1033,7 @@ setMemoryDepth={setMemoryDepth}
       {/* Data Table */}
       <div 
         className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
-        onClick={() => triggerStudioAction('markdown data table extracting all key metrics')}
+        onClick={() => triggerNotebookAction('markdown data table extracting all key metrics')}
       >
         <div className="text-lg mb-1">📋</div>
         <div className="text-xs font-medium text-zinc-300">Data Table</div>
