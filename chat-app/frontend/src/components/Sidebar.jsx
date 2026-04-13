@@ -19,13 +19,13 @@ const tonePresets = [
   { label: "Cute GF 💖", prompt: "Act as my sweet, supportive, and cute girlfriend. Use emojis, be affectionate, and ask how my day is going." }
 ];
 
-const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat, onRenameChat, darkMode, isCollapsed, onToggleCollapse, isMobileOpen, onCloseMobile, onOpenCodex, aiTone, setAiTone, theme, setTheme, macros, setMacros, temperature, setTemperature, memoryDepth, setMemoryDepth }) => {
+const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat, onRenameChat, darkMode, isCollapsed, onToggleCollapse, isMobileOpen, onCloseMobile, onOpenCodex, aiTone, setAiTone, theme, setTheme, macros, setMacros, temperature, setTemperature, memoryDepth, setMemoryDepth, fontStyle, setFontStyle }) => {
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [isUploadingVault, setIsUploadingVault] = useState(false);
   const [persona, setPersona] = useState('');
   const [isSavingPersona, setIsSavingPersona] = useState(false);
-  const [openSections, setOpenSections] = useState({ identity: false, vault: false, persona: false, theme: false, macros: false, engine: false });
+  const [openSections, setOpenSections] = useState({ identity: false, vault: false, persona: false, theme: false, macros: false, engine: false, sync: false });
   const vaultInputRef = useRef(null);
 
   const toggleSection = (section) => {
@@ -133,6 +133,48 @@ const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat
   const handleDelete = (e, chatId) => {
     e.stopPropagation();
     onDeleteChat(chatId);
+  };
+
+  const handleExport = () => {
+    const configData = {
+      theme,
+      fontStyle,
+      macros,
+      temperature,
+      memoryDepth,
+      aiTone,
+      persona
+    };
+    const blob = new Blob([JSON.stringify(configData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'synapse-config.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target.result);
+        if (parsed.theme) { setTheme(parsed.theme); localStorage.setItem('theme', parsed.theme); document.documentElement.setAttribute('data-theme', parsed.theme); }
+        if (parsed.fontStyle) { setFontStyle(parsed.fontStyle); localStorage.setItem('synapse_font', parsed.fontStyle); }
+        if (parsed.macros) { setMacros(parsed.macros); localStorage.setItem('synapse_macros', JSON.stringify(parsed.macros)); }
+        if (parsed.temperature !== undefined) { setTemperature(parsed.temperature); localStorage.setItem('synapse_temp', parsed.temperature.toString()); }
+        if (parsed.memoryDepth !== undefined) { setMemoryDepth(parsed.memoryDepth); localStorage.setItem('synapse_memory', parsed.memoryDepth.toString()); }
+        if (parsed.aiTone !== undefined) { setAiTone(parsed.aiTone); localStorage.setItem('ai_tone', parsed.aiTone); }
+        if (parsed.persona) { setPersona(parsed.persona); }
+        alert('Profile synced successfully!');
+      } catch (err) {
+        alert('Invalid config file');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
 const SynapseLogo = ({ className = "w-6 h-6", glow = false }) => (
@@ -445,6 +487,27 @@ return (
                     </button>
                   ))}
                 </div>
+                <div className="text-[10px] text-[var(--theme-text-muted)] uppercase mb-2 mt-4">Typography</div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setFontStyle?.('sans')}
+                    className={`flex-1 py-1.5 text-[10px] rounded-lg transition-all ${fontStyle === 'sans' ? 'ring-1 ring-[var(--accent-primary)] bg-[var(--accent-primary)]/20 text-[var(--theme-text)]' : 'bg-[var(--theme-bg-subtle)] text-[var(--theme-text-muted)] border border-[var(--theme-border)]'}`}
+                  >
+                    Clean
+                  </button>
+                  <button
+                    onClick={() => setFontStyle?.('mono')}
+                    className={`flex-1 py-1.5 text-[10px] rounded-lg transition-all ${fontStyle === 'mono' ? 'ring-1 ring-[var(--accent-primary)] bg-[var(--accent-primary)]/20 text-[var(--theme-text)]' : 'bg-[var(--theme-bg-subtle)] text-[var(--theme-text-muted)] border border-[var(--theme-border)]'}`}
+                  >
+                    Terminal
+                  </button>
+                  <button
+                    onClick={() => setFontStyle?.('space')}
+                    className={`flex-1 py-1.5 text-[10px] rounded-lg transition-all ${fontStyle === 'space' ? 'ring-1 ring-[var(--accent-primary)] bg-[var(--accent-primary)]/20 text-[var(--theme-text)]' : 'bg-[var(--theme-bg-subtle)] text-[var(--theme-text-muted)] border border-[var(--theme-border)]'}`}
+                  >
+                    Sci-Fi
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -488,6 +551,52 @@ return (
                   className="w-full text-xs p-2 rounded-lg resize-none border bg-[var(--theme-bg-subtle)] border-[var(--theme-border)] text-[var(--theme-text)] placeholder-[var(--theme-text-muted)]"
                   rows={2}
                 />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!isCollapsed && (
+        <div className="px-3 mt-4">
+          <div className="rounded-xl border border-white/10 bg-[var(--theme-bg-subtle)]/50 backdrop-blur-md">
+            <button
+              onClick={() => toggleSection('sync')}
+              className="w-full flex items-center justify-between px-3 py-2.5"
+            >
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span className="text-xs font-medium" style={{ color: 'var(--theme-text)' }}>Profile Sync</span>
+              </div>
+              <svg className={`w-4 h-4 transition-transform duration-200 ${openSections.sync ? 'rotate-180' : ''}`} style={{ color: 'var(--theme-text-muted)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {openSections.sync && (
+              <div className="px-3 pb-3">
+                <input
+                  type="file"
+                  accept=".json"
+                  id="config-upload"
+                  className="hidden"
+                  onChange={handleImport}
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleExport}
+                    className="flex-1 text-xs py-2 rounded-lg cursor-pointer transition-all bg-[var(--theme-bg-subtle)] hover:bg-[var(--theme-border)] text-[var(--theme-text)] border border-[var(--theme-border)]"
+                  >
+                    Export Config
+                  </button>
+                  <label
+                    htmlFor="config-upload"
+                    className="flex-1 text-xs py-2 rounded-lg cursor-pointer transition-all text-center bg-[var(--theme-bg-subtle)] hover:bg-[var(--theme-border)] text-[var(--theme-text)] border border-[var(--theme-border)]"
+                  >
+                    Import Config
+                  </label>
+                </div>
               </div>
             )}
           </div>

@@ -81,6 +81,9 @@ function App() {
     return saved || 'cyberpunk';
   });
 
+  // Font style state
+  const [fontStyle, setFontStyle] = useState(() => localStorage.getItem('synapse_font') || 'sans');
+
   // Session ID
   const [sessionId, setSessionId] = useState(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -123,6 +126,11 @@ function App() {
   useEffect(() => {
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  // Save fontStyle to localStorage
+  useEffect(() => {
+    localStorage.setItem('synapse_font', fontStyle);
+  }, [fontStyle]);
 
   // Zen Mode toggle with Escape key
   useEffect(() => {
@@ -473,6 +481,7 @@ function App() {
   return (
     <div 
       className={`h-[100dvh] flex ${darkMode ? 'dark' : ''}`}
+      style={{ fontFamily: fontStyle === 'mono' ? '"Fira Code", monospace' : fontStyle === 'space' ? '"Space Grotesk", sans-serif' : 'system-ui, sans-serif' }}
       onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
     >
       <CodexModal isOpen={showCodex} onClose={() => setShowCodex(false)} />
@@ -522,6 +531,8 @@ function App() {
               setTemperature={setTemperature}
               memoryDepth={memoryDepth}
               setMemoryDepth={setMemoryDepth}
+              fontStyle={fontStyle}
+              setFontStyle={setFontStyle}
             />
       </div>
 
@@ -550,14 +561,15 @@ function App() {
               setMacros={setMacros}
               temperature={temperature}
               setTemperature={setTemperature}
-              memoryDepth={memoryDepth}
+memoryDepth={memoryDepth}
               setMemoryDepth={setMemoryDepth}
+              fontStyle={fontStyle}
+              setFontStyle={setFontStyle}
             />
           </div>
         </div>
-      )}
 
-      <div className="flex w-full">
+        <div className="flex w-full">
         <div className={`flex-1 flex flex-col ${activeCanvas ? '' : ''}`}>
           <div className={`flex-1 flex ${activeCanvas ? 'gap-0' : ''}`}>
             <div className={`flex-1 relative flex flex-col min-w-0 transition-all duration-500 ${zenMode ? 'px-10 lg:px-40 border-none bg-transparent' : 'bg-white/5 border-l border-white/10'} ${activeCanvas ? 'w-[35%]' : ''}`}>
