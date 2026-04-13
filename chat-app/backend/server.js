@@ -190,6 +190,8 @@ GOOD EXAMPLE: $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
 CRITICAL UI RULE: NEVER generate text-based graphs, ASCII charts, or auto-render data visualizations in your text response. If the user EXPLICITLY asks for a chart or graph, you must output a clean text summary, and attach the chart data in a JSON tool call block.
 
 5. CONVERSATIONAL CONTINUITY: You MUST maintain perfect situational awareness. If a web search was performed earlier in the chat (indicated by [SEARCH_CONTEXT] tags), treat that data as 'Active Memory'. NEVER ignore previously retrieved data when answering follow-up questions. Always refer back to the search results when relevant. The [SEARCH_CONTEXT] data is authoritative and current—prioritize it over your internal knowledge.
+
+6. EDUCATIONAL REFERENCE RULE: If the user asks you to explain a complex concept, a historical event, a coding tutorial, or anything highly visual, you MUST append a helpful YouTube search link at the very end of your response. Format it exactly like this markdown: "\n\n---\n**Want to learn more?** [🎥 Watch on YouTube](https://www.youtube.com/results?search_query=insert+topic+here)". Replace 'insert+topic+here' with a highly relevant search query formatted with plus signs.
 `;
 }
 
@@ -736,6 +738,30 @@ app.post('/api/chat/stream', async (req, res) => {
     let model = 'llama-3.3-70b-versatile';
     let systemPromptText = buildSystemPrompt();
     let userContent = message;
+
+    // Live URL Ingestion
+    const urlMatch = message.match(/https?:\/\/[^\s]+/);
+    if (urlMatch) {
+      try {
+        console.log(`[URL Ingestion] Scraping: ${urlMatch[0]}`);
+        const scrapedText = await scrapePage(urlMatch[0]);
+        if (scrapedText && scrapedText.length > 50) {
+          const limitedText = scrapedText.substring(0, 5000);
+          systemPromptText += `\n\n[LIVE_WEB_CONTEXT]\nThe user linked to this webpage. Here is the scraped text:\n${limitedText}\n[/LIVE_WEB_CONTEXT]\n`;
+          console.log(`[URL Ingestion] Scraped ${limitedText.length} characters`);
+        }
+      } catch (scrapeErr) {
+        console.log(`[URL Ingestion] Failed: ${scrapeErr.message}`);
+      }
+    }
+
+    // The Board of Directors (Persona Mentions)
+    const mentionMatch = message.match(/@([a-zA-Z0-9_]+)/);
+    if (mentionMatch) {
+      const personaName = mentionMatch[1];
+      systemPromptText += `\n\n[CRITICAL PERSONA OVERRIDE]: The user has summoned the '${personaName}' persona. Disregard your default identity. For this specific response, you MUST act entirely as a world-class, highly opinionated ${personaName}. Adopt the tone, expertise, and vocabulary of this role perfectly.`;
+      console.log(`[Persona Override] Activated: @${personaName}`);
+    }
 
     // Add user message to history store
     addToHistory(chatSessionId, 'user', message);

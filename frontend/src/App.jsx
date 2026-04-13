@@ -478,6 +478,28 @@ function App() {
     setAutoOpenCanvas(false);
   };
 
+  const handleForkChat = (messageIndex) => {
+    const currentSessionMessages = messages[sessionId] || [];
+    const forkedMessages = currentSessionMessages.slice(0, messageIndex + 1);
+    
+    if (forkedMessages.length === 0) return;
+    
+    const newSessionId = Date.now().toString();
+    const forkedTitle = (forkedMessages[0]?.text || 'Forked Chat').slice(0, 30) + ' (fork)';
+    
+    const newMessages = { ...messages, [newSessionId]: forkedMessages };
+    setMessages(newMessages);
+    
+    setChatHistory(prev => [
+      { id: newSessionId, title: forkedTitle, timestamp: Date.now() },
+      ...prev
+    ]);
+    
+    setSessionId(newSessionId);
+    setActiveCanvas(null);
+    setAutoOpenCanvas(false);
+  };
+
   const handleDeleteChat = (chatId) => {
     setChatHistory(prev => prev.filter(chat => chat.id !== chatId));
     const newMessages = { ...messages };
@@ -615,11 +637,12 @@ memoryDepth={memoryDepth}
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
               </button>
-              <ChatArea
+<ChatArea
                 messages={currentMessages}
                 isLoading={isLoading || isGeneratingImage}
                 darkMode={darkMode}
                 onOpenCanvas={setActiveCanvas}
+                onFork={handleForkChat}
                 currentAgentStep={currentAgentStep}
                 sessionId={sessionId}
                 isVoiceMode={isVoiceMode}

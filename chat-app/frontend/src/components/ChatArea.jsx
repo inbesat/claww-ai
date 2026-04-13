@@ -220,7 +220,7 @@ const EmailActionCard = ({ actionJson, darkMode }) => {
   );
 };
 
-const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, currentAgentStep, sessionId, isVoiceMode, isHandsFree, selectedVoiceIndex, toolActive, toolName }) => {
+const ChatArea = ({ messages, isLoading, darkMode, onOpenCanvas, onFork, currentAgentStep, sessionId, isVoiceMode, isHandsFree, selectedVoiceIndex, toolActive, toolName }) => {
   const [isListening, setIsListening] = useState(false);
   const [voices, setVoices] = useState([]);
   const recognitionRef = useRef(null);
@@ -602,6 +602,7 @@ const SynapseLogo = ({ className = "w-6 h-6", glow = false }) => (
                 message={{ ...message, text: displayText }} 
                 darkMode={darkMode} 
                 onOpenCanvas={onOpenCanvas} 
+                onFork={() => onFork?.(index)}
                 sessionId={sessionId}
                 isUser={message.sender === 'user'}
               />

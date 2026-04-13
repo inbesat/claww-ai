@@ -461,7 +461,7 @@ export const LargePreviewableCodeBlock = ({ code, language, darkMode, sessionId 
   );
 };
 
-const MessageBubble = ({ message, darkMode, onOpenCanvas, sessionId, isUser: propIsUser }) => {
+const MessageBubble = ({ message, darkMode, onOpenCanvas, onFork, sessionId, isUser: propIsUser }) => {
   const isUser = propIsUser ?? message.sender === 'user';
   const isStreaming = message.isStreaming;
   const [copied, setCopied] = useState(false);
@@ -475,6 +475,21 @@ const MessageBubble = ({ message, darkMode, onOpenCanvas, sessionId, isUser: pro
     await navigator.clipboard.writeText(message.text);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
+  };
+
+  const highlightUrls = (text) => {
+    if (typeof text !== 'string') return text;
+    const combinedRegex = /(https?:\/\/[^\s]+)|@([a-zA-Z0-9_]+)/g;
+    const parts = text.split(combinedRegex).filter(Boolean);
+    return parts.map((part, i) => {
+      if (part.match(/^https?:\/\/[^\s]+$/)) {
+        return <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-[var(--accent-primary)] underline underline-offset-2 hover:opacity-80">{part}</a>;
+      }
+      if (part.match(/^@[a-zA-Z0-9_]+$/)) {
+        return <span key={i} className="bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] font-bold px-1.5 py-0.5 rounded">{part}</span>;
+      }
+      return part;
+    });
   };
 
   useEffect(() => {
@@ -543,13 +558,17 @@ const MessageBubble = ({ message, darkMode, onOpenCanvas, sessionId, isUser: pro
     </button>
   );
 
-  const renderMarkdown = (text) => {
+const renderMarkdown = (text) => {
     return (
       <ReactMarkdown
         remarkPlugins={[remarkMath]}
         rehypePlugins={[rehypeKatex]}
         className="prose dark:prose-invert max-w-none"
 components={{
+          p: ({ children }) => <p className="mb-3 last:mb-0 leading-relaxed" style={{ color: 'var(--theme-text)' }}>{children}</p>,
+          li: ({ children }) => <li className="mb-1" style={{ color: 'var(--theme-text)' }}>{children}</li>,
+          td: ({ children }) => <td style={{ color: 'var(--theme-text)' }}>{children}</td>,
+          th: ({ children }) => <th style={{ color: 'var(--theme-text)' }}>{children}</th>,
           code({ node, inline, className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '');
             const language = match ? match[1] : '';
@@ -613,7 +632,7 @@ components={{
             );
           },
           p({ children }) {
-            return <p className="mb-3 last:mb-0 leading-relaxed">{children}</p>;
+            return <p className="mb-3 last:mb-0 leading-relaxed" style={{ color: 'var(--theme-text)' }}>{children}</p>;
           },
           ul({ children }) {
             return <ul className="mb-3 pl-6 list-disc">{children}</ul>;
@@ -628,7 +647,7 @@ components={{
             return (
               <a
                 href={href}
-                className="text-emerald-600 hover:underline"
+                className="text-[var(--accent-primary)] underline underline-offset-2 hover:opacity-80"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -684,7 +703,7 @@ return (
         className={`max-w-[85%] ${bubbleClasses} px-5 py-3.5 rounded-2xl shadow-sm`}
         style={isUser ? { background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' } : { borderColor: 'var(--theme-border)' }}
       >
-        <div className="text-[15px] leading-relaxed">
+        <div className="text-[15px] leading-relaxed" style={{ color: isUser ? 'white' : 'var(--theme-text)' }}>
           {(() => {
             const rawText = message.text || '';
             const embeddedImage = message.image;
@@ -705,7 +724,7 @@ return (
             
             const cleanText = typeof rawText === 'string' ? rawText.replace(/^\s*\(|\)\s*$/g, '').trim() : rawText;
             return isUser ? (
-              renderMarkdown(cleanText)
+              <div>{highlightUrls(cleanText)}</div>
             ) : (
               <>
                 {renderMarkdown(cleanText)}
@@ -715,9 +734,20 @@ return (
           })()}
         </div>
       </div>
-      {!isUser && !isStreaming && (
+      {(isUser || !isStreaming) && (
         <div className="absolute -top-1 -right-1 flex gap-1">
-          <SpeakButton />
+          {isUser && onFork && (
+            <button
+              onClick={onFork}
+              className="p-1.5 text-[var(--theme-text-muted)] hover:text-[var(--accent-primary)] hover:bg-[var(--theme-bg-subtle)] rounded transition-colors"
+              title="Fork Timeline"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+              </svg>
+            </button>
+          )}
+          {!isUser && <SpeakButton />}
           {copied ? (
             <span className="text-xs bg-violet-600 text-white px-2 py-1 rounded-lg shadow-sm">Copied!</span>
           ) : (
