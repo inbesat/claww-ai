@@ -521,10 +521,10 @@ const MessageBubble = ({ message, darkMode, onOpenCanvas, onFork, sessionId, isU
     setIsSpeaking(true);
   };
 
-  const CopyButton = () => (
+const CopyButton = () => (
     <button
       onClick={handleCopy}
-      className={`absolute top-2 right-2 p-1.5 rounded-lg bg-white/80 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-700 text-zinc-500 dark:text-zinc-400 hover:text-violet-600 dark:hover:text-violet-400 transition-all duration-300 opacity-0 group-hover:opacity-100 border border-zinc-200/50 dark:border-zinc-700/50`}
+      className={`absolute top-2 right-2 p-1.5 rounded-lg bg-white/80 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-700 transition-all duration-300 opacity-0 group-hover:opacity-100 border border-zinc-200/50 dark:border-zinc-700/50 ${darkMode ? 'text-zinc-500 hover:text-violet-400' : 'text-zinc-500 hover:text-violet-600'}`}
       title="Copy"
     >
       {copied ? (
@@ -542,7 +542,7 @@ const MessageBubble = ({ message, darkMode, onOpenCanvas, onFork, sessionId, isU
   const SpeakButton = () => (
     <button
       onClick={toggleSpeech}
-      className={`absolute top-2 right-14 p-1.5 rounded-lg bg-white/80 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-700 transition-all duration-300 opacity-0 group-hover:opacity-100 border border-zinc-200/50 dark:border-zinc-700/50 ${isSpeaking ? 'text-violet-500 animate-pulse' : 'text-zinc-500 dark:text-zinc-400 hover:text-violet-600 dark:hover:text-violet-400'}`}
+      className={`absolute top-2 right-14 p-1.5 rounded-lg bg-white/80 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-700 transition-all duration-300 opacity-0 group-hover:opacity-100 border border-zinc-200/50 dark:border-zinc-700/50 ${isSpeaking ? 'text-violet-500 animate-pulse' : darkMode ? 'text-zinc-400 hover:text-violet-400' : 'text-zinc-500 hover:text-violet-600'}`}
       title={isSpeaking ? 'Stop speaking' : 'Read aloud'}
     >
       {isSpeaking ? (
@@ -563,12 +563,12 @@ const renderMarkdown = (text) => {
       <ReactMarkdown
         remarkPlugins={[remarkMath]}
         rehypePlugins={[rehypeKatex]}
-        className="prose dark:prose-invert max-w-none"
+        className={`prose max-w-none ${darkMode ? 'prose-invert text-zinc-200' : 'text-zinc-800 prose-p:text-zinc-800 prose-headings:text-zinc-900 prose-strong:text-zinc-900'}`}
 components={{
-          p: ({ children }) => <p className="mb-3 last:mb-0 leading-relaxed" style={{ color: 'var(--theme-text)' }}>{children}</p>,
-          li: ({ children }) => <li className="mb-1" style={{ color: 'var(--theme-text)' }}>{children}</li>,
-          td: ({ children }) => <td style={{ color: 'var(--theme-text)' }}>{children}</td>,
-          th: ({ children }) => <th style={{ color: 'var(--theme-text)' }}>{children}</th>,
+          p: ({ children }) => <p className="mb-3 last:mb-0 leading-relaxed">{children}</p>,
+          li: ({ children }) => <li className="mb-1">{children}</li>,
+          td: ({ children }) => <td>{children}</td>,
+          th: ({ children }) => <th>{children}</th>,
           code({ node, inline, className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '');
             const language = match ? match[1] : '';
@@ -624,7 +624,7 @@ components={{
             
             return (
               <code
-                className={`px-1.5 py-0.5 rounded ${isUser ? 'bg-white/20' : 'bg-zinc-200 dark:bg-zinc-700'}`}
+                className={`px-1.5 py-0.5 rounded ${isUser ? 'bg-white/20' : darkMode ? 'bg-zinc-700' : 'bg-gray-200'}`}
                 {...props}
               >
                 {children}
@@ -655,9 +655,9 @@ components={{
               </a>
             );
           },
-          blockquote({ children }) {
+blockquote({ children }) {
             return (
-              <blockquote className="border-l-4 border-zinc-300 dark:border-zinc-600 pl-4 italic my-3">
+              <blockquote className={`border-l-4 pl-4 italic my-3 ${darkMode ? 'border-zinc-600' : 'border-zinc-300'}`}>
                 {children}
               </blockquote>
             );
@@ -703,7 +703,7 @@ return (
         className={`max-w-[85%] ${bubbleClasses} px-5 py-3.5 rounded-2xl shadow-sm`}
         style={isUser ? { background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' } : { borderColor: 'var(--theme-border)' }}
       >
-        <div className="text-[15px] leading-relaxed" style={{ color: isUser ? 'white' : 'var(--theme-text)' }}>
+        <div className={`text-[15px] leading-relaxed ${darkMode ? '' : 'text-zinc-900'}`} style={{ color: isUser ? 'white' : undefined }}>
           {(() => {
             const rawText = message.text || '';
             const embeddedImage = message.image;

@@ -320,3 +320,14 @@ button, a, input, textarea {
 .text-balance {
   text-wrap: balance;
 }
+
+@keyframes dustOut {
+  0% { filter: blur(0px); transform: scale(1); opacity: 1; }
+  100% { filter: blur(20px); transform: scale(0.95); opacity: 0; }
+}
+@keyframes dustIn {
+  0% { filter: blur(20px); transform: scale(1.05); opacity: 0; }
+  100% { filter: blur(0px); transform: scale(1); opacity: 1; }
+}
+.animate-dust-out { animation: dustOut 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.animate-dust-in { animation: dustIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; }

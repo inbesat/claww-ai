@@ -81,11 +81,24 @@ function App() {
 
   const [zenMode, setZenMode] = useState(false);
 
-  const [strictMode, setStrictMode] = useState(() => localStorage.getItem('synapse_strict') === 'true');
+  const [isNotebookMode, setIsNotebookMode] = useState(() => localStorage.getItem('synapse_notebook') === 'true');
+  const [transitionState, setTransitionState] = useState(null);
+
+  const handleNotebookToggle = () => {
+    if (transitionState) return;
+    setTransitionState('out');
+    setTimeout(() => {
+      setIsNotebookMode(!isNotebookMode);
+      setTransitionState('in');
+      setTimeout(() => {
+        setTransitionState(null);
+      }, 600);
+    }, 600);
+  };
 
   useEffect(() => {
-    localStorage.setItem('synapse_strict', strictMode.toString());
-  }, [strictMode]);
+    localStorage.setItem('synapse_notebook', isNotebookMode.toString());
+  }, [isNotebookMode]);
 
   // Theme state
   const [theme, setTheme] = useState(() => {
@@ -382,7 +395,7 @@ function App() {
           temperature,
           memoryDepth,
           useLocalLlm,
-          strictMode
+          isNotebookMode
         }),
       });
 
@@ -586,7 +599,7 @@ return (
           background: 'radial-gradient(circle, var(--aura-color, #8b5cf6) 0%, transparent 70%)'
         }}
 />
-      <div className={`hidden md:flex ${zenMode ? 'md:hidden w-0 overflow-hidden' : (isSidebarCollapsed ? 'w-20' : 'w-64')} transition-all duration-500 z-10`}>
+      <div className={`hidden md:flex ${zenMode ? 'md:hidden w-0 overflow-hidden' : (isSidebarCollapsed ? 'w-20' : 'w-64')} ${isNotebookMode ? 'md:hidden w-0' : ''} transition-all duration-500 z-10`}>
         <Sidebar
           sessionId={sessionId}
           chatHistory={chatHistory}
@@ -613,8 +626,9 @@ setMemoryDepth={setMemoryDepth}
           setDarkMode={setDarkMode}
           useLocalLlm={useLocalLlm}
           setUseLocalLlm={setUseLocalLlm}
-          strictMode={strictMode}
-          setStrictMode={setStrictMode}
+          isNotebookMode={isNotebookMode}
+          setIsNotebookMode={setIsNotebookMode}
+          handleNotebookToggle={handleNotebookToggle}
         />
       </div>
 
@@ -649,17 +663,26 @@ memoryDepth={memoryDepth}
               setFontStyle={setFontStyle}
               darkMode={darkMode}
               setDarkMode={setDarkMode}
-              useLocalLlm={useLocalLlm}
-              setUseLocalLlm={setUseLocalLlm}
-              strictMode={strictMode}
-              setStrictMode={setStrictMode}
+useLocalLlm={useLocalLlm}
+setUseLocalLlm={setUseLocalLlm}
+              isNotebookMode={isNotebookMode}
+              setIsNotebookMode={setIsNotebookMode}
+              handleNotebookToggle={handleNotebookToggle}
             />
           </div>
-        </div>
-      )}
+        )}
 
-        <div className={`flex-1 flex flex-col ${activeCanvas ? '' : ''}`}>
+        <div className={`flex-1 flex flex-col transition-all duration-700 ease-in-out ${activeCanvas ? '' : ''} ${transitionState === 'out' ? 'animate-dust-out' : transitionState === 'in' ? 'animate-dust-in' : ''}`}>
           <div className={`flex-1 flex ${activeCanvas ? 'gap-0' : ''}`}>
+            {isNotebookMode && (
+              <div className="hidden lg:flex w-72 flex-col bg-[#1e1e1e]/90 border-r border-white/10 p-4">
+                <h2 className="text-sm font-bold text-zinc-200 mb-4 flex items-center gap-2">📚 Sources</h2>
+                <button className="w-full py-2 bg-white/5 border border-white/10 rounded-lg text-xs text-zinc-300 hover:bg-white/10 transition-colors">+ Add sources</button>
+                <div className="mt-4 flex-1 overflow-y-auto">
+                  <p className="text-xs text-zinc-500 text-center mt-10">No sources added yet.</p>
+                </div>
+              </div>
+            )}
             <div className={`flex-1 relative flex flex-col min-w-0 transition-all duration-500 ${zenMode ? 'px-10 lg:px-40 border-none bg-transparent' : 'bg-white/5 border-l border-white/10'} ${activeCanvas ? 'w-[35%]' : ''}`}>
               <button
                 onClick={() => setIsSidebarOpen(true)}
@@ -706,6 +729,29 @@ memoryDepth={memoryDepth}
                 zenMode={zenMode}
               />
             </div>
+            {isNotebookMode && (
+              <div className="hidden xl:flex w-80 flex-col bg-[#1e1e1e]/90 border-l border-white/10 p-4">
+                <h2 className="text-sm font-bold text-zinc-200 mb-4">✨ Studio</h2>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
+                    <div className="text-lg mb-1">🎧</div>
+                    <div className="text-xs font-medium text-zinc-300">Audio Overview</div>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
+                    <div className="text-lg mb-1">📝</div>
+                    <div className="text-xs font-medium text-zinc-300">Study Guide</div>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
+                    <div className="text-lg mb-1">❓</div>
+                    <div className="text-xs font-medium text-zinc-300">Quiz</div>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
+                    <div className="text-lg mb-1">🗂️</div>
+                    <div className="text-xs font-medium text-zinc-300">Flashcards</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {activeCanvas && (

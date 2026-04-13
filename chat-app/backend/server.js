@@ -723,7 +723,7 @@ app.post('/api/chat', async (req, res) => {
 // ⚡ STREAM CHAT
 app.post('/api/chat/stream', async (req, res) => {
   try {
-    const { message, isSearchMode, isCodeMode, imageContext, isVaultMode, history, sessionId, temperature, memoryDepth, useLocalLlm, strictMode } = req.body;
+    const { message, isSearchMode, isCodeMode, imageContext, isVaultMode, history, sessionId, temperature, memoryDepth, useLocalLlm, isNotebookMode } = req.body;
 
     if (!message) {
       return res.end();
@@ -807,7 +807,7 @@ app.post('/api/chat/stream', async (req, res) => {
       priorDocumentContext = `[DOCUMENT_CONTEXT]\nDocument: ${lastUploadedDoc.fileName}\n\n${lastUploadedDoc.text}\n[/DOCUMENT_CONTEXT]`;
     }
     
-    if (strictMode) {
+    if (isNotebookMode) {
       if (priorDocumentContext) {
         systemPromptText = `[CRITICAL INSTRUCTION: NOTEBOOK MODE IS ACTIVE]\nYou are a strict, highly analytical document extractor. You MUST ONLY use the information provided in the [DOCUMENT_CONTEXT] below to answer the user's query.\n\nRULES:\n1. If the answer is NOT explicitly written in the provided text, you MUST reply with: "The provided documents do not contain this information."\n2. DO NOT use any outside knowledge.\n3. DO NOT hallucinate facts, dates, or numbers.\n\n[DOCUMENT_CONTEXT]\n${priorDocumentContext}\n[/DOCUMENT_CONTEXT]`;
       } else {

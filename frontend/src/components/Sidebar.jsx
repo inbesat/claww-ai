@@ -19,7 +19,7 @@ const tonePresets = [
   { label: "Cute GF 💖", prompt: "Act as my sweet, supportive, and cute girlfriend. Use emojis, be affectionate, and ask how my day is going." }
 ];
 
-const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat, onRenameChat, darkMode, setDarkMode, isCollapsed, onToggleCollapse, isMobileOpen, onCloseMobile, onOpenCodex, aiTone, setAiTone, theme, setTheme, macros, setMacros, temperature, setTemperature, memoryDepth, setMemoryDepth, fontStyle, setFontStyle, useLocalLlm, setUseLocalLlm, strictMode, setStrictMode }) => {
+const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat, onRenameChat, darkMode, setDarkMode, isCollapsed, onToggleCollapse, isMobileOpen, onCloseMobile, onOpenCodex, aiTone, setAiTone, theme, setTheme, macros, setMacros, temperature, setTemperature, memoryDepth, setMemoryDepth, fontStyle, setFontStyle, useLocalLlm, setUseLocalLlm, isNotebookMode, setIsNotebookMode, handleNotebookToggle }) => {
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [isUploadingVault, setIsUploadingVault] = useState(false);
@@ -227,9 +227,17 @@ return (
           )}
         </button>
         {!isCollapsed && (
-          <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] bg-clip-text text-transparent">
-            Synapse
-          </span>
+          <>
+            <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] bg-clip-text text-transparent">
+              Synapse
+            </span>
+            <div className="ml-4 flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full cursor-pointer hover:bg-white/10 transition-all" onClick={() => handleNotebookToggle?.()}>
+              <svg className={`w-4 h-4 ${isNotebookMode ? 'text-emerald-400' : 'text-zinc-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              <span className={`text-xs font-bold ${isNotebookMode ? 'text-emerald-400' : 'text-zinc-500'}`}>Notebook</span>
+            </div>
+          </>
         )}
       </div>
       
@@ -284,18 +292,6 @@ return (
                 >
                   {isUploadingVault ? 'Indexing 100+ pages... 📚' : 'Add Documents'}
                 </label>
-                <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-[var(--theme-text-muted)] font-bold">Strict Grounding</span>
-                    <span className="text-[9px] text-zinc-500">Only answer using Vault docs</span>
-                  </div>
-                  <button 
-                    onClick={() => setStrictMode(!strictMode)} 
-                    className={`text-xs px-2 py-1 rounded transition-colors ${strictMode ? 'bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] ring-1 ring-[var(--accent-primary)]/50' : 'bg-white/5 text-zinc-500 hover:bg-white/10'}`}
-                  >
-                    {strictMode ? 'ON' : 'OFF'}
-                  </button>
-                </div>
               </div>
             )}
           </div>
