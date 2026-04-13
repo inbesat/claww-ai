@@ -219,6 +219,14 @@ const CodexModal = ({ isOpen, onClose }) => {
             <p>Never lose your ultimate setup. Use the Profile Sync accordion in the sidebar to <strong>Export</strong> your entire brain—including your custom macros, current theme, typography, and Engine Room sliders—as a JSON file. Share it with friends or <strong>Import</strong> it on a new device to instantly load your personalized OS.</p>
           </Section>
 
+          <Section icon="✨" title="Artifacts (Live Canvas)">
+            <p>When Synapse writes HTML, CSS, or JavaScript, you don't need to copy-paste it to see what it looks like. Click the <strong>Render</strong> button at the top of the code block to open a split-screen live sandbox. Watch your UI components, clocks, and mini-games come to life instantly inside the app.</p>
+          </Section>
+
+          <Section icon="🔌" title="Offline Mode (Ollama)">
+            <p>The ultimate power-user flex. Internet down? Toggle <strong>Offline Mode</strong> in the Engine Room. This instantly reroutes Synapse to talk to your local <a href="https://ollama.com/" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-primary)] hover:underline">Ollama</a> server (port 11434). Run models like Llama 3 or Mistral entirely locally, privately, and for free.</p>
+          </Section>
+
           <div className="bg-white/5 p-5 rounded-xl border border-white/10">
             <h3 className="text-lg font-semibold text-zinc-100 mb-4 flex items-center gap-2">
               📖 The UI Legend

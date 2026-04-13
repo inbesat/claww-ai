@@ -721,7 +721,7 @@ app.post('/api/chat', async (req, res) => {
 // ⚡ STREAM CHAT
 app.post('/api/chat/stream', async (req, res) => {
   try {
-    const { message, isSearchMode, isCodeMode, imageContext, isVaultMode, history, sessionId, temperature, memoryDepth } = req.body;
+    const { message, isSearchMode, isCodeMode, imageContext, isVaultMode, history, sessionId, temperature, memoryDepth, useLocalLlm } = req.body;
 
     if (!message) {
       return res.end();
@@ -847,6 +847,48 @@ app.post('/api/chat/stream', async (req, res) => {
     if (isCodeMode) {
       console.log(`[Code Mode] Using Groq with Senior Developer prompt`);
       systemPromptText = "You are an elite Senior Developer. Provide only clean, modern, and production-ready code blocks. Do not use conversational filler.";
+    }
+
+    // Ollama Offline Mode
+    if (useLocalLlm) {
+      console.log(`[Offline Mode] Using local Ollama at http://127.0.0.1:11434`);
+      
+      try {
+        const ollamaResponse = await fetch('http://127.0.0.1:11434/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'llama3',
+            prompt: systemPromptText + "\n\nUser: " + userContent,
+            stream: true,
+            options: { temperature: parseFloat(temperature) || 0.7 }
+          })
+        });
+
+        if (!ollamaResponse.ok) {
+          throw new Error(`Ollama error: ${ollamaResponse.status}`);
+        }
+
+        const decoder = new TextDecoder();
+        for await (const chunk of ollamaResponse.body) {
+          const line = decoder.decode(chunk);
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.response) {
+                res.write(`data: ${JSON.stringify({ content: data.response })}\n\n`);
+              }
+            } catch (e) {}
+          }
+        }
+      } catch (ollamaErr) {
+        console.error('[Offline Mode] Ollama error:', ollamaErr.message);
+        res.write(`data: ${JSON.stringify({ error: 'Ollama not running. Start with: ollama serve' })}\n\n`);
+      }
+      
+      res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+      res.end();
+      return;
     }
 
     console.log(`[Default Mode] Model: ${model}, Search: ${isSearchMode}, Code: ${isCodeMode}`);

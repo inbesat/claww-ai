@@ -19,7 +19,7 @@ const tonePresets = [
   { label: "Cute GF 💖", prompt: "Act as my sweet, supportive, and cute girlfriend. Use emojis, be affectionate, and ask how my day is going." }
 ];
 
-const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat, onRenameChat, darkMode, setDarkMode, isCollapsed, onToggleCollapse, isMobileOpen, onCloseMobile, onOpenCodex, aiTone, setAiTone, theme, setTheme, macros, setMacros, temperature, setTemperature, memoryDepth, setMemoryDepth, fontStyle, setFontStyle }) => {
+const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat, onRenameChat, darkMode, setDarkMode, isCollapsed, onToggleCollapse, isMobileOpen, onCloseMobile, onOpenCodex, aiTone, setAiTone, theme, setTheme, macros, setMacros, temperature, setTemperature, memoryDepth, setMemoryDepth, fontStyle, setFontStyle, useLocalLlm, setUseLocalLlm }) => {
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [isUploadingVault, setIsUploadingVault] = useState(false);
@@ -465,6 +465,24 @@ return (
                   <div className="flex justify-between mt-1">
                     <span className="text-[9px] text-[var(--theme-text-muted)]">Retaining last {memoryDepth} messages</span>
                   </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-[var(--theme-border)]">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] text-[var(--theme-text-muted)]">Offline Mode (Ollama)</span>
+                    <span className={`text-[10px] font-mono ${useLocalLlm ? 'text-green-400' : 'text-[var(--theme-text-muted)]'}`}>
+                      {useLocalLlm ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setUseLocalLlm?.(!useLocalLlm)}
+                    className={`w-full py-2 rounded-lg text-xs font-medium transition-all ${
+                      useLocalLlm 
+                        ? 'bg-[var(--accent-primary)] text-white shadow-lg' 
+                        : 'bg-[var(--theme-bg-subtle)] text-[var(--theme-text-muted)] border border-[var(--theme-border)]'
+                    }`}
+                  >
+                    {useLocalLlm ? '🟢 Using Local Llama3' : '🔴 Using Cloud API'}
+                  </button>
                 </div>
               </div>
             )}

@@ -5,6 +5,7 @@ import ChatInput from './components/ChatInput';
 import CodexModal from './components/CodexModal';
 import ThemeVibe from './components/ThemeVibe';
 import { LargePreviewableCodeBlock } from './components/MessageBubble';
+import Canvas from './components/Canvas';
 import mermaid from 'mermaid';
 import './index.css';
 
@@ -87,6 +88,18 @@ function App() {
   // Font style state
   const [fontStyle, setFontStyle] = useState(() => localStorage.getItem('synapse_font') || 'sans');
 
+  // Initialize data-font on mount
+  useEffect(() => {
+    document.documentElement.setAttribute('data-font', fontStyle);
+  }, []);
+
+  // Offline/LLM mode state
+  const [useLocalLlm, setUseLocalLlm] = useState(() => localStorage.getItem('synapse_local') === 'true');
+
+  useEffect(() => {
+    localStorage.setItem('synapse_local', useLocalLlm.toString());
+  }, [useLocalLlm]);
+
   // Session ID
   const [sessionId, setSessionId] = useState(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -133,6 +146,7 @@ function App() {
   // Save fontStyle to localStorage
   useEffect(() => {
     localStorage.setItem('synapse_font', fontStyle);
+    document.documentElement.setAttribute('data-font', fontStyle);
   }, [fontStyle]);
 
   // Zen Mode toggle with Escape key
@@ -343,7 +357,8 @@ function App() {
           imageContext,
           isVaultMode,
           temperature,
-          memoryDepth
+          memoryDepth,
+          useLocalLlm
         }),
       });
 
@@ -481,12 +496,11 @@ function App() {
     );
   };
 
-  return (
+return (
     <div 
       className={`h-[100dvh] flex ${darkMode ? 'dark' : ''}`}
-      style={{ fontFamily: fontStyle === 'mono' ? '"Fira Code", monospace' : fontStyle === 'space' ? '"Space Grotesk", sans-serif' : 'system-ui, sans-serif' }}
       onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
->
+    >
       <CodexModal isOpen={showCodex} onClose={() => setShowCodex(false)} />
       
       <>
@@ -534,10 +548,12 @@ function App() {
           temperature={temperature}
           setTemperature={setTemperature}
           memoryDepth={memoryDepth}
-          setMemoryDepth={setMemoryDepth}
+setMemoryDepth={setMemoryDepth}
           fontStyle={fontStyle}
-setFontStyle={setFontStyle}
+          setFontStyle={setFontStyle}
           setDarkMode={setDarkMode}
+          useLocalLlm={useLocalLlm}
+          setUseLocalLlm={setUseLocalLlm}
         />
       </div>
 
@@ -572,6 +588,8 @@ memoryDepth={memoryDepth}
               setFontStyle={setFontStyle}
               darkMode={darkMode}
               setDarkMode={setDarkMode}
+              useLocalLlm={useLocalLlm}
+              setUseLocalLlm={setUseLocalLlm}
             />
           </div>
         </div>
@@ -627,27 +645,11 @@ memoryDepth={memoryDepth}
           </div>
 
           {activeCanvas && (
-            <div className={`w-[65%] border-l ${darkMode ? 'border-zinc-800/50 bg-[#0a0a0a]' : 'border-gray-200 bg-white'} flex flex-col animate-fade-in`}>
-              <div className={`flex items-center justify-between px-4 py-3 border-b ${darkMode ? 'border-zinc-800/50 bg-zinc-900/50' : 'border-gray-200 bg-gray-50'}`}>
-                <div className="flex items-center gap-2">
-                  <span className={`text-sm font-medium ${darkMode ? 'text-zinc-300' : 'text-gray-700'}`}>Canvas</span>
-                  <span className="text-xs px-2 py-0.5 rounded bg-violet-500/20 text-violet-600 border border-violet-500/30">
-                    {activeCanvas.language || 'code'}
-                  </span>
-                </div>
-                <button
-                  onClick={() => setActiveCanvas(null)}
-                  className={`p-1.5 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-800 ${darkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-gray-500 hover:text-gray-700'} transition-all duration-300`}
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <div className="flex-1 p-4 overflow-auto">
-                <LargePreviewableCodeBlock code={activeCanvas.code} language={activeCanvas.language} darkMode={darkMode} />
-              </div>
-            </div>
+            <Canvas 
+              content={activeCanvas.code} 
+              language={activeCanvas.language}
+              onClose={() => setActiveCanvas(null)} 
+            />
           )}
         </div>
 

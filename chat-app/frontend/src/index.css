@@ -17,7 +17,13 @@
   --theme-text: #fafafa;
   --theme-text-muted: #a1a1aa;
   --theme-border: #3f3f46;
+  --font-main: system-ui, -apple-system, sans-serif;
 }
+
+[data-font='mono'] { --font-main: 'Fira Code', monospace; }
+[data-font='space'] { --font-main: 'Space Grotesk', sans-serif; }
+
+body { font-family: var(--font-main) !important; }
 
 [data-theme='cyberpunk'] {
   --accent-primary: #a855f7;
