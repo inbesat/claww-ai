@@ -50,9 +50,12 @@ function App() {
   });
 
   const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('darkMode');
-    return saved !== null ? JSON.parse(saved) : true;
+    return localStorage.getItem('synapse_dark_mode') !== 'false';
   });
+
+  useEffect(() => {
+    localStorage.setItem('synapse_dark_mode', darkMode.toString());
+  }, [darkMode]);
 
   const [activeCanvas, setActiveCanvas] = useState(null);
   const [autoOpenCanvas, setAutoOpenCanvas] = useState(false);
@@ -533,6 +536,8 @@ function App() {
               setMemoryDepth={setMemoryDepth}
               fontStyle={fontStyle}
               setFontStyle={setFontStyle}
+              darkMode={darkMode}
+              setDarkMode={setDarkMode}
             />
       </div>
 
@@ -565,11 +570,12 @@ memoryDepth={memoryDepth}
               setMemoryDepth={setMemoryDepth}
               fontStyle={fontStyle}
               setFontStyle={setFontStyle}
+              darkMode={darkMode}
+              setDarkMode={setDarkMode}
             />
           </div>
         </div>
 
-        <div className="flex w-full">
         <div className={`flex-1 flex flex-col ${activeCanvas ? '' : ''}`}>
           <div className={`flex-1 flex ${activeCanvas ? 'gap-0' : ''}`}>
             <div className={`flex-1 relative flex flex-col min-w-0 transition-all duration-500 ${zenMode ? 'px-10 lg:px-40 border-none bg-transparent' : 'bg-white/5 border-l border-white/10'} ${activeCanvas ? 'w-[35%]' : ''}`}>

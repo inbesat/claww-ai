@@ -211,6 +211,14 @@ const CodexModal = ({ isOpen, onClose }) => {
             <p>Need to do some deep, distraction-free writing? Click the expand icon in the top right corner of the screen (or press <strong>Escape</strong>) to instantly hide the sidebar, remove all UI borders, and center the chat.</p>
           </Section>
 
+          <Section icon="🔤" title="The Typography Engine">
+            <p>Complete your aesthetic by changing the app's font. Head to the Theme section to toggle between <strong>Clean</strong> (Default), <strong>Terminal</strong> (Hacker/Coding vibe), and <strong>Sci-Fi</strong> (Cyberpunk look) to make your workspace truly yours.</p>
+          </Section>
+
+          <Section icon="☁️" title="Profile Sync (Export/Import)">
+            <p>Never lose your ultimate setup. Use the Profile Sync accordion in the sidebar to <strong>Export</strong> your entire brain—including your custom macros, current theme, typography, and Engine Room sliders—as a JSON file. Share it with friends or <strong>Import</strong> it on a new device to instantly load your personalized OS.</p>
+          </Section>
+
           <div className="bg-white/5 p-5 rounded-xl border border-white/10">
             <h3 className="text-lg font-semibold text-zinc-100 mb-4 flex items-center gap-2">
               📖 The UI Legend
