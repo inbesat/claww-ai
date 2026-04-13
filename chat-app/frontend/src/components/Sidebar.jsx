@@ -19,7 +19,7 @@ const tonePresets = [
   { label: "Cute GF 💖", prompt: "Act as my sweet, supportive, and cute girlfriend. Use emojis, be affectionate, and ask how my day is going." }
 ];
 
-const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat, onRenameChat, darkMode, setDarkMode, isCollapsed, onToggleCollapse, isMobileOpen, onCloseMobile, onOpenCodex, aiTone, setAiTone, theme, setTheme, macros, setMacros, temperature, setTemperature, memoryDepth, setMemoryDepth, fontStyle, setFontStyle, useLocalLlm, setUseLocalLlm }) => {
+const Sidebar = ({ sessionId, chatHistory, onNewChat, onSelectChat, onDeleteChat, onRenameChat, darkMode, setDarkMode, isCollapsed, onToggleCollapse, isMobileOpen, onCloseMobile, onOpenCodex, aiTone, setAiTone, theme, setTheme, macros, setMacros, temperature, setTemperature, memoryDepth, setMemoryDepth, fontStyle, setFontStyle, useLocalLlm, setUseLocalLlm, strictMode, setStrictMode }) => {
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [isUploadingVault, setIsUploadingVault] = useState(false);
@@ -284,6 +284,18 @@ return (
                 >
                   {isUploadingVault ? 'Indexing 100+ pages... 📚' : 'Add Documents'}
                 </label>
+                <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-[var(--theme-text-muted)] font-bold">Strict Grounding</span>
+                    <span className="text-[9px] text-zinc-500">Only answer using Vault docs</span>
+                  </div>
+                  <button 
+                    onClick={() => setStrictMode(!strictMode)} 
+                    className={`text-xs px-2 py-1 rounded transition-colors ${strictMode ? 'bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] ring-1 ring-[var(--accent-primary)]/50' : 'bg-white/5 text-zinc-500 hover:bg-white/10'}`}
+                  >
+                    {strictMode ? 'ON' : 'OFF'}
+                  </button>
+                </div>
               </div>
             )}
           </div>

@@ -723,7 +723,7 @@ app.post('/api/chat', async (req, res) => {
 // ⚡ STREAM CHAT
 app.post('/api/chat/stream', async (req, res) => {
   try {
-    const { message, isSearchMode, isCodeMode, imageContext, isVaultMode, history, sessionId, temperature, memoryDepth, useLocalLlm } = req.body;
+    const { message, isSearchMode, isCodeMode, imageContext, isVaultMode, history, sessionId, temperature, memoryDepth, useLocalLlm, strictMode } = req.body;
 
     if (!message) {
       return res.end();
@@ -807,8 +807,14 @@ app.post('/api/chat/stream', async (req, res) => {
       priorDocumentContext = `[DOCUMENT_CONTEXT]\nDocument: ${lastUploadedDoc.fileName}\n\n${lastUploadedDoc.text}\n[/DOCUMENT_CONTEXT]`;
     }
     
-    if (priorDocumentContext) {
-      systemPromptText += `\n\n[DOCUMENT_CONTEXT] Earlier uploaded documents:\n${priorDocumentContext}\n[/DOCUMENT_CONTEXT]\n\nCRITICAL INSTRUCTION: The user has uploaded a document. You MUST use the [DOCUMENT_CONTEXT] above to answer their questions. Do NOT say you cannot read or access files.`;
+    if (strictMode) {
+      if (priorDocumentContext) {
+        systemPromptText = `[CRITICAL INSTRUCTION: NOTEBOOK MODE IS ACTIVE]\nYou are a strict, highly analytical document extractor. You MUST ONLY use the information provided in the [DOCUMENT_CONTEXT] below to answer the user's query.\n\nRULES:\n1. If the answer is NOT explicitly written in the provided text, you MUST reply with: "The provided documents do not contain this information."\n2. DO NOT use any outside knowledge.\n3. DO NOT hallucinate facts, dates, or numbers.\n\n[DOCUMENT_CONTEXT]\n${priorDocumentContext}\n[/DOCUMENT_CONTEXT]`;
+      } else {
+        systemPromptText = `[CRITICAL INSTRUCTION: NOTEBOOK MODE IS ACTIVE]\nThe user has enabled Strict Document Grounding, but has not uploaded any documents to the Vault yet. You MUST reply by politely asking them to upload a document to the Vault first before you can answer their question. Do not answer the actual prompt.`;
+      }
+    } else if (priorDocumentContext) {
+      systemPromptText += `\n\n[DOCUMENT_CONTEXT] Earlier uploaded documents:\n${priorDocumentContext}\n[/DOCUMENT_CONTEXT]\n\nWhen answering questions about these documents, you MUST use the text from above.`;
     }
 
     // Inject persona context

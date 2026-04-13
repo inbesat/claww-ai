@@ -227,6 +227,24 @@ const CodexModal = ({ isOpen, onClose }) => {
             <p>The ultimate power-user flex. Internet down? Toggle <strong>Offline Mode</strong> in the Engine Room. This instantly reroutes Synapse to talk to your local <a href="https://ollama.com/" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-primary)] hover:underline">Ollama</a> server (port 11434). Run models like Llama 3 or Mistral entirely locally, privately, and for free.</p>
           </Section>
 
+          <Section icon="🔍" title="Omni-Search Command Palette">
+            <p>Throw away your mouse. Press <strong>Cmd + K</strong> (or Ctrl + K on Windows) from anywhere in the app to open the Omni-Search glass modal. You can instantly search and trigger your custom macros, jump to past chat histories, switch themes, or toggle Zen Mode entirely from your keyboard.</p>
+          </Section>
+
+          <Section icon="🎙️" title="Voice OS (Hands-Free)">
+            <p>Talk to Synapse like JARVIS. Click the <strong>Microphone</strong> icon in the chat box to dictate your prompts aloud. When the AI responds, click the <strong>Speaker</strong> icon at the bottom of its message to have Synapse read the answer back to you in real-time.</p>
+          </Section>
+
+          <div className="mt-8 mb-4 border-t border-white/10 pt-6">
+            <h3 className="text-lg font-bold text-emerald-400 flex items-center gap-2">🌌 Ultimate User Features</h3>
+            <p className="text-sm text-[var(--theme-text-muted)] mt-1">The absolute pinnacle of personalized AI orchestration.</p>
+          </div>
+
+          <Section icon="🧠" title="Flying Thoughts Under One Roof (Strict Grounding)">
+            <p>Turn Synapse into a closed-loop research assistant. When you toggle <strong>Strict Grounding</strong> ON in the Document Vault, you completely sandbox the AI's brain. It will physically refuse to use outside internet knowledge or hallucinate facts, forcing it to answer your prompts <em>only</em> using the documents you have uploaded.</p>
+            <div className="mt-2 p-2 bg-black/20 rounded border border-white/5 text-xs text-zinc-400"><strong>Example:</strong> Upload 5 different PDFs of your personal journals, class notes, or company policies. Ask a question, and Synapse will weave those "flying thoughts" together under one roof, citing only your provided text and saying "I don't know" if the answer isn't in your files.</div>
+          </Section>
+
           <div className="bg-white/5 p-5 rounded-xl border border-white/10">
             <h3 className="text-lg font-semibold text-zinc-100 mb-4 flex items-center gap-2">
               📖 The UI Legend

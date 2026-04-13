@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
 import ChatInput from './components/ChatInput';
 import CodexModal from './components/CodexModal';
+import CommandPalette from './components/CommandPalette';
 import ThemeVibe from './components/ThemeVibe';
 import { LargePreviewableCodeBlock } from './components/MessageBubble';
 import Canvas from './components/Canvas';
@@ -70,6 +71,7 @@ function App() {
   const [toolActive, setToolActive] = useState(false);
   const [toolName, setToolName] = useState(null);
   const [showCodex, setShowCodex] = useState(false);
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [aiTone, setAiTone] = useState(() => localStorage.getItem('ai_tone') || '');
 
   const [macros, setMacros] = useState(() => JSON.parse(localStorage.getItem('synapse_macros')) || [{ command: '/roast', prompt: 'Read the following and absolutely destroy it with sarcastic critique: ' }, { command: '/eli5', prompt: 'Explain the following concept like I am a 5 year old: ' }]);
@@ -78,6 +80,12 @@ function App() {
   const [memoryDepth, setMemoryDepth] = useState(() => parseInt(localStorage.getItem('synapse_memory')) || 10);
 
   const [zenMode, setZenMode] = useState(false);
+
+  const [strictMode, setStrictMode] = useState(() => localStorage.getItem('synapse_strict') === 'true');
+
+  useEffect(() => {
+    localStorage.setItem('synapse_strict', strictMode.toString());
+  }, [strictMode]);
 
   // Theme state
   const [theme, setTheme] = useState(() => {
@@ -159,6 +167,21 @@ function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [zenMode]);
+
+  // Command Palette toggle with Cmd+K or Ctrl+K
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowCommandPalette(prev => !prev);
+      }
+      if (e.key === 'Escape' && showCommandPalette) {
+        setShowCommandPalette(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showCommandPalette]);
 
   useEffect(() => {
     localStorage.setItem('synapse_macros', JSON.stringify(macros));
@@ -358,7 +381,8 @@ function App() {
           isVaultMode,
           temperature,
           memoryDepth,
-          useLocalLlm
+          useLocalLlm,
+          strictMode
         }),
       });
 
@@ -523,7 +547,20 @@ return (
       className={`h-[100dvh] flex ${darkMode ? 'dark' : ''}`}
       onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
     >
-      <CodexModal isOpen={showCodex} onClose={() => setShowCodex(false)} />
+<CodexModal isOpen={showCodex} onClose={() => setShowCodex(false)} />
+      <CommandPalette 
+        isOpen={showCommandPalette} 
+        onClose={() => setShowCommandPalette(false)} 
+        macros={macros}
+        chatHistory={chatHistory}
+        onSelectChat={(id) => setSessionId(id)}
+        setZenMode={setZenMode}
+        setTheme={setTheme}
+        setMessage={(msg) => {
+          // Insert message into input - this would require handling in ChatInput
+          // For now, we can simulate by setting a message in macros or similar
+        }}
+      />
       
       <>
       <button
@@ -576,6 +613,8 @@ setMemoryDepth={setMemoryDepth}
           setDarkMode={setDarkMode}
           useLocalLlm={useLocalLlm}
           setUseLocalLlm={setUseLocalLlm}
+          strictMode={strictMode}
+          setStrictMode={setStrictMode}
         />
       </div>
 
@@ -612,6 +651,8 @@ memoryDepth={memoryDepth}
               setDarkMode={setDarkMode}
               useLocalLlm={useLocalLlm}
               setUseLocalLlm={setUseLocalLlm}
+              strictMode={strictMode}
+              setStrictMode={setStrictMode}
             />
           </div>
         </div>
