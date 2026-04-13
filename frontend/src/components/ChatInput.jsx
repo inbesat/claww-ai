@@ -102,10 +102,10 @@ const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, active
 
 try {
         const formData = new FormData();
-        formData.append('file', file);
         if (sessionId) {
           formData.append('sessionId', sessionId);
         }
+        formData.append('file', file);
 
          const controller = new AbortController();
          const timeoutId = setTimeout(() => controller.abort(), 60000);

@@ -67,6 +67,19 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 }
 });
 
+// 🤗 HUGGINGFACE INITIALIZATION
+let hf;
+try {
+  const { HfInference } = require('@huggingface/inference');
+  hf = new HfInference(process.env.HUGGINGFACE_API_KEY || process.env.HF_TOKEN || process.env.HUGGINGFACE_ACCESS_TOKEN);
+  console.log('✅ HuggingFace Inference Initialized');
+} catch (e) {
+  console.log('[HuggingFace] Not configured - using fallback embeds');
+}
+
+// 📄 GLOBAL DOCUMENT CACHE (fallback for session mismatches)
+let lastUploadedDoc = null;
+
 // 🕷️ PAGE SCRAPER
 async function scrapePage(url) {
   try {
@@ -374,6 +387,7 @@ app.post('/api/process-pdf', upload.single('file'), async (req, res) => {
     
     addToHistory(sessionId, 'system', `[DOCUMENT_CONTEXT]\nDocument: ${file.originalname}\n\n${truncatedText}\n[/DOCUMENT_CONTEXT]`, { isDocument: true, fileName: file.originalname });
     
+    lastUploadedDoc = { session: sessionId, text: truncatedText, fileName: file.originalname };
     console.log(`[Process PDF] Injected into history for session: ${sessionId}`);
     
     return res.json({ 
@@ -759,9 +773,15 @@ app.post('/api/chat/stream', async (req, res) => {
     }
 
     // Inject prior document contexts from history if available
-    const priorDocumentContext = getDocumentContext(chatSessionId);
+    let priorDocumentContext = getDocumentContext(chatSessionId);
+    
+    // Fallback to global cache if session mapping failed
+    if (!priorDocumentContext && lastUploadedDoc && lastUploadedDoc.text) {
+      priorDocumentContext = `[DOCUMENT_CONTEXT]\nDocument: ${lastUploadedDoc.fileName}\n\n${lastUploadedDoc.text}\n[/DOCUMENT_CONTEXT]`;
+    }
+    
     if (priorDocumentContext) {
-      systemPromptText += `\n\n[DOCUMENT_CONTEXT] Earlier uploaded documents:\n${priorDocumentContext}\n[/DOCUMENT_CONTEXT]\n\nWhen answering questions about these documents, you MUST use the text from above.`;
+      systemPromptText += `\n\n[DOCUMENT_CONTEXT] Earlier uploaded documents:\n${priorDocumentContext}\n[/DOCUMENT_CONTEXT]\n\nCRITICAL INSTRUCTION: The user has uploaded a document. You MUST use the [DOCUMENT_CONTEXT] above to answer their questions. Do NOT say you cannot read or access files.`;
     }
 
     // Inject persona context

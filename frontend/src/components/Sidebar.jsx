@@ -1,9 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 
 const themes = [
-  { id: 'cyberpunk', name: 'Cyberpunk', colors: ['#a855f7', '#ec4899'] },
-  { id: 'forest', name: 'Forest', colors: ['#10b981', '#34d399'] },
-  { id: 'minimal', name: 'Minimal', colors: ['#64748b', '#94a3b8'] },
+  { id: 'cyberpunk', name: 'Cyberpunk', from: 'from-fuchsia-600', to: 'to-violet-600', text: 'text-white' },
+  { id: 'forest', name: 'Forest', from: 'from-emerald-600', to: 'to-teal-600', text: 'text-white' },
+  { id: 'minimal', name: 'Minimal', from: 'from-zinc-500', to: 'to-zinc-600', text: 'text-white' },
+  { id: 'matrix', name: 'Matrix', from: 'from-green-600', to: 'to-green-400', text: 'text-black' },
+  { id: 'vaporwave', name: 'Vaporwave', from: 'from-pink-500', to: 'to-cyan-400', text: 'text-black' },
+  { id: 'nord', name: 'Nord', from: 'from-sky-600', to: 'to-blue-600', text: 'text-white' },
+  { id: 'bloodmoon', name: 'Blood Moon', from: 'from-red-700', to: 'to-red-900', text: 'text-white' },
+  { id: 'solareclipse', name: 'Eclipse', from: 'from-yellow-400', to: 'to-orange-500', text: 'text-black' },
+  { id: 'ocean', name: 'Ocean', from: 'from-cyan-400', to: 'to-blue-600', text: 'text-white' },
 ];
 
 const tonePresets = [
@@ -294,25 +300,16 @@ return (
             </button>
             {openSections.theme && (
               <div className="px-3 pb-3">
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={() => { document.documentElement.setAttribute('data-theme', 'cyberpunk'); setTheme?.('cyberpunk'); }}
-                    className="w-full py-2 text-xs rounded-lg text-center bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white hover:from-fuchsia-500 hover:to-violet-500 transition-all shadow-lg shadow-fuchsia-500/20"
-                  >
-                    Cyberpunk
-                  </button>
-                  <button
-                    onClick={() => { document.documentElement.setAttribute('data-theme', 'forest'); setTheme?.('forest'); }}
-                    className="w-full py-2 text-xs rounded-lg text-center bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500 transition-all"
-                  >
-                    Forest
-                  </button>
-                  <button
-                    onClick={() => { document.documentElement.setAttribute('data-theme', 'minimal'); setTheme?.('minimal'); }}
-                    className="w-full py-2 text-xs rounded-lg text-center bg-zinc-600 text-white hover:bg-zinc-500 transition-all"
-                  >
-                    Minimal
-                  </button>
+                <div className="grid grid-cols-2 gap-2">
+                  {themes.map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => { document.documentElement.setAttribute('data-theme', t.id); setTheme?.(t.id); }}
+                      className={`w-full py-2 text-xs font-bold rounded-lg text-center bg-gradient-to-r ${t.from} ${t.to} ${t.text} hover:opacity-90 transition-all ${theme === t.id ? 'ring-2 ring-white ring-offset-2 ring-offset-black' : ''}`}
+                    >
+                      {t.name}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}

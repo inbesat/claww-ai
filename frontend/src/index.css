@@ -110,6 +110,32 @@
   --theme-border: #330000;
 }
 
+[data-theme='solareclipse'] {
+  --accent-primary: #FBBF24;
+  --accent-secondary: #EA580C;
+  --aura-color: #FBBF24;
+  --glow-color: rgba(251, 191, 36, 0.3);
+  --theme-bg: #050505;
+  --theme-bg-subtle: #111111;
+  --theme-bg-glass: rgba(5, 5, 5, 0.85);
+  --theme-text: #FEF3C7;
+  --theme-text-muted: #D4D4D8;
+  --theme-border: #27272A;
+}
+
+[data-theme='ocean'] {
+  --accent-primary: #22D3EE;
+  --accent-secondary: #3B82F6;
+  --aura-color: #22D3EE;
+  --glow-color: rgba(34, 211, 238, 0.4);
+  --theme-bg: #082F49;
+  --theme-bg-subtle: #0C4A6E;
+  --theme-bg-glass: rgba(8, 47, 73, 0.8);
+  --theme-text: #ECFEFF;
+  --theme-text-muted: #A5F3FC;
+  --theme-border: #0369A1;
+}
+
 /* Utility classes using theme variables */
 .theme-bg { background-color: var(--theme-bg); }
 .theme-bg-subtle { background-color: var(--theme-bg-subtle); }
