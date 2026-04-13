@@ -558,28 +558,26 @@ function App() {
       )}
 
       <div className="flex w-full">
-        <div className="md:hidden flex items-center justify-between w-full px-4 py-3 backdrop-blur-md bg-black/50 sticky top-0 z-40 border-b border-zinc-800/50">
-          <button
-            onClick={() => setIsSidebarOpen(true)}
-            className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-300"
-          >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <span className="text-lg font-bold bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">Synapse</span>
-          <button
-            onClick={handleNewChat}
-            className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-300"
-          >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-          </button>
-        </div>
         <div className={`flex-1 flex flex-col ${activeCanvas ? '' : ''}`}>
           <div className={`flex-1 flex ${activeCanvas ? 'gap-0' : ''}`}>
-            <div className={`flex-1 flex flex-col min-w-0 transition-all duration-500 ${zenMode ? 'px-10 lg:px-40 border-none bg-transparent' : 'bg-white/5 border-l border-white/10'} ${activeCanvas ? 'w-[35%]' : ''}`}>
+            <div className={`flex-1 relative flex flex-col min-w-0 transition-all duration-500 ${zenMode ? 'px-10 lg:px-40 border-none bg-transparent' : 'bg-white/5 border-l border-white/10'} ${activeCanvas ? 'w-[35%]' : ''}`}>
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="md:hidden absolute top-3 left-3 z-40 p-2.5 rounded-full bg-[var(--theme-bg-glass)] backdrop-blur-xl border border-[var(--theme-border)] text-[var(--theme-text)] shadow-lg"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+              <button
+                onClick={handleNewChat}
+                className="md:hidden absolute top-3 right-3 z-40 p-2.5 rounded-full text-white shadow-lg"
+                style={{ background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))', boxShadow: '0 4px 15px var(--glow-color)' }}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
               <ChatArea
                 messages={currentMessages}
                 isLoading={isLoading || isGeneratingImage}
