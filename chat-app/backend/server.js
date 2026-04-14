@@ -19,10 +19,7 @@ console.log('✅ PDF-parse loaded');
 
 const mammoth = require('mammoth');
 const fs = require('fs');
-const axios = require('axios');
 const Tesseract = require('tesseract.js');
-const cheerio = require('cheerio');
-const { YoutubeTranscript } = require('youtube-transcript');
 const nodemailer = require('nodemailer');
 const path = require('path');
 
@@ -407,11 +404,14 @@ app.post('/api/process-pdf', upload.single('file'), async (req, res) => {
 
 // 🔗 LINK UPLOAD (Web/YouTube scraping to Vault context)
 app.post('/api/upload-link', async (req, res) => {
-  try {
-    const { url } = req.body;
-    if (!url) {
-      return res.status(400).json({ error: 'URL is required' });
-    }
+   const axios = (await import('axios')).default;
+   const cheerio = await import('cheerio');
+   const { YoutubeTranscript } = await import('youtube-transcript');
+   try {
+     const { url } = req.body;
+     if (!url) {
+       return res.status(400).json({ error: 'URL is required' });
+     }
 
     let scrapedText = '';
     let title = '';
