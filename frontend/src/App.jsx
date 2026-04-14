@@ -85,7 +85,11 @@ const [isNotebookMode, setIsNotebookMode] = useState(() => localStorage.getItem(
     const [transitionState, setTransitionState] = useState(null);
     // Notebook Mode State
     const [notebookSearch, setNotebookSearch] = useState('');
-    const [selectedSources, setSelectedSources] = useState(new Set(['1 Quantum Numbers.pdf'])); // Default mock
+    const [selectedSources, setSelectedSources] = useState(new Set(['1 Quantum Numbers.pdf']));
+    const [notebookSourcesList, setNotebookSourcesList] = useState([]);
+    const [showLinkInput, setShowLinkInput] = useState(false);
+    const [linkUrl, setLinkUrl] = useState('');
+    const [isScraping, setIsScraping] = useState(false);
     // Debate state
     const [isDebating, setIsDebating] = useState(false);
 
@@ -95,16 +99,46 @@ const [isNotebookMode, setIsNotebookMode] = useState(() => localStorage.getItem(
         handleSendMessage(new Event('submit'), fullPrompt);
     };
    
-   // Toggle source selection
-   const toggleSource = (file) => {
-     const newSet = new Set(selectedSources);
-     if (newSet.has(file)) {
-       newSet.delete(file);
-     } else {
-       newSet.add(file);
-     }
-     setSelectedSources(newSet);
-   };
+// Toggle source selection
+    const toggleSource = (file) => {
+      const newSet = new Set(selectedSources);
+      if (newSet.has(file)) {
+        newSet.delete(file);
+      } else {
+        newSet.add(file);
+      }
+      setSelectedSources(newSet);
+    };
+
+    // Add link (Web/YouTube) to notebook sources
+    const handleAddLink = async (e) => {
+      if (e) e.preventDefault();
+      if (!linkUrl.trim()) return;
+      
+      setIsScraping(true);
+      try {
+        const response = await fetch(`${API_URL}/api/upload-link`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: linkUrl, sessionId })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          setNotebookSourcesList(prev => [...prev, data.fileName]);
+          setSelectedSources(prev => new Set([...prev, data.fileName]));
+          setLinkUrl('');
+          setShowLinkInput(false);
+        } else {
+          setError(data.error || 'Failed to scrape URL');
+        }
+      } catch (err) {
+        console.error('Link upload error:', err);
+        setError('Failed to upload link');
+      } finally {
+        setIsScraping(false);
+      }
+    };
    
     // Trigger studio action with selected sources
     const triggerStudioAction = (actionType) => {
@@ -752,7 +786,7 @@ const [isNotebookMode, setIsNotebookMode] = useState(() => localStorage.getItem(
 
 return (
     <div 
-className={`h-[100dvh] flex ${darkMode ? 'dark' : ''}`}
+className={`h-[100dvh] flex overflow-hidden ${darkMode ? 'dark' : ''}`}
       onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
     >
       <CodexModal isOpen={showCodex} onClose={() => setShowCodex(false)} />
@@ -826,7 +860,7 @@ setMemoryDepth={setMemoryDepth}
       {isSidebarOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={() => setIsSidebarOpen(false)} />
-          <div className="absolute left-0 top-0 h-full w-64 bg-zinc-900 shadow-2xl">
+          <div className="absolute left-0 top-0 h-[100dvh] w-64 bg-zinc-900 shadow-2xl">
             <Sidebar
               sessionId={sessionId}
               chatHistory={chatHistory}
@@ -887,8 +921,7 @@ setMemoryDepth={setMemoryDepth}
       className="w-full mb-4 px-3 py-2 bg-[#1a1a1a] border border-white/5 rounded-md text-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-400"
     />
     <div className="mt-4 flex-1 overflow-y-auto space-y-2">
-      {/* Mock file list - in a real app, this would come from the vault */}
-      {[ '1 Quantum Numbers.pdf', '2 Relativity Basics.docx', '3 Thermodynamics Notes.txt' ].filter(file => 
+      {notebookSourcesList.length > 0 ? notebookSourcesList.filter(file => 
         file.toLowerCase().includes(notebookSearch.toLowerCase())
       ).map((file) => (
         <div key={file} className="flex items-center">
@@ -898,16 +931,43 @@ setMemoryDepth={setMemoryDepth}
             onChange={() => toggleSource(file)}
             className="mr-2 h-4 w-4 border-zinc-500 rounded text-zinc-600 focus:ring-zinc-400"
           />
-          <span className="text-xs">{file}</span>
+          {file.includes('YouTube') ? (
+            <span className="text-xs bg-red-600/20 text-red-400 px-1.5 py-0.5 rounded mr-1">YT</span>
+          ) : file.includes('http') ? (
+            <span className="text-xs bg-blue-600/20 text-blue-400 px-1.5 py-0.5 rounded mr-1">WEB</span>
+          ) : (
+            <span className="text-xs bg-zinc-600/20 text-zinc-400 px-1.5 py-0.5 rounded mr-1">DOC</span>
+          )}
+          <span className="text-xs truncate">{file}</span>
         </div>
-      ))}
+      )) : (
+        <div className="text-xs text-zinc-500 text-center py-4">No sources added yet</div>
+      )}
     </div>
     <button 
-      onClick={() => setIsSidebarOpen(true)}
+      onClick={() => setShowLinkInput(!showLinkInput)}
       className="w-full py-2 mt-4 bg-white/5 border border-white/10 rounded-lg text-xs text-zinc-300 hover:bg-white/10 transition-colors"
     >
       + Add sources
     </button>
+    {showLinkInput && (
+      <div className="mb-4 flex gap-2 animate-fade-in">
+        <input 
+          type="url" 
+          value={linkUrl} 
+          onChange={(e) => setLinkUrl(e.target.value)} 
+          placeholder="Paste Web or YouTube URL..." 
+          className="flex-1 bg-[#1e1e1e] border border-white/10 rounded px-3 py-1.5 text-xs text-white outline-none focus:border-[var(--accent-primary)]" 
+        />
+        <button 
+          onClick={handleAddLink} 
+          disabled={isScraping} 
+          className="bg-[var(--accent-primary)] text-white px-3 py-1.5 rounded text-xs font-bold disabled:opacity-50"
+        >
+          {isScraping ? 'Reading...' : 'Add'}
+        </button>
+      </div>
+    )}
   </div>
 )}
             <div className={`flex-1 relative flex flex-col min-w-0 transition-all duration-500 ${zenMode ? 'px-10 lg:px-40 border-none bg-transparent' : 'bg-white/5 border-l border-white/10'} ${activeCanvas ? 'w-[35%]' : ''}`}>
@@ -976,13 +1036,13 @@ setMemoryDepth={setMemoryDepth}
         <div className="text-lg mb-1">📺</div>
         <div className="text-xs font-medium text-zinc-300">Slide Deck</div>
       </div>
-      {/* Video Overview */}
+      {/* Image Prompts */}
       <div 
         className="bg-white/5 border border-white/10 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition-colors"
-        onClick={() => triggerNotebookAction('YouTube video script')}
+        onClick={() => triggerNotebookAction('list of 5 highly detailed image generation prompts illustrating the core concepts')}
       >
-        <div className="text-lg mb-1">▶️</div>
-        <div className="text-xs font-medium text-zinc-300">Video Overview</div>
+        <div className="text-lg mb-1">🖼️</div>
+        <div className="text-xs font-medium text-zinc-300">Image Prompts</div>
       </div>
       {/* Mind Map */}
       <div 

@@ -644,7 +644,7 @@ return (
         </div>
       )}
 
-      <div className={`flex-1 overflow-y-auto mt-6 ${isCollapsed ? '-mx-2 px-2' : '-mx-3 px-3'}`}>
+      <div className={`flex-1 overflow-y-auto overscroll-contain touch-pan-y mt-6 ${isCollapsed ? '-mx-2 px-2' : '-mx-3 px-3'}`}>
         {!isCollapsed && (
           <h2 className={`mb-3 text-xs font-light uppercase tracking-wider pl-3 ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>Recent</h2>
         )}

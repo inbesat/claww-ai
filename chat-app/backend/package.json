@@ -24,7 +24,8 @@
     "pdf-parse": "^1.1.1",
     "playwright": "^1.59.1",
     "socket.io": "^4.8.3",
-    "tesseract.js": "^7.0.0"
+    "tesseract.js": "^7.0.0",
+    "youtube-transcript": "^1.2.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

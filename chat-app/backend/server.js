@@ -22,6 +22,7 @@ const fs = require('fs');
 const axios = require('axios');
 const Tesseract = require('tesseract.js');
 const cheerio = require('cheerio');
+const { YoutubeTranscript } = require('youtube-transcript');
 const nodemailer = require('nodemailer');
 const path = require('path');
 
@@ -401,6 +402,73 @@ app.post('/api/process-pdf', upload.single('file'), async (req, res) => {
   } catch (err) {
     console.error('PDF processing error:', err);
     return res.status(500).json({ error: err.message || 'PDF processing failed' });
+  }
+});
+
+// 🔗 LINK UPLOAD (Web/YouTube scraping to Vault context)
+app.post('/api/upload-link', async (req, res) => {
+  try {
+    const { url } = req.body;
+    if (!url) {
+      return res.status(400).json({ error: 'URL is required' });
+    }
+
+    let scrapedText = '';
+    let title = '';
+
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      console.log(`[Upload Link] YouTube detected: ${url}`);
+      try {
+        const transcript = await YoutubeTranscript.fetchTranscript(url);
+        scrapedText = transcript.map(item => item.text).join(' ');
+        title = `YouTube Video: ${url}`;
+      } catch (ytErr) {
+        console.error('[Upload Link] YouTube transcript error:', ytErr.message);
+        return res.status(500).json({ error: 'Could not fetch YouTube transcript. Subtitles may be disabled.' });
+      }
+    } else {
+      console.log(`[Upload Link] Web URL detected: ${url}`);
+      const response = await axios.get(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        },
+        timeout: 10000
+      });
+      const $ = cheerio.load(response.data);
+      scrapedText = $('body').text().replace(/\s+/g, ' ').trim();
+      title = $('title').text() || `Web Page: ${url}`;
+    }
+
+    if (!scrapedText || scrapedText.length < 50) {
+      return res.status(400).json({ error: 'Could not extract meaningful content from URL' });
+    }
+
+    const truncatedText = scrapedText.length > 15000 
+      ? scrapedText.substring(0, 15000) + '\n\n[Document truncated due to length...]'
+      : scrapedText;
+
+    const sessionId = req.body.sessionId || 'default';
+    const documentContent = `\n\n[DOCUMENT: ${title}]\n${truncatedText}`;
+
+    let priorDocumentContext = getDocumentContext(sessionId);
+    if (!priorDocumentContext && lastUploadedDoc && lastUploadedDoc.text) {
+      priorDocumentContext = lastUploadedDoc.text;
+    }
+
+    const newDocumentContext = priorDocumentContext 
+      ? priorDocumentContext + documentContent 
+      : documentContent;
+
+    addToHistory(sessionId, 'system', `[DOCUMENT_CONTEXT]\nDocument: ${title}\n\n${truncatedText}\n[/DOCUMENT_CONTEXT]`, { isDocument: true, fileName: title });
+
+    lastUploadedDoc = { session: sessionId, text: newDocumentContext, fileName: title };
+    console.log(`[Upload Link] Added to Vault context: ${title}`);
+
+    return res.json({ success: true, fileName: title });
+
+  } catch (err) {
+    console.error('[Upload Link] Error:', err.message);
+    return res.status(500).json({ error: err.message || 'Failed to scrape URL' });
   }
 });
 
