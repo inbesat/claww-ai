@@ -82,6 +82,7 @@ function App() {
   const [zenMode, setZenMode] = useState(false);
 
 const [isNotebookMode, setIsNotebookMode] = useState(() => localStorage.getItem('synapse_notebook') === 'true');
+    const [currentMessage, setCurrentMessage] = useState('');
     const [transitionState, setTransitionState] = useState(null);
     // Notebook Mode State
     const [notebookSearch, setNotebookSearch] = useState('');
@@ -295,15 +296,8 @@ const [isNotebookMode, setIsNotebookMode] = useState(() => localStorage.getItem(
     };
 
   const handleNotebookToggle = () => {
-    if (transitionState) return;
-    setTransitionState('out');
-    setTimeout(() => {
-      setIsNotebookMode(!isNotebookMode);
-      setTransitionState('in');
-      setTimeout(() => {
-        setTransitionState(null);
-      }, 600);
-    }, 600);
+    const query = encodeURIComponent(currentMessage || '');
+    window.location.href = `https://thoughtbook-five.vercel.app/notebooks?query=${query}`;
   };
 
   useEffect(() => {
@@ -1004,17 +998,18 @@ setMemoryDepth={setMemoryDepth}
                 aiTone={aiTone}
               />
 
-              <ChatInput
-                isLoading={isLoading || isGeneratingImage}
-                onSendMessage={handleSendMessage}
-                onFileProcessed={handlePdfProcessed}
-                darkMode={darkMode}
-                activeCanvas={activeCanvas}
-                onToggleCanvas={setActiveCanvas}
-                sessionId={sessionId}
-                macros={macros}
-                zenMode={zenMode}
-              />
+               <ChatInput
+                 isLoading={isLoading || isGeneratingImage}
+                 onSendMessage={handleSendMessage}
+                 onFileProcessed={handlePdfProcessed}
+                 darkMode={darkMode}
+                 activeCanvas={activeCanvas}
+                 onToggleCanvas={setActiveCanvas}
+                 sessionId={sessionId}
+                 macros={macros}
+                 zenMode={zenMode}
+                 onMessageChange={setCurrentMessage}
+               />
             </div>
 {isNotebookMode && (
   <div className="w-[340px] flex-col bg-[#131314] text-zinc-200 border-l border-white/5 p-4 animate-dust-in">

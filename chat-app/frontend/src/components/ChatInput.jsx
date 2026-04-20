@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 
 const API_URL = (import.meta.env.VITE_API_URL || 'https://claww-ai-3.onrender.com').trim();
 
-const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, activeCanvas, onToggleCanvas, sessionId, macros = [], zenMode = false }) => {
+const ChatInput = ({ isLoading, onSendMessage, onFileProcessed, darkMode, activeCanvas, onToggleCanvas, sessionId, macros = [], zenMode = false, onMessageChange }) => {
   const [message, setMessage] = useState('');
   const [fileContext, setFileContext] = useState(null);
   const [attachedFileName, setAttachedFileName] = useState('');
@@ -398,27 +398,27 @@ return (
                 </svg>
               )}
             </button>
-            <textarea
-              ref={textareaRef}
-              value={message}
-              onChange={(e) => {
-                const val = e.target.value;
-                setMessage(val);
-                if (val === '/' || val.endsWith(' /')) {
-                  setShowMacroMenu(true);
-                } else {
-                  setShowMacroMenu(false);
-                }
-              }}
-              onKeyDown={handleKeyDown}
-              placeholder={isLoading ? (isImageMode ? "Synapse AI is imagining your request..." : "AI is thinking...") : isImageMode ? "Describe the image you want to create..." : "Message Synapse AI..."}
-              className={`w-full px-2 py-2 md:py-4 bg-transparent focus:outline-none resize-none transition-all ${darkMode ? 'text-[#fafafa] placeholder-zinc-500' : 'text-zinc-900 placeholder-zinc-400'}`}
-              disabled={isLoading || isUploading}
-              rows={1}
-              spellCheck="false"
-              autoComplete="off"
-              style={{ minHeight: '56px', maxHeight: '120px' }}
-            />
+             <textarea
+               ref={textareaRef}
+               value={message}
+               onChange={(e) => {
+                 const val = e.target.value;
+                 setMessage(val);
+                 onMessageChange?.(val);
+                 if (val === '/' || val.endsWith(' /')) {
+                   setShowMacroMenu(true);
+                 } else {
+                   setShowMacroMenu(false);
+                 }
+               }}
+               onKeyDown={handleKeyDown}
+               placeholder={isLoading ? (isImageMode ? "Synapse AI is imagining your request..." : "AI is thinking...") : isImageMode ? "Describe the image you want to create..." : "Message Synapse AI..."}
+               className={`w-full px-2 py-2 md:py-4 bg-transparent focus:outline-none resize-none transition-all ${darkMode ? 'text-[#fafafa] placeholder-zinc-500' : 'text-zinc-900 placeholder-zinc-400'}`}
+               disabled={isLoading || isUploading}
+               rows={1}
+               spellCheck="false"
+               autoComplete="off"
+             />
             <button
               type="submit"
               disabled={isLoading || isUploading || !message.trim()}
