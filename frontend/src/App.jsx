@@ -891,8 +891,8 @@ setMemoryDepth={setMemoryDepth}
         </div>
       )}
 
-        <div className={`flex-1 flex flex-col transition-all duration-700 ease-in-out ${activeCanvas ? '' : ''} ${transitionState === 'out' ? 'animate-dust-out' : transitionState === 'in' ? 'animate-dust-in' : ''}`}>
-          <div className={`flex-1 flex ${activeCanvas ? 'gap-0' : ''}`}>
+        <div className={`flex-1 min-h-0 flex flex-col transition-all duration-700 ease-in-out ${activeCanvas ? '' : ''} ${transitionState === 'out' ? 'animate-dust-out' : transitionState === 'in' ? 'animate-dust-in' : ''}`}>
+          <div className={`flex-1 min-h-0 flex ${activeCanvas ? 'gap-0' : ''}`}>
 {isNotebookMode && (
   <div className="w-[320px] flex-col bg-[#131314] text-zinc-200 border-r border-white/5 p-4 animate-dust-in">
     <div className="flex items-center gap-2 mb-4">
@@ -964,7 +964,7 @@ setMemoryDepth={setMemoryDepth}
     )}
   </div>
 )}
-            <div className={`flex-1 relative flex flex-col min-w-0 transition-all duration-500 ${zenMode ? 'px-10 lg:px-40 border-none bg-transparent' : 'bg-white/5 border-l border-white/10'} ${activeCanvas ? 'w-[35%]' : ''}`}>
+            <div className={`flex-1 min-h-0 relative flex flex-col transition-all duration-500 ${zenMode ? 'px-10 lg:px-40 border-none bg-transparent' : 'bg-white/5 border-l border-white/10'} ${activeCanvas ? 'w-[35%]' : ''}`}>
               <button
                 onClick={() => setIsSidebarOpen(true)}
                 className="md:hidden absolute top-3 left-3 z-40 p-2.5 rounded-full bg-[var(--theme-bg-glass)] backdrop-blur-xl border border-[var(--theme-border)] text-[var(--theme-text)] shadow-lg"
