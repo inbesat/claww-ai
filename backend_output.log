@@ -1,0 +1,16 @@
+
+> chat-app-backend@1.0.0 start
+> node server.js
+
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+✅ PDF-parse loaded
+[Pinecone] Connected to synapse-vault index
+✅ Pinecone Initialized Successfully
+✅ HuggingFace Inference Initialized
+✅ Server structure verified.
+✅ File structure successfully sealed.
+(node:13153) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+====================================
+🚀 SYNAPSE IS LIVE ON PORT: 10000
+====================================
