@@ -337,16 +337,51 @@ function deleteFile(filePath) {
 
 // 📁 FILE UPLOAD
 app.post('/api/upload', upload.single('file'), async (req, res) => {
-  console.log("Upload request received!");
+  console.log(`[Upload] Request received! File type: ${req.file?.mimetype}`);
   try {
-    if (!req.file) return res.status(400).json({ error: "No file" });
-    // Just extract text to confirm it works
-    const pdf = require('pdf-parse');
-    const data = await pdf(req.file.buffer);
-    res.json({ message: "PDF Uploaded", textLength: data.text.length });
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+    let extractedText = "";
+
+    // Check if it's an image
+    if (req.file.mimetype.startsWith('image/')) {
+      console.log("[Upload] Processing image with Tesseract...");
+      const worker = await Tesseract.recognize(req.file.buffer);
+      extractedText = worker.data.text;
+    }
+    // Check if it's a docx
+    else if (req.file.originalname.toLowerCase().endsWith('.docx') || req.file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+      console.log("[Upload] Processing DOCX with Mammoth...");
+      const result = await mammoth.extractRawText({ buffer: req.file.buffer });
+      extractedText = result.value;
+    }
+    // Fallback for raw text
+    else if (req.file.mimetype.startsWith('text/') || req.file.originalname.toLowerCase().endsWith('.txt')) {
+      extractedText = req.file.buffer.toString('utf8');
+    }
+    // PDF should normally hit /api/process-pdf, but just in case it hits here:
+    else if (req.file.mimetype === 'application/pdf' || req.file.originalname.toLowerCase().endsWith('.pdf')) {
+      const pdf = require('pdf-parse');
+      const data = await pdf(req.file.buffer);
+      extractedText = data.text;
+    } else {
+      return res.status(400).json({ error: "Unsupported file type" });
+    }
+
+    const sessionId = req.body.sessionId || 'default';
+    const truncatedText = extractedText.length > 15000
+      ? extractedText.substring(0, 15000) + '\n\n[Document truncated due to length...]'
+      : extractedText;
+
+    addToHistory(sessionId, 'system', `[DOCUMENT_CONTEXT]\nDocument: ${req.file.originalname}\n\n${truncatedText}\n[/DOCUMENT_CONTEXT]`, { isDocument: true, fileName: req.file.originalname });
+
+    lastUploadedDoc = { session: sessionId, text: truncatedText, fileName: req.file.originalname };
+    console.log(`[Upload] Extracted ${extractedText.length} chars. Added to session ${sessionId}.`);
+
+    res.json({ message: "File Uploaded and Parsed", textLength: extractedText.length, text: extractedText });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Upload crash" });
+    console.error("[Upload] Error:", err.message);
+    res.status(500).json({ error: "Failed to process file" });
   }
 });
 
@@ -369,16 +404,26 @@ app.post('/api/process-pdf', upload.single('file'), async (req, res) => {
     let numPages = 0;
     
     try {
-      const data = await pdf(dataBuffer);
+      // Add a 30-second timeout to pdf-parse to prevent hanging on corrupt PDFs
+      let timeoutId;
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('PDF parsing timed out')), 30000);
+      });
+      const data = await Promise.race([
+        pdf(dataBuffer),
+        timeoutPromise
+      ]);
+      clearTimeout(timeoutId);
       extractedText = data.text;
       numPages = data.numpages;
       console.log(`[Process PDF] Extracted ${numPages} pages, ${extractedText?.length || 0} characters`);
     } catch (pdfErr) {
       console.error('[Process PDF] Text extraction failed:', pdfErr.message);
+      return res.status(400).json({ error: `Could not extract text from PDF: ${pdfErr.message}` });
     }
     
     if (!extractedText) {
-      return res.status(400).json({ error: 'Could not extract text from PDF.' });
+      return res.status(400).json({ error: 'Could not extract text from PDF (empty content).' });
     }
     
     const sessionId = req.body.sessionId || 'default';

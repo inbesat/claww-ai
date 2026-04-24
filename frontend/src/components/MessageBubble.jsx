@@ -565,8 +565,6 @@ const renderMarkdown = (text) => {
         rehypePlugins={[rehypeKatex]}
         className={`prose max-w-none ${darkMode ? 'prose-invert text-zinc-200' : 'text-zinc-900 prose-p:text-zinc-900 prose-headings:text-zinc-900 prose-strong:text-zinc-900 prose-code:text-zinc-800 prose-a:text-blue-600'}`}
 components={{
-          p: ({ children }) => <p className="mb-3 last:mb-0 leading-relaxed">{children}</p>,
-          li: ({ children }) => <li className="mb-1">{children}</li>,
           td: ({ children }) => <td>{children}</td>,
           th: ({ children }) => <th>{children}</th>,
           code({ node, inline, className, children, ...props }) {
