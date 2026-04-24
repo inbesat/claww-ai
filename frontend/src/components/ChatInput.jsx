@@ -422,7 +422,7 @@ return (
             <button
               type="submit"
               disabled={isLoading || isUploading || !message.trim()}
-              className="m-2 p-2.5 text-white rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 disabled:hover:shadow-none" style={{ background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))', boxShadow: '0 4px 15px var(--glow-color)' }}
+              className="m-2 p-2.5 text-white rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 disabled:hover:shadow-none active:scale-95" style={{ background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))', boxShadow: '0 4px 15px var(--glow-color)' }}
             >
               {isLoading ? (
                 <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">

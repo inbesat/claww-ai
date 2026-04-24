@@ -246,7 +246,7 @@ return (
       <div className="px-3">
         <button 
           onClick={onNewChat}
-          className={`w-full flex items-center justify-center gap-2 px-4 py-3 text-white rounded-xl transition-all duration-300 text-sm font-light hover:shadow-lg active:scale-[0.98] border-none ${isCollapsed ? 'w-12 h-12 p-0' : ''}`}
+          className={`w-full flex items-center justify-center gap-2 px-4 py-3 text-white rounded-xl transition-all duration-300 text-sm font-light hover:shadow-lg active:scale-95 border-none ${isCollapsed ? 'w-12 h-12 p-0' : ''}`}
           style={{ background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))', boxShadow: '0 4px 15px var(--glow-color)' }}
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
