@@ -593,6 +593,8 @@ const [isNotebookMode, setIsNotebookMode] = useState(() => localStorage.getItem(
       const sanitizedHistory = currentMessages.map(msg => {
         const cleanMsg = {
           ...msg,
+          role: msg.sender === 'ai' ? 'assistant' : 'user',
+          content: msg.text?.startsWith('data:image') ? '[AI Generated Image]' : msg.text,
           text: msg.text?.startsWith('data:image') ? '[AI Generated Image]' : msg.text
         };
         if (msg.searchData) {

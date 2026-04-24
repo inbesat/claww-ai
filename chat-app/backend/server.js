@@ -769,12 +769,27 @@ app.post('/api/chat', async (req, res) => {
       }
     }
 
+    let normalChatMessages = [{ role: "system", content: systemPrompt }];
+
+    // If history is passed in body for /api/chat (though usually stream is used)
+    const history = req.body.history;
+    if (history && Array.isArray(history)) {
+      const limitedHistory = history.slice(-10);
+      for (const msg of limitedHistory) {
+        if (msg.role && msg.content) {
+          normalChatMessages.push({ role: msg.role, content: msg.content });
+        } else if (msg.sender === 'user') {
+          normalChatMessages.push({ role: 'user', content: msg.text || '' });
+        } else if (msg.sender === 'ai' || msg.sender === 'assistant') {
+          normalChatMessages.push({ role: 'assistant', content: msg.text || '' });
+        }
+      }
+    }
+    normalChatMessages.push({ role: "user", content: userPrompt });
+
     const completion = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt }
-      ],
+      messages: normalChatMessages,
       tools,
       tool_choice: "auto"
     });
@@ -795,8 +810,7 @@ app.post('/api/chat', async (req, res) => {
       const finalCompletion = await groq.chat.completions.create({
         model: 'llama-3.3-70b-versatile',
         messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+          ...normalChatMessages,
           assistantMessage,
           ...toolResults.map(r => ({ role: "tool", tool_call_id: r.tool_call_id, content: r.content, name: r.name }))
         ]
@@ -1039,12 +1053,25 @@ app.post('/api/chat/stream', async (req, res) => {
 
     console.log(`[Default Mode] Model: ${model}, Search: ${isSearchMode}, Code: ${isCodeMode}`);
 
+    let llmMessages = [{ role: "system", content: systemPromptText }];
+
+    if (history && Array.isArray(history)) {
+      const limitedHistory = history.slice(-(memoryDepth || 10));
+      for (const msg of limitedHistory) {
+        if (msg.role && msg.content) {
+          llmMessages.push({ role: msg.role, content: msg.content });
+        } else if (msg.sender === 'user') {
+          llmMessages.push({ role: 'user', content: msg.text || '' });
+        } else if (msg.sender === 'ai' || msg.sender === 'assistant') {
+          llmMessages.push({ role: 'assistant', content: msg.text || '' });
+        }
+      }
+    }
+    llmMessages.push({ role: "user", content: userContent });
+
     const completion = await groq.chat.completions.create({
       model: model,
-      messages: [
-        { role: "system", content: systemPromptText },
-        { role: "user", content: userContent }
-      ],
+      messages: llmMessages,
       stream: true,
       temperature: parseFloat(temperature) || 0.7
     });
