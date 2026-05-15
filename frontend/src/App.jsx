@@ -820,7 +820,7 @@ className={`h-[100dvh] flex overflow-hidden ${darkMode ? 'dark' : ''}`}
           background: 'radial-gradient(circle, var(--aura-color, #8b5cf6) 0%, transparent 70%)'
         }}
 />
-      <div className={`hidden md:flex ${zenMode ? 'md:hidden w-0 overflow-hidden' : (isSidebarCollapsed ? 'w-20' : 'w-64')} ${isNotebookMode ? 'md:hidden w-0' : ''} transition-all duration-500 z-10`}>
+      <div className={`hidden md:flex h-full max-h-screen ${zenMode ? 'md:hidden w-0 overflow-hidden' : (isSidebarCollapsed ? 'w-20' : 'w-64')} ${isNotebookMode ? 'md:hidden w-0' : ''} transition-all duration-500 z-10`}>
         <Sidebar
           sessionId={sessionId}
           chatHistory={chatHistory}
@@ -893,7 +893,7 @@ setMemoryDepth={setMemoryDepth}
         </div>
       )}
 
-        <div className={`flex-1 min-h-0 flex flex-col transition-all duration-700 ease-in-out ${activeCanvas ? '' : ''} ${transitionState === 'out' ? 'animate-dust-out' : transitionState === 'in' ? 'animate-dust-in' : ''}`}>
+        <div className={`flex-1 min-h-0 flex flex-col h-[100vh] transition-all duration-700 ease-in-out ${activeCanvas ? '' : ''} ${transitionState === 'out' ? 'animate-dust-out' : transitionState === 'in' ? 'animate-dust-in' : ''}`}>
           <div className={`flex-1 min-h-0 flex ${activeCanvas ? 'gap-0' : ''}`}>
 {isNotebookMode && (
   <div className="w-[320px] flex-col bg-[#131314] text-zinc-200 border-r border-white/5 p-4 animate-dust-in">

@@ -189,7 +189,7 @@ const SynapseLogo = ({ className = "w-6 h-6", glow = false }) => (
 );
 
 return (
-    <div className={`flex flex-col h-full transition-all`} style={{ backgroundColor: 'var(--theme-bg)' }}>
+    <div className={`flex flex-col h-full max-h-screen transition-all`} style={{ backgroundColor: 'var(--theme-bg)' }}>
       <div className={`flex items-center gap-2 px-2 py-4 ${isCollapsed ? 'justify-center' : ''}`}>
         {isMobileOpen ? (
           <button
@@ -646,7 +646,7 @@ return (
         </div>
       )}
 
-      <div className={`flex-1 overflow-y-auto overscroll-contain touch-pan-y mt-6 ${isCollapsed ? '-mx-2 px-2' : '-mx-3 px-3'}`}>
+      <div className={`flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y mt-6 ${isCollapsed ? '-mx-2 px-2' : '-mx-3 px-3'}`}>
         {!isCollapsed && (
           <h2 className={`mb-3 text-xs font-light uppercase tracking-wider pl-3 ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>Recent</h2>
         )}

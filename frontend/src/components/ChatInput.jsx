@@ -203,7 +203,7 @@ const handleRemoveFile = () => {
   };
 
 return (
-    <div className={`fixed bottom-0 left-0 ${zenMode ? '' : 'md:left-64'} right-0 bg-black/40 backdrop-blur-xl border-t border-white/10 px-2 py-2 md:py-4 z-50 shadow-[0_-4px_20px_rgba(217,70,239,0.1)]`}>
+    <div className={`shrink-0 w-full bg-black/40 backdrop-blur-xl border-t border-white/10 px-2 py-2 md:py-4 z-50 shadow-[0_-4px_20px_rgba(217,70,239,0.1)]`}>
        <div className="max-w-[800px] mx-auto">
 {isProcessing && (
             <div className="flex items-center gap-2 mb-2 px-3 py-2 rounded-lg bg-[var(--theme-bg-subtle)] border border-[var(--theme-border)]">

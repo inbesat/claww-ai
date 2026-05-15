@@ -437,7 +437,7 @@ const SynapseLogo = ({ className = "w-6 h-6", glow = false }) => (
       ref={chatAreaRef}
       className={`flex-1 min-h-0 overflow-y-auto h-full py-6 px-4 pt-16 md:pt-6 ${darkMode ? 'bg-[#0a0a0a]' : 'bg-zinc-50'} scrollbar-thin scrollbar-thumb-zinc-700/50 scrollbar-track-transparent`}
     >
-      <div className="max-w-[800px] mx-auto space-y-4 pb-4">
+      <div className="max-w-[800px] mx-auto space-y-4 pb-32">
         <ToolActiveIndicator toolActive={toolActive} toolName={toolName} />
         {messages.length === 0 && (
             <div className="text-center py-16">
