@@ -782,7 +782,7 @@ const [isNotebookMode, setIsNotebookMode] = useState(() => localStorage.getItem(
 
 return (
     <div 
-className={`h-[100dvh] flex overflow-hidden ${darkMode ? 'dark' : ''}`}
+className={`h-[100vh] min-h-0 flex overflow-hidden ${darkMode ? 'dark' : ''}`}
       onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
     >
       <CodexModal isOpen={showCodex} onClose={() => setShowCodex(false)} />
@@ -820,7 +820,7 @@ className={`h-[100dvh] flex overflow-hidden ${darkMode ? 'dark' : ''}`}
           background: 'radial-gradient(circle, var(--aura-color, #8b5cf6) 0%, transparent 70%)'
         }}
 />
-      <div className={`hidden md:flex h-full max-h-screen ${zenMode ? 'md:hidden w-0 overflow-hidden' : (isSidebarCollapsed ? 'w-20' : 'w-64')} ${isNotebookMode ? 'md:hidden w-0' : ''} transition-all duration-500 z-10`}>
+      <div className={`hidden md:flex h-[100vh] min-h-0 overflow-hidden ${zenMode ? 'md:hidden w-0 overflow-hidden' : (isSidebarCollapsed ? 'w-20' : 'w-64')} ${isNotebookMode ? 'md:hidden w-0' : ''} transition-all duration-500 z-10`}>
         <Sidebar
           sessionId={sessionId}
           chatHistory={chatHistory}
@@ -856,7 +856,7 @@ setMemoryDepth={setMemoryDepth}
       {isSidebarOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={() => setIsSidebarOpen(false)} />
-          <div className="absolute left-0 top-0 h-[100dvh] w-64 bg-zinc-900 shadow-2xl">
+          <div className="absolute left-0 top-0 flex h-[100vh] min-h-0 w-64 overflow-hidden bg-zinc-900 shadow-2xl">
             <Sidebar
               sessionId={sessionId}
               chatHistory={chatHistory}
@@ -893,10 +893,10 @@ setMemoryDepth={setMemoryDepth}
         </div>
       )}
 
-        <div className={`flex-1 min-h-0 flex flex-col h-[100vh] transition-all duration-700 ease-in-out ${activeCanvas ? '' : ''} ${transitionState === 'out' ? 'animate-dust-out' : transitionState === 'in' ? 'animate-dust-in' : ''}`}>
-          <div className={`flex-1 min-h-0 flex ${activeCanvas ? 'gap-0' : ''}`}>
+        <div className={`flex flex-1 flex-col h-[100vh] min-h-0 transition-all duration-700 ease-in-out ${activeCanvas ? '' : ''} ${transitionState === 'out' ? 'animate-dust-out' : transitionState === 'in' ? 'animate-dust-in' : ''}`}>
+          <div className={`flex flex-1 min-h-0 overflow-hidden ${activeCanvas ? 'gap-0' : ''}`}>
 {isNotebookMode && (
-  <div className="w-[320px] flex-col bg-[#131314] text-zinc-200 border-r border-white/5 p-4 animate-dust-in">
+  <div className="w-[320px] flex min-h-0 flex-col overflow-hidden bg-[#131314] text-zinc-200 border-r border-white/5 p-4 animate-dust-in">
     <div className="flex items-center gap-2 mb-4">
       <button 
         onClick={() => setIsNotebookMode(false)} 
@@ -966,7 +966,7 @@ setMemoryDepth={setMemoryDepth}
     )}
   </div>
 )}
-            <div className={`flex-1 min-h-0 relative flex flex-col transition-all duration-500 ${zenMode ? 'px-10 lg:px-40 border-none bg-transparent' : 'bg-white/5 border-l border-white/10'} ${activeCanvas ? 'w-[35%]' : ''}`}>
+            <div className={`relative flex flex-1 min-h-0 flex-col overflow-hidden transition-all duration-500 ${zenMode ? 'px-10 lg:px-40 border-none bg-transparent' : 'bg-white/5 border-l border-white/10'} ${activeCanvas ? 'w-[35%]' : ''}`}>
               <button
                 onClick={() => setIsSidebarOpen(true)}
                 className="md:hidden absolute top-3 left-3 z-40 p-2.5 rounded-full bg-[var(--theme-bg-glass)] backdrop-blur-xl border border-[var(--theme-border)] text-[var(--theme-text)] shadow-lg"
@@ -1000,21 +1000,23 @@ setMemoryDepth={setMemoryDepth}
                 aiTone={aiTone}
               />
 
-               <ChatInput
-                 isLoading={isLoading || isGeneratingImage}
-                 onSendMessage={handleSendMessage}
-                 onFileProcessed={handlePdfProcessed}
-                 darkMode={darkMode}
-                 activeCanvas={activeCanvas}
-                 onToggleCanvas={setActiveCanvas}
-                 sessionId={sessionId}
-                 macros={macros}
-                 zenMode={zenMode}
-                 onMessageChange={setCurrentMessage}
-               />
+              <div className="shrink-0">
+                <ChatInput
+                  isLoading={isLoading || isGeneratingImage}
+                  onSendMessage={handleSendMessage}
+                  onFileProcessed={handlePdfProcessed}
+                  darkMode={darkMode}
+                  activeCanvas={activeCanvas}
+                  onToggleCanvas={setActiveCanvas}
+                  sessionId={sessionId}
+                  macros={macros}
+                  zenMode={zenMode}
+                  onMessageChange={setCurrentMessage}
+                />
+              </div>
             </div>
 {isNotebookMode && (
-  <div className="w-[340px] flex-col bg-[#131314] text-zinc-200 border-l border-white/5 p-4 animate-dust-in">
+  <div className="w-[340px] flex min-h-0 flex-col overflow-y-auto bg-[#131314] text-zinc-200 border-l border-white/5 p-4 animate-dust-in">
     <h2 className="text-sm font-bold text-zinc-200 mb-4">✨ Studio</h2>
     <div className="grid grid-cols-2 gap-2">
       {/* Audio Overview */}

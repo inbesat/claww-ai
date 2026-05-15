@@ -189,7 +189,7 @@ const SynapseLogo = ({ className = "w-6 h-6", glow = false }) => (
 );
 
 return (
-    <div className={`flex flex-col h-full max-h-screen transition-all`} style={{ backgroundColor: 'var(--theme-bg)' }}>
+    <div className={`flex h-full min-h-0 flex-col overflow-hidden transition-all`} style={{ backgroundColor: 'var(--theme-bg)' }}>
       <div className={`flex items-center gap-2 px-2 py-4 ${isCollapsed ? 'justify-center' : ''}`}>
         {isMobileOpen ? (
           <button
@@ -309,6 +309,7 @@ return (
         </div>
       )}
 
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y">
       {!isCollapsed && (
         <div className="px-3 mt-4">
           <div className="rounded-xl border bg-[var(--theme-bg-subtle)]/50 backdrop-blur-md" style={{ borderColor: 'var(--theme-border)' }}>
@@ -646,7 +647,7 @@ return (
         </div>
       )}
 
-      <div className={`flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y mt-6 ${isCollapsed ? '-mx-2 px-2' : '-mx-3 px-3'}`}>
+      <div className={`mt-6 ${isCollapsed ? '-mx-2 px-2' : '-mx-3 px-3'}`}>
         {!isCollapsed && (
           <h2 className={`mb-3 text-xs font-light uppercase tracking-wider pl-3 ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>Recent</h2>
         )}
@@ -716,8 +717,9 @@ return (
           )}
         </div>
       </div>
+      </div>
       
-      <div className="pt-4 border-t mt-4 flex flex-col gap-2">
+      <div className="shrink-0 pt-4 border-t mt-4 flex flex-col gap-2">
         <button
           onClick={onOpenCodex}
           className="flex items-center justify-center gap-2 py-3 px-3 rounded-lg text-xs font-bold text-white transition-all"

@@ -435,9 +435,9 @@ const SynapseLogo = ({ className = "w-6 h-6", glow = false }) => (
   return (
     <div 
       ref={chatAreaRef}
-      className={`flex-1 min-h-0 overflow-y-auto h-full py-6 px-4 pt-16 md:pt-6 ${darkMode ? 'bg-[#0a0a0a]' : 'bg-zinc-50'} scrollbar-thin scrollbar-thumb-zinc-700/50 scrollbar-track-transparent`}
+      className={`flex-1 min-h-0 overflow-y-auto px-4 pb-4 pt-16 md:pt-6 ${darkMode ? 'bg-[#0a0a0a]' : 'bg-zinc-50'} scrollbar-thin scrollbar-thumb-zinc-700/50 scrollbar-track-transparent`}
     >
-      <div className="max-w-[800px] mx-auto space-y-4 pb-32">
+      <div className="max-w-[800px] mx-auto space-y-4 pb-4">
         <ToolActiveIndicator toolActive={toolActive} toolName={toolName} />
         {messages.length === 0 && (
             <div className="text-center py-16">
@@ -453,7 +453,7 @@ const SynapseLogo = ({ className = "w-6 h-6", glow = false }) => (
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 p-4 md:p-0 max-w-5xl mx-auto mt-8 pb-32">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 p-4 md:p-0 max-w-5xl mx-auto mt-8 pb-4">
               <FeatureCard 
                 icon={<SynapseLogo />}
                 title="Web Search"
