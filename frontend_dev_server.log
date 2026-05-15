@@ -1,0 +1,10 @@
+
+> chat-app-frontend@0.0.0 dev
+> vite
+
+
+  VITE v4.5.14  ready in 391 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+6:57:55 PM [vite] hmr update /src/components/Sidebar.jsx, /src/index.css
